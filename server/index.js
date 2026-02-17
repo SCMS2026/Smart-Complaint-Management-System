@@ -1,18 +1,19 @@
 const express = require('express');
 const session = require('express-session');
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 const connectDB = require('./config/DB');
 const passport = require('passport');
 const cors = require('cors');
-require('dotenv').config();
 require('./config/passport');
 const app = express();
 
-// Middleware
+
+
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-const path = require('path');
-const authrouter = require('./router/auth.R');
+const authrouter = require('./router/authRoutes');
 
 // Session Configuration
 app.use(session({
@@ -22,16 +23,19 @@ app.use(session({
     cookie: {
         secure: process.env.NODE_ENV === 'production',
         httpOnly: true,
-        maxAge: 1000 * 60 * 60 * 24 * 7 // 7 days
+        maxAge: 1000 * 60 * 60 * 24 * 7 
     }
 }));
 
-// Passport Middleware
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Routes
+// Serve static files
+app.use(express.static(path.join(__dirname, 'public')));
+
+// API Routes (must be before catch-all route)
 app.use('/auth', authrouter);
+
 
 const PORT = process.env.PORT || 8070;
 app.listen(PORT, ()=> {
