@@ -1,4 +1,4 @@
-const User = require('../models/Auth.M');
+const User = require('../models/authModels');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { OAuth2Client } = require('google-auth-library');
@@ -7,7 +7,7 @@ require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
 const register = async (req, res) => {
     try {
-        const { name, email, password, profileImage } = req.body;
+        const { name, email, password, profileImage,role } = req.body;
 
         if (!name) return res.status(400).json({ message: "Name required" });
         if (!email) return res.status(400).json({ message: "Email required" });
@@ -23,8 +23,10 @@ const register = async (req, res) => {
             name,
             email,
             password: hashedPassword,
+            role,
             profileImage: profileImage || null,
             isVerified: true
+
         });
 
         const token = jwt.sign(

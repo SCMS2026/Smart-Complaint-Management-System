@@ -1,71 +1,61 @@
-const passport = require('passport');
-const GoogleStrategy = require('passport-google-oauth20').Strategy;
-const User = require('../models/Auth.M');
-const path = require('path');
-require('dotenv').config({ path: path.join(__dirname, '../.env') });
+const passport = require("passport");
+const GoogleStrategy = require("passport-google-oauth20").Strategy;
+const User = require("../models/authModels");
+require("dotenv").config();
 
+// Google Login Strategy
+passport.use(
+  new GoogleStrategy(
+    {
+      clientID: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      callbackURL:
+        process.env.GOOGLE_CALLBACK_URL ||
+        "http://localhost:9060/auth/google/callback",
+    },
+    async (accessToken, refreshToken, profile, done) => {
+      try {
+        // Check if user already exists
+        let existingUser = await User.findOne({ googleId: profile.id });
 
-// Validate required environment variables
-const requiredEnvVars = ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET'];
-const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
-
-if (missingEnvVars.length > 0) {
-    console.error('❌ CRITICAL ERROR: Missing required environment variables:');
-    missingEnvVars.forEach(envVar => {
-        console.error(`   - ${envVar}`);
-    });
-    console.error('\n📝 Please update your .env file with the required credentials.');
-    console.error('   Get them from: https://console.cloud.google.com/\n');
-    process.exit(1);
-}
-
-// Configure Google OAuth Strategy
-passport.use(new GoogleStrategy({
-    clientID: process.env.GOOGLE_CLIENT_ID,
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: process.env.GOOGLE_CALLBACK_URL || "http://localhost:9060/auth/google/callback"
-}, async (accessToken, refreshToken, profile, done) => {
-    try {
-        let user = await User.findOne({ googleId: profile.id });
-        
-        if (user) {
-            return done(null, user);
+        if (existingUser) {
+          return done(null, existingUser);
         }
-        
-        const profileImage = profile.photos && profile.photos.length > 0 ? profile.photos[0].value : null;
-        
-        user = new User({
-            name: profile.displayName,
-            email: profile.emails[0].value,
-            googleId: profile.id,
-            profileImage: profileImage,
-            googleProfile: {
-                provider: profile.provider,
-                id: profile.id,
-                displayName: profile.displayName,
-                photos: profile.photos
-            },
-            isVerified: true
-        });
-        
-        await user.save();
-        return done(null, user);
-    } catch (error) {
-        return done(error, null);
-    }
-}));
 
+        // Create new user if not found
+        const newUser = new User({
+          name: profile.displayName,
+          email: profile.emails[0].value,
+          googleId: profile.id,
+          profileImage:
+            profile.photos && profile.photos.length > 0
+              ? profile.photos[0].value
+              : "",
+          isVerified: true,
+        });
+
+        await newUser.save();
+        done(null, newUser);
+      } catch (err) {
+        done(err, null);
+      }
+    }
+  )
+);
+
+// Store user id in session
 passport.serializeUser((user, done) => {
-    done(null, user.id);
+  done(null, user.id);
 });
 
+// Get user from id stored in session
 passport.deserializeUser(async (id, done) => {
-    try {
-        const user = await User.findById(id);
-        done(null, user);
-    } catch (error) {
-        done(error, null);
-    }
+  try {
+    const user = await User.findById(id);
+    done(null, user);
+  } catch (err) {
+    done(err, null);
+  }
 });
 
 module.exports = passport;

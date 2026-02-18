@@ -7,8 +7,7 @@ const passport = require('passport');
 const cors = require('cors');
 require('./config/passport');
 const app = express();
-
-
+const googleAuth = require('./auth');
 
 app.use(cors());
 app.use(express.json());
@@ -35,7 +34,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // API Routes (must be before catch-all route)
 app.use('/auth', authrouter);
-
+app.use('/api/auth', googleAuth);
 
 const PORT = process.env.PORT || 8070;
 app.listen(PORT, ()=> {
