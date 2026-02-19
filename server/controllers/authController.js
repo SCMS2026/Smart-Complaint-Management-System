@@ -79,18 +79,35 @@ const login = async (req, res) => {
 };
 
 const googleCallback = (req, res) => {
+    try {
+        const user = req.user;
 
-    const user = req.user;
+        if (!user) {
+            return res.redirect("http://localhost:5174/login?error=no_user");
+        }
 
-    const token = jwt.sign(
-        { id: user._id, role: user.role },
-        process.env.JWT_SECRET,
-        { expiresIn: "7d" }
-    );
+        const token = jwt.sign(
+            { id: user._id, role: user.role },
+            process.env.JWT_SECRET,
+            { expiresIn: "7d" }
+        );
 
-     res.redirect(
-        `http://localhost:5173/google-success?token=${token}`
-    );
+        // Encode user data for URL param
+        const userStr = encodeURIComponent(JSON.stringify({
+            id: user._id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            profileImage: user.profileImage
+        }));
+
+        res.redirect(
+            `http://localhost:5174/google-success?token=${token}&user=${userStr}`
+        );
+    } catch (err) {
+        console.error("Google callback error:", err);
+        res.redirect(`http://localhost:5174/login?error=${encodeURIComponent(err.message)}`);
+    }
 };
 
 const verifyGoogleToken = async (req, res) => {

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import Login from "./Login";
 import { getMe } from "../services/auth";
 
 const Navbar = () => {
@@ -81,7 +82,7 @@ const Navbar = () => {
         {!user ? (
           <div className="flex gap-3">
             <a
-              href="./Login"
+              href="Login"
               className="px-4 py-2 bg-black text-white rounded-md hover:opacity-80"
             >
               Login

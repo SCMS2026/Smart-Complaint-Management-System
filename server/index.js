@@ -7,6 +7,10 @@ const passport = require('passport');
 const cors = require('cors');
 require('./config/passport');
 const app = express();
+
+// Debug: print env presence
+console.log('Server starting with GOOGLE_CLIENT_ID present:', !!process.env.GOOGLE_CLIENT_ID);
+console.log('Server starting with GOOGLE_CALLBACK_URL:', process.env.GOOGLE_CALLBACK_URL);
 const googleAuth = require('./auth');
 
 app.use(cors());
@@ -15,16 +19,14 @@ app.use(express.urlencoded({ extended: true }));
 const authrouter = require('./router/authRoutes');
 
 // Session Configuration
-app.use(session({
-    secret: process.env.SESSION_SECRET || 'SCMS_SESSION_SECRET',
+app.use(
+  session({
+    secret: "secret",
     resave: false,
-    saveUninitialized: false,
-    cookie: {
-        secure: process.env.NODE_ENV === 'production',
-        httpOnly: true,
-        maxAge: 1000 * 60 * 60 * 24 * 7 
-    }
-}));
+    saveUninitialized: true
+  })
+);
+
 
 app.use(passport.initialize());
 app.use(passport.session());
@@ -35,6 +37,10 @@ app.use(express.static(path.join(__dirname, 'public')));
 // API Routes (must be before catch-all route)
 app.use('/auth', authrouter);
 app.use('/api/auth', googleAuth);
+
+// Debug route
+const debugRouter = require('./routes/debug');
+app.use('/debug', debugRouter);
 
 const PORT = process.env.PORT || 8070;
 app.listen(PORT, ()=> {
