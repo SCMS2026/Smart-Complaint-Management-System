@@ -26,18 +26,18 @@ router.get(
     passport.authenticate('google', { session: true }, (err, user, info) => {
       if (err) {
         console.error('❌ Passport Error:', err);
-        return res.redirect(`http://localhost:5174/login?error=${encodeURIComponent(err.message)}`);
+        return res.redirect(`http://localhost:3000/login?error=${encodeURIComponent(err.message)}`);
       }
 
       if (!user) {
         console.warn('⚠️ No user returned from Google:', info);
-        return res.redirect(`http://localhost:5174/login?error=no_user`);
+        return res.redirect(`http://localhost:3000/login?error=no_user`);
       }
 
       req.logIn(user, (loginErr) => {
         if (loginErr) {
           console.error('❌ Login Error:', loginErr);
-          return res.redirect(`http://localhost:5174/login?error=${encodeURIComponent(loginErr.message)}`);
+          return res.redirect(`http://localhost:3000/login?error=${encodeURIComponent(loginErr.message)}`);
         }
 
         console.log('✅ Google Auth Success for:', user.email);
@@ -57,7 +57,7 @@ router.get(
         }));
 
         res.redirect(
-          `http://localhost:5174/google-success?token=${token}&user=${userStr}`
+          `http://localhost:3000/google-success?token=${token}&user=${userStr}`
         );
       });
     })(req, res, next);
