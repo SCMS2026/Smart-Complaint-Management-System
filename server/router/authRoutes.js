@@ -41,7 +41,7 @@ router.get(
         }
 
         console.log('✅ Google Auth Success for:', user.email);
-        
+
         const token = jwt.sign(
           { id: user._id, email: user.email, role: user.role },
           process.env.JWT_SECRET,
@@ -73,15 +73,15 @@ router.put('/profile', authMiddleware, authController.updateProfile);
 router.post('/logout', authController.logout);
 
 router.get('/admin/users',
-    authMiddleware,
-    allowRoles('admin'),
-    authController.getAllUsers
+  authMiddleware,
+  allowRoles('admin'),
+  authController.getAllUsers
 );
 
 router.put('/admin/users/:id/role',
-    authMiddleware,
-    allowRoles('admin'),
-    authController.setUserRole
+  authMiddleware,
+  allowRoles('admin'),
+  authController.setUserRole
 );
 
 module.exports = router;

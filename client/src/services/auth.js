@@ -1,4 +1,4 @@
-const API = "http://localhost:9030/auth";
+const API = "http://localhost:5000/auth";
 
 // Get JWT token from localStorage
 const getToken = () => localStorage.getItem("user_token");

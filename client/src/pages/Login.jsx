@@ -28,7 +28,7 @@ const Login = () => {
     }
   };
   const googleLogin = () => {
-    window.open("http://localhost:9030/auth/google", "_self");
+    window.open("http://localhost:5000/auth/google", "_self");
   };
   return (
     <div className="min-h-screen flex bg-gray-100">
@@ -112,7 +112,7 @@ const Login = () => {
             </div>
 
             {/* Google Button */}
-            <a href="http://localhost:9030/auth/google" className="w-full">
+            <a href="http://localhost:5000/auth/google" className="w-full">
               <button
                 type="button"
                 className="w-full py-3 border rounded-lg font-medium hover:bg-gray-50 transition"
