@@ -16,9 +16,9 @@ const Login = () => {
     setError("");
     setLoading(true);
     try {
-      const res = await loginUser();
-      localStorage.setItem("user_token", res.data.token);
-      localStorage.setItem("user", JSON.stringify(res.data.user));
+      const res = await loginUser(form);
+      if (res.token) localStorage.setItem("user_token", res.token);
+      if (res.user) localStorage.setItem("user", JSON.stringify(res.user));
       nav("/");
     } catch (err) {
       const msg = err?.response?.data?.message || err.message;

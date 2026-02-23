@@ -1,4 +1,4 @@
-const API = "http://localhost:5000/auth";
+const API = "http://localhost:8070/auth";
 
 // Get JWT token from localStorage
 const getToken = () => localStorage.getItem("user_token");
@@ -45,17 +45,23 @@ export const getCurrentUser = async () => {
   const token = getToken();
   if (!token) return null;
 
-  const res = await fetch(`${API}/me`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      ...getAuthHeader(),
-    },
-    credentials: "include",
-  });
+  try {
+    const res = await fetch(`${API}/me`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        ...getAuthHeader(),
+      },
+      credentials: "include",
+    });
 
-  if (!res.ok) return null;
-  return res.json();
+    if (!res.ok) return null;
+    return res.json();
+  } catch (err) {
+    // Network error (server down / connection refused)
+    console.warn("getCurrentUser failed:", err);
+    return null;
+  }
 };
 
 export const isAuthenticated = () => {
