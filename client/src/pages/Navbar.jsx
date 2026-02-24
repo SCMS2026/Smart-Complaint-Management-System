@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { getMe } from "../services/auth";
+import { getMe,logout } from "../services/auth";
 
 const Navbar = () => {
   const [user, setUser] = useState(null);
@@ -22,17 +22,17 @@ const Navbar = () => {
     });
   }, []);
 
-  const logout = async () => {
-    await fetch("http://localhost:8070/auth/logout", {
-      method: "POST",
-      credentials: "include",
-    });
+  // const logout = async () => {
+  //   await fetch("http://localhost:5000/auth/logout", {
+  //     method: "POST",
+  //     credentials: "include",
+  //   });
 
-    localStorage.removeItem("user_token");
-    localStorage.removeItem("user");
+  //   localStorage.removeItem("user_token");
+  //   localStorage.removeItem("user");
 
-    window.location.reload();
-  };
+  //   window.location.reload();
+  // };
 
   return (
     <header className="fixed top-0 left-0 w-full z-50">
@@ -173,7 +173,8 @@ const Navbar = () => {
 
                 <div className="h-px bg-gray-200 my-2"></div>
 
-                <button
+                <button 
+                  
                   onClick={logout}
                   className="w-full text-left px-4 py-2.5 rounded-lg text-red-500 hover:bg-red-50 transition"
                 >

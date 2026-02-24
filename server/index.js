@@ -19,7 +19,13 @@ console.log('Server starting with GOOGLE_CLIENT_ID present:', !!process.env.GOOG
 console.log('Server starting with GOOGLE_CALLBACK_URL:', process.env.GOOGLE_CALLBACK_URL);
 const googleAuth = require('./auth'); // Will keep the file but remove its usage for now
 
-app.use(cors());
+// CORS configuration for credentials
+app.use(cors({
+  origin: ['http://localhost:3000', 'http://localhost:5174'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(morgan('dev')); // "dev" mode outputs colored and well-formatted API requests
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

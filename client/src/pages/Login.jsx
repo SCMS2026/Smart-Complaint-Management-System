@@ -15,22 +15,38 @@ const Login = () => {
     e.preventDefault();
     setError("");
     setLoading(true);
+
     try {
+      // Validate inputs
+      if (!form.email || !form.password) {
+        setError("Please enter both email and password");
+        setLoading(false);
+        return;
+      }
+
       const res = await loginUser(form);
-      if (res.token) localStorage.setItem("user_token", res.token);
-      if (res.user) localStorage.setItem("user", JSON.stringify(res.user));
-      nav("/");
+      console.log("Login response:", res);
+
+      if (res.success) {
+        console.log("Login successful, user:", res.user);
+        console.log("Token stored:", localStorage.getItem("user_token"));
+        console.log("User stored:", localStorage.getItem("user"));
+        
+        // Navigate to profile to verify data
+        nav("/profile");
+      } else {
+        // Login failed - show error message
+        setError(res.message || "Login failed. Please try again.");
+      }
     } catch (err) {
-      const msg = err?.response?.data?.message || err.message;
-      setError(String(msg));
+      console.error("Login error:", err);
+      setError(err?.message || "An unexpected error occurred");
     } finally {
       setLoading(false);
     }
   };
-  const googleLogin = () => {
-    window.open("http://localhost:5000/auth/google", "_self");
-  };
-  return (
+
+   return (
     <div className="min-h-screen flex bg-gray-100">
       {/* LEFT COMPANY HEADER */}
       <div className="hidden lg:flex w-1/2 bg-gradient-to-br from-indigo-700 via-purple-700 to-pink-600 text-white flex-col justify-between p-12">
@@ -135,6 +151,7 @@ const Login = () => {
       </div>
     </div>
   );
+
 };
 
 export default Login;

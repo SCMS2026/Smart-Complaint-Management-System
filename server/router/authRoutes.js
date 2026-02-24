@@ -7,7 +7,6 @@ const allowRoles = require('../middleware/roleMiddleware');
 
 router.post('/register', authController.register);
 router.post('/login', authController.login);
-
 router.get(
   '/google',
   (req, res, next) => {
@@ -69,7 +68,7 @@ router.get(
 router.post('/google/verify', authController.verifyGoogleToken);
 
 router.get('/me', authMiddleware, authController.getCurrentUser);
-router.put('/profile', authMiddleware, authController.updateProfile);
+router.patch('/profile', authMiddleware, authController.updateProfile);
 router.post('/logout', authController.logout);
 
 router.get('/admin/users',

@@ -1,7 +1,7 @@
-const API = "http://localhost:8070/auth";
+const API = "http://localhost:5000/auth";
 
 // Get JWT token from localStorage
-const getToken = () => localStorage.getItem("user_token");
+export const getToken = () => localStorage.getItem("user_token");
 
 // Get auth header with JWT token
 const getAuthHeader = () => {
@@ -10,39 +10,102 @@ const getAuthHeader = () => {
 };
 
 export const loginUser = async (data) => {
-  const res = await fetch(`${API}/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify(data),
-  });
+  try {
+    // Validate input
+    if (!data.email || !data.password) {
+      return {
+        success: false,
+        message: "Email and password are required",
+        token: null,
+        user: null,
+      };
+    }
 
-  const result = await res.json();
-  if (result.token) {
-    localStorage.setItem("user_token", result.token);
-    localStorage.setItem("user", JSON.stringify(result.user));
+    const res = await fetch(`${API}/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(data),
+    });
+
+    const result = await res.json();
+
+    if (!res.ok) {
+      return {
+        success: false,
+        message: result.message || "Login failed",
+        token: null,
+        user: null,
+      };
+    }
+
+    // Store token and user data on successful login
+    if (result.token) {
+      localStorage.setItem("user_token", result.token);
+      localStorage.setItem("user", JSON.stringify(result.user));
+    }
+
+    return {
+      success: true,
+      message: result.message || "Login successful",
+      token: result.token,
+      user: result.user,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: error.message || "An error occurred during login",
+      token: null,
+      user: null,
+    };
   }
-  return result;
 };
 
 export const registerUser = async (data) => {
-  const res = await fetch(`${API}/register`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify(data),
-  });
+  try {
+    const res = await fetch(`${API}/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(data),
+    });
 
-  const result = await res.json();
-  if (result.token) {
-    localStorage.setItem("user_token", result.token);
-    localStorage.setItem("user", JSON.stringify(result.user));
+    const result = await res.json();
+    console.log("Register response:", result);
+    
+    if (!res.ok) {
+      return {
+        success: false,
+        message: result.message || "Registration failed",
+        token: null,
+        user: null,
+      };
+    }
+
+    if (result.token) {
+      localStorage.setItem("user_token", result.token);
+      localStorage.setItem("user", JSON.stringify(result.user));
+    }
+    
+    return {
+      success: true,
+      message: result.message || "Registration successful",
+      token: result.token,
+      user: result.user,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: error.message || "An error occurred during registration",
+      token: null,
+      user: null,
+    };
   }
-  return result;
 };
 
 export const getCurrentUser = async () => {
   const token = getToken();
+  console.log("getCurrentUser called, token:", token);
   if (!token) return null;
 
   try {
@@ -50,13 +113,23 @@ export const getCurrentUser = async () => {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-        ...getAuthHeader(),
+        Authorization: `Bearer ${token}`,
       },
       credentials: "include",
     });
 
-    if (!res.ok) return null;
-    return res.json();
+    console.log("getCurrentUser response status:", res.status);
+    
+    if (!res.ok) {
+      console.error("getCurrentUser failed with status:", res.status);
+      const errorData = await res.json();
+      console.error("Error response:", errorData);
+      return null;
+    }
+    
+    const data = await res.json();
+    console.log("getCurrentUser success:", data);
+    return data;
   } catch (err) {
     // Network error (server down / connection refused)
     console.warn("getCurrentUser failed:", err);
@@ -71,6 +144,7 @@ export const isAuthenticated = () => {
 export const logout = () => {
   localStorage.removeItem("user_token");
   localStorage.removeItem("user");
+  window.location.reload();
 };
 
 // Legacy alias for backward compatibility
