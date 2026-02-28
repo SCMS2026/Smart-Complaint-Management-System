@@ -149,3 +149,27 @@ export const logout = () => {
 
 // Legacy alias for backward compatibility
 export const getMe = getCurrentUser;
+
+export const updateProfile = async (profileData) => {
+  const token = getToken();
+  if (!token) return { success: false, message: "Not authenticated" };
+
+  try {
+    const res = await fetch(`${API}/profile`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      credentials: "include",
+      body: JSON.stringify(profileData),
+    });
+    const result = await res.json();
+    if (!res.ok) {
+      return { success: false, message: result.message || "Profile update failed" };
+    }
+    return { success: true, message: result.message || "Profile updated successfully", user: result.user };
+  } catch (error) { 
+    return { success: false, message: error.message || "An error occurred during profile update" };
+  }
+}

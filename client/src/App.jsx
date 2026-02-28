@@ -6,6 +6,7 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import GoogleSuccess from "./pages/GoogleSuccess";
 import { getCurrentUser } from "./services/auth";
+import Profile from "./pages/Profile";
 
 function App() {
   const [user, setUser] = useState(null);
@@ -35,6 +36,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/google-success" element={<GoogleSuccess />} />
+          <Route path="/profile" element={<Profile />} />
         </Routes>
       </main>
     </div>
