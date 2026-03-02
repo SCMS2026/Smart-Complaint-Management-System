@@ -1,16 +1,26 @@
 import React, { useState, useEffect } from "react";
-import { getMe } from "../services/auth";
+import { getMe, updateProfile } from "../services/auth";
 
 const Profile = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // editing state
+  const [editMode, setEditMode] = useState(false);
+  const [nameInput, setNameInput] = useState("");
+  const [profileImageInput, setProfileImageInput] = useState("");
+  const [saveLoading, setSaveLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
     const fetchUser = async () => {
       const local = localStorage.getItem("user");
       if (local) {
         try {
-          setUser(JSON.parse(local));
+          const u = JSON.parse(local);
+          setUser(u);
+          setNameInput(u.name || "");
+          setProfileImageInput(u.profileImage || "");
           setLoading(false);
           return;
         } catch (e) {
@@ -20,7 +30,11 @@ const Profile = () => {
 
       const data = await getMe();
       if (data) {
-        setUser(data.user || data);
+        const u = data.user || data;
+        setUser(u);
+        // prefill inputs
+        setNameInput(u.name || "");
+        setProfileImageInput(u.profileImage || "");
       }
       setLoading(false);
     };
@@ -45,16 +59,37 @@ const Profile = () => {
               <div className="relative group">
                 <img
                   className="h-40 w-40 rounded-full border-4 border-white shadow-md object-cover"
-                  src={ user.profileImage || user.picture || user.googleProfile?.photo || user.avatar || "https://i.pravatar.cc/40"}
+                  src={
+                    editMode
+                      ? profileImageInput || user.profileImage || user.picture || user.googleProfile?.photo || user.avatar || "https://i.pravatar.cc/40"
+                      : user.profileImage || user.picture || user.googleProfile?.photo || user.avatar || "https://i.pravatar.cc/40"
+                  }
                   alt="Profile"
                 />
-                
+                {editMode && (
+                  <input
+                    type="text"
+                    placeholder="Image URL"
+                    value={profileImageInput}
+                    onChange={(e) => setProfileImageInput(e.target.value)}
+                    className="mt-2 w-full text-sm px-2 py-1 rounded border"
+                  />
+                )}
               </div>
 
               {/* Name & Role */}
-              <h1 className="mt-4 text-3xl font-extrabold text-gray-900 dark:text-white">
-                {user.name || "Anonymous User"}
-              </h1>
+              {editMode ? (
+                <input
+                  type="text"
+                  value={nameInput}
+                  onChange={(e) => setNameInput(e.target.value)}
+                  className="mt-4 text-3xl font-extrabold text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-700 rounded px-2"
+                />
+              ) : (
+                <h1 className="mt-4 text-3xl font-extrabold text-gray-900 dark:text-white">
+                  {user.name || "Anonymous User"}
+                </h1>
+              )}
             </div>
 
             {/* Information Grid */}
@@ -71,17 +106,71 @@ const Profile = () => {
 
             {/* Action Buttons */}
             <div className="mt-10 flex flex-wrap justify-center gap-4">
-              <button className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold transition-all shadow-md active:scale-95">
-                Edit Profile
-              </button>
-              <button className="px-8 py-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-white rounded-xl font-semibold hover:bg-gray-50 dark:hover:bg-gray-600 transition-all">
-                Settings
-              </button>
+              {editMode ? (
+                <>
+                  <button
+                    onClick={async () => {
+                      setSaveLoading(true);
+                      setErrorMsg("");
+                      try {
+                        const res = await updateProfile({
+                          name: nameInput,
+                          profileImage: profileImageInput,
+                        });
+                        if (res.success) {
+                          setUser(res.user);
+                          localStorage.setItem("user", JSON.stringify(res.user));
+                          setEditMode(false);
+                        } else {
+                          setErrorMsg(res.message);
+                        }
+                      } catch (e) {
+                        setErrorMsg(e.message);
+                      } finally {
+                        setSaveLoading(false);
+                      }
+                    }}
+                    disabled={saveLoading}
+                    className="px-8 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-semibold transition-all shadow-md active:scale-95"
+                  >
+                    {saveLoading ? "Saving..." : "Save"}
+                  </button>
+                  <button
+                    onClick={() => {
+                      // reset inputs
+                      setNameInput(user.name || "");
+                      setProfileImageInput(user.profileImage || "");
+                      setErrorMsg("");
+                      setEditMode(false);
+                    }}
+                    className="px-8 py-3 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-xl font-semibold transition-all"
+                  >
+                    Cancel
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={() => setEditMode(true)}
+                    className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold transition-all shadow-md active:scale-95"
+                  >
+                    Edit Profile
+                  </button>
+                  <button className="px-8 py-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-white rounded-xl font-semibold hover:bg-gray-50 dark:hover:bg-gray-600 transition-all">
+                    Settings
+                  </button>
+                </>
+              )}
             </div>
+            </div>
+            {errorMsg && (
+              <div className="mt-4 text-center text-red-600">
+                {errorMsg}
+              </div>
+            )}
           </div>
         </div>
       </div>
-    </div>
   );
 };
 

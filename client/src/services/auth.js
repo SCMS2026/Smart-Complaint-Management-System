@@ -165,6 +165,7 @@ export const updateProfile = async (profileData) => {
       body: JSON.stringify(profileData),
     });
     const result = await res.json();
+    // debug line removed
     if (!res.ok) {
       return { success: false, message: result.message || "Profile update failed" };
     }
@@ -172,4 +173,28 @@ export const updateProfile = async (profileData) => {
   } catch (error) { 
     return { success: false, message: error.message || "An error occurred during profile update" };
   }
-}
+};
+
+// Google sign-in: send ID token to server and receive our JWT
+export const googleSignIn = async (idToken) => {
+  try {
+    const res = await fetch(`${API}/google`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ token: idToken }),
+    });
+
+    const result = await res.json();
+    if (!res.ok) {
+      return { success: false, message: result.message || "Google login failed" };
+    }
+    if (result.token) {
+      localStorage.setItem("user_token", result.token);
+      localStorage.setItem("user", JSON.stringify(result.user));
+    }
+    return { success: true, token: result.token, user: result.user };
+  } catch (error) {
+    return { success: false, message: error.message || "An error occurred during Google login" };
+  }
+};

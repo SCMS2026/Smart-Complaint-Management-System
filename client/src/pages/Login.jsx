@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { loginUser } from "../services/auth";
+import { loginUser, googleSignIn } from "../services/auth";
 
 
 const Login = () => {
@@ -8,6 +8,7 @@ const Login = () => {
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
   const handleChange = (e) =>
     setForm((p) => ({ ...p, [e.target.name]: e.target.value }));
 
@@ -45,6 +46,40 @@ const Login = () => {
       setLoading(false);
     }
   };
+
+  // Google button initialization
+  useEffect(() => {
+    /* global google */
+    if (!googleClientId) {
+      // leave a helpful message for developers/testers
+      setError(
+        "Google client id missing. Set VITE_GOOGLE_CLIENT_ID in client/.env and restart dev server."
+      );
+      return;
+    }
+
+    if (window.google && window.google.accounts) {
+      google.accounts.id.initialize({
+        client_id: googleClientId,
+        callback: async (response) => {
+          try {
+            const res = await googleSignIn(response.credential);
+            if (res.success) {
+              nav("/profile");
+            } else {
+              setError(res.message);
+            }
+          } catch (err) {
+            setError(err.message || "Google login failed");
+          }
+        },
+      });
+      google.accounts.id.renderButton(
+        document.getElementById("googleSignInDiv"),
+        { theme: "outline", size: "large", width: "100%" }
+      );
+    }
+  }, [nav]);
 
    return (
     <div className="min-h-screen flex bg-gray-100">
@@ -127,13 +162,16 @@ const Login = () => {
               <div className="flex-1 h-px bg-gray-300"></div>
             </div>
 
-            {/* Google Button */}
+            {/* Google Button - will be replaced by Google's JS button */}
+            <div id="googleSignInDiv" className="w-full"></div>
+
+            {/* fallback link in case the JS button fails */}
             <a href="http://localhost:5000/auth/google" className="w-full">
               <button
                 type="button"
-                className="w-full py-3 border rounded-lg font-medium hover:bg-gray-50 transition"
+                className="w-full py-3 border rounded-lg font-medium hover:bg-gray-50 transition mt-2"
               >
-                Login with Google
+                Login with Google (redirect)
               </button>
             </a>
 

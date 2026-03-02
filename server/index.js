@@ -52,22 +52,48 @@ app.post("/auth/google", async (req, res) => {
     });
 
     const payload = ticket.getPayload();
+    console.log("Google ID token payload", payload);
 
-    console.log("payload", payload);
+    // find or create a user in our database
+    const User = require("./models/authModels");
+    const { email, name, picture, sub: googleId } = payload;
 
-    const user = {
-      email: payload.email,
-      name: payload.name,
-      picture: payload.picture,
-    };
+    let user = await User.findOne({ email });
+    if (!user) {
+      user = new User({
+        name,
+        email,
+        googleId,
+        profileImage: picture,
+        isVerified: true,
+      });
+      await user.save();
+      console.log("Created new user from google login", email);
+    } else if (!user.googleId) {
+      user.googleId = googleId;
+      user.profileImage = picture;
+      await user.save();
+      console.log("Associated googleId with existing user", email);
+    }
 
-    // Create JWT for your app
-    const appToken = jwt.sign(user, process.env.JWT_SECRET, {
-      expiresIn: "1d",
+    const appToken = jwt.sign(
+      { id: user._id, email: user.email, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    res.json({
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        profileImage: user.profileImage,
+      },
+      token: appToken,
     });
-
-    res.json({ user, token: appToken });
   } catch (error) {
+    console.error("Google login error", error.message);
     res.status(400).json({ message: "Invalid token" });
   }
 });

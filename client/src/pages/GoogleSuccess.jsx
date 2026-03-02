@@ -17,8 +17,8 @@ function GoogleSuccess() {
         return;
       }
 
-      // Store JWT token
-      localStorage.setItem("user_token", token);
+      // Store JWT token (URL parameters sometimes encode/escape characters)
+      localStorage.setItem("user_token", decodeURIComponent(token));
 
       // Store user data if available
       if (user) {
@@ -30,7 +30,7 @@ function GoogleSuccess() {
         }
       }
 
-      // Redirect to home
+      // Redirect to home after a brief pause
       setTimeout(() => {
         window.location.href = "/";
       }, 300);
