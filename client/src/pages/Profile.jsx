@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React,{ useState, useEffect } from "react";
 import { getMe, updateProfile } from "../services/auth";
 
 const Profile = () => {
@@ -90,6 +90,7 @@ const Profile = () => {
                   {user.name || "Anonymous User"}
                 </h1>
               )}
+              <p className="text-sm text-gray-500 mt-1">Role: {user.role || 'user'}</p>
             </div>
 
             {/* Information Grid */}

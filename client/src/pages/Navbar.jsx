@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React,{ useEffect, useState } from "react";
 import { getMe,logout } from "../services/auth";
 
 const Navbar = () => {
@@ -12,7 +12,9 @@ const Navbar = () => {
       try {
         setUser(JSON.parse(local));
         return;
-      } catch (e) {}
+      } catch (e) {
+        console.error("Failed to parse user from localStorage", e);
+      }
     }
 
     getMe().then((data) => {
@@ -111,6 +113,31 @@ const Navbar = () => {
             >
               Contact
             </a>
+
+            {user && user.role === 'admin' && (
+              <a
+                href="/admin"
+                className="px-4 py-2 rounded-lg hover:bg-black/5 transition"
+              >
+                Admin
+              </a>
+            )}
+            {user && user.role === 'analyzer' && (
+              <a
+                href="/analyzer"
+                className="px-4 py-2 rounded-lg hover:bg-black/5 transition"
+              >
+                Analytics
+              </a>
+            )}
+            {user && user.role === 'contractor' && (
+              <a
+                href="/contractor"
+                className="px-4 py-2 rounded-lg hover:bg-black/5 transition"
+              >
+                Contractor
+              </a>
+            )}
           </nav>
 
           {/* ================= AUTH ================= */}
@@ -157,8 +184,14 @@ const Navbar = () => {
                     : "opacity-0 -translate-y-3 invisible"
                 }`}
               >
+                {/* compute dashboard path based on role */}
                 <a
-                  href="/dashboard"
+                  href={
+                    user.role === 'admin' ? '/admin' :
+                    user.role === 'analyzer' ? '/analyzer' :
+                    user.role === 'contractor' ? '/contractor' :
+                    '/profile'
+                  }
                   className="block px-4 py-2.5 rounded-lg hover:bg-gray-100 transition"
                 >
                   Dashboard
@@ -169,6 +202,13 @@ const Navbar = () => {
                   className="block px-4 py-2.5 rounded-lg hover:bg-gray-100 transition"
                 >
                   Profile
+                </a>
+
+                <a
+                  href="/complaints"
+                  className="block px-4 py-2.5 rounded-lg hover:bg-gray-100 transition"
+                >
+                  Complaints
                 </a>
 
                 <div className="h-px bg-gray-200 my-2"></div>

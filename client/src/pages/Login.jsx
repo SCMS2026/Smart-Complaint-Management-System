@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React,{ useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { loginUser, googleSignIn } from "../services/auth";
 
@@ -79,7 +79,7 @@ const Login = () => {
         { theme: "outline", size: "large", width: "100%" }
       );
     }
-  }, [nav]);
+  }, [nav, googleClientId]);
 
    return (
     <div className="min-h-screen flex bg-gray-100">

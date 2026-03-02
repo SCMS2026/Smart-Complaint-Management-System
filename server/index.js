@@ -30,6 +30,7 @@ app.use(morgan('dev')); // "dev" mode outputs colored and well-formatted API req
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 const authrouter = require('./router/authRoutes');
+const complaintRouter = require('./router/complaintRoutes');
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -101,6 +102,10 @@ app.post("/auth/google", async (req, res) => {
 
 app.use(passport.initialize());
 app.use(passport.session());
+
+// mount API routers
+app.use('/auth', authrouter);
+app.use('/complaints', complaintRouter);
 
 // Serve static files
 app.use(express.static(path.join(__dirname, 'public')));

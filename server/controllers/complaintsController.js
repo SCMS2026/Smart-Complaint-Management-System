@@ -1,9 +1,9 @@
-const complaint = require('../models/complaintModels');
+const Complaint = require('../models/complaintsModel');
 
 const createComplaint = async (req, res) => {
     try {
         const { userId, assetId, description, image } = req.body;
-        const newComplaint = new complaint({
+        const newComplaint = new Complaint({
             userId,
             assetId,
             description,
@@ -19,7 +19,14 @@ const createComplaint = async (req, res) => {
 
 const getComplaints = async (req, res) => {
     try {
-        const complaints = await complaint.find().populate('userId', 'name').populate('assetId', 'name');
+        // filter by role: regular users only see their own complaints
+        const filter = {};
+        if (req.user && req.user.role === 'user') {
+            filter.userId = req.user.id;
+        }
+        const complaints = await Complaint.find(filter)
+            .populate('userId', 'name')
+            .populate('assetId', 'name');
         res.status(200).json({ complaints });
     } catch (error) {
         res.status(500).json({ message: 'Error fetching complaints', error: error.message });
@@ -30,7 +37,7 @@ const updateComplaintStatus = async (req, res) => {
     try {
         const { complaintId } = req.params;
         const { status } = req.body;
-        const updatedComplaint = await complaint.findByIdAndUpdate(complaintId, { status, updatedAt: Date.now() }, { new: true });
+        const updatedComplaint = await Complaint.findByIdAndUpdate(complaintId, { status, updatedAt: Date.now() }, { new: true });
         if (!updatedComplaint) {
             return res.status(404).json({ message: 'Complaint not found' });
         }
@@ -44,7 +51,7 @@ const updateComplaintStatus = async (req, res) => {
 const deleteComplaint = async (req, res) => {
     try {
         const { complaintId } = req.params;
-        const deletedComplaint = await complaint.findByIdAndDelete(complaintId);
+        const deletedComplaint = await Complaint.findByIdAndDelete(complaintId);
         if (!deletedComplaint) {
             return res.status(404).json({ message: 'Complaint not found' });
         }

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React,{ useEffect, useState } from "react";
 import Navbar from "./pages/Navbar";
 import { Routes, Route } from "react-router-dom";
 import "./App.css";
@@ -7,6 +7,10 @@ import Signup from "./pages/Signup";
 import GoogleSuccess from "./pages/GoogleSuccess";
 import { getCurrentUser } from "./services/auth";
 import Profile from "./pages/Profile";
+import AllComplaints from "./pages/AllComplaints";
+import AdminDashboard from "./pages/AdminDashboard";
+import AnalyzerDashboard from "./pages/AnalyzerDashboard";
+import ContractorDashboard from "./pages/ContractorDashboard";
 
 function App() {
   const [user, setUser] = useState(null);
@@ -37,6 +41,10 @@ function App() {
           <Route path="/signup" element={<Signup />} />
           <Route path="/google-success" element={<GoogleSuccess />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/complaints" element={<AllComplaints />} />
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/analyzer" element={<AnalyzerDashboard />} />
+          <Route path="/contractor" element={<ContractorDashboard />} />
         </Routes>
       </main>
     </div>
