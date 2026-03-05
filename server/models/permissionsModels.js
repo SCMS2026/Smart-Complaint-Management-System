@@ -5,4 +5,7 @@ const permissionSchema = new mongoose.Schema({
     assetId: { type: mongoose.Schema.Types.ObjectId, ref: 'Asset', required: true },
     reason: { type: String, required: true },
     status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
-})
+});
+
+const Permission = mongoose.model('Permission', permissionSchema);
+module.exports = Permission;

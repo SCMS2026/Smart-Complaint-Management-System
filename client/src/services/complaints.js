@@ -68,3 +68,49 @@ export const deleteComplaintRequest = async (id) => {
     return { success: false, message: err.message };
   }
 };
+
+export const getComplaintById = async (id) => {
+  try {
+    const res = await fetch(`${API}/${id}`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json", ...getAuthHeader() },
+      credentials: "include",
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Failed to fetch complaint");
+    return { success: true, complaint: data.complaint };
+  } catch (err) {
+    return { success: false, message: err.message };
+  }
+};
+
+export const addCommentToComplaint = async (id, text) => {
+  try {
+    const res = await fetch(`${API}/${id}/comments`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...getAuthHeader() },
+      credentials: "include",
+      body: JSON.stringify({ text }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Failed to add comment");
+    return { success: true, complaint: data.complaint };
+  } catch (err) {
+    return { success: false, message: err.message };
+  }
+};
+
+export const markComplaintAsFake = async (id) => {
+  try {
+    const res = await fetch(`${API}/${id}/fake`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...getAuthHeader() },
+      credentials: "include",
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Failed to mark as fake");
+    return { success: true, complaint: data.complaint };
+  } catch (err) {
+    return { success: false, message: err.message };
+  }
+};

@@ -31,8 +31,10 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 const authrouter = require('./router/authRoutes');
 const complaintRouter = require('./router/complaintRoutes');
+const permissionRouter = require('./router/permissionRoutes');
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+const assetsRouter = require('./router/assetsRoutes');
 
 // Session Configuration
 app.use(
@@ -106,6 +108,8 @@ app.use(passport.session());
 // mount API routers
 app.use('/auth', authrouter);
 app.use('/complaints', complaintRouter);
+app.use('/permissions', permissionRouter); // new permission endpoints
+app.use('/assets', assetsRouter); // list available assets
 
 // Serve static files
 app.use(express.static(path.join(__dirname, 'public')));
