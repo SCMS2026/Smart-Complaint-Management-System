@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React,{ useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { fetchComplaints } from "../services/complaints";
 import { fetchPermissions } from "../services/permissions";
+import { importAssets } from "../services/assets";
 import ComplaintDetail from "./ComplaintDetail";
 
 const AdminDashboard = () => {
@@ -15,6 +16,11 @@ const AdminDashboard = () => {
     resolved: 0,
     pendingApprovals: 0,
   });
+
+  // asset import state
+  const [excelFile, setExcelFile] = useState(null);
+  const [importStatus, setImportStatus] = useState('');
+
 
   const [complaints, setComplaints] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -56,7 +62,7 @@ const AdminDashboard = () => {
         } else {
           setError(res.message || "Failed to load complaints");
         }
-      } catch (err) {
+      } catch {
         setError("Error loading complaints");
       } finally {
         setLoading(false);
@@ -102,6 +108,36 @@ const AdminDashboard = () => {
     return statusMap[status?.toLowerCase()] || status;
   };
 
+  const handleFileChange = (e) => {
+    setExcelFile(e.target.files[0]);
+  };
+
+  const handleImport = async () => {
+    if (!excelFile) return setImportStatus("Please select a file");
+    setImportStatus("Importing assets...");
+    const res = await importAssets(excelFile);
+    if (res.success) {
+      let msg = `Added ${res.added} asset${res.added === 1 ? '' : 's'}`;
+      if (res.errors && res.errors.length) {
+        msg += `, ${res.errors.length} row${res.errors.length === 1 ? '' : 's'} skipped`;
+      }
+      setImportStatus(msg);
+    } else {
+      setImportStatus(res.message || "Import failed");
+    }
+  };
+
+  const downloadTemplate = () => {
+    const csv = "name,location,category\nExample Asset,Office,Electronics\n";
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'assets-template.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="min-h-screen min-w-screen bg-gray-100">
       {/* Header */}
@@ -128,6 +164,35 @@ const AdminDashboard = () => {
       {/* Main Content */}
       {!loading && !error && (
         <div className="p-6">
+          {/* Asset import panel */}
+          <div className="bg-white rounded-lg shadow-md p-4 mb-6">
+            <h2 className="text-lg font-semibold mb-2">Import Assets (Excel)</h2>
+            <div className="flex items-center gap-2 flex-wrap">
+              <input
+                type="file"
+                accept=".xlsx,.xls"
+                onChange={handleFileChange}
+                className="border p-1"
+              />
+              <button
+                onClick={handleImport}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+              >
+                Upload
+              </button>
+              <button
+                onClick={downloadTemplate}
+                className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition"
+              >
+                Download Template
+              </button>
+            </div>
+            {importStatus && <p className="mt-2 text-sm text-gray-700">{importStatus}</p>}
+            <p className="text-xs text-gray-500 mt-1">
+              Excel must include headers <code>name</code>, <code>location</code>, and <code>category</code> (case-insensitive).
+            </p>
+          </div>
+
           {/* Stat Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             {/* Pending Complaints */}
