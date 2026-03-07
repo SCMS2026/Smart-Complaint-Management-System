@@ -20,8 +20,9 @@ console.log('Server starting with GOOGLE_CALLBACK_URL:', process.env.GOOGLE_CALL
 const googleAuth = require('./auth'); // Will keep the file but remove its usage for now
 
 // CORS configuration for credentials
+const isDev = process.env.NODE_ENV === 'development';
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:5174'],
+  origin: isDev ? ['http://localhost:3000', 'http://localhost:5174', 'http://localhost:5000'] : [process.env.CLIENT_URL || 'http://localhost:5000'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -111,19 +112,26 @@ app.use('/complaints', complaintRouter);
 app.use('/permissions', permissionRouter); // new permission endpoints
 app.use('/assets', assetsRouter); // list available assets
 
-// Serve static files
-app.use(express.static(path.join(__dirname, 'public')));
-
-// API Routes (must be before catch-all route)
-app.use('/auth', authrouter);
-// app.use('/api/auth', googleAuth); // REMOVED redundant route
+// Serve static files from client build
+if (!isDev) {
+  app.use(express.static(path.join(__dirname, '../client/dist')));
+}
 
 // Debug route
 const debugRouter = require('./routes/debug');
 app.use('/debug', debugRouter);
 
-const PORT = process.env.PORT || 8070;
+
+// Serve React app for any non-API routes (SPA routing)
+if (!isDev) {
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+  });
+}
+
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server is up and running on port ${PORT}`);
+  console.log(`Environment: ${isDev ? 'DEVELOPMENT' : 'PRODUCTION'}`);
   connectDB()
 })
