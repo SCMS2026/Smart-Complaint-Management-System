@@ -41,7 +41,7 @@ function App() {
           <Route path="/signup" element={<Signup />} />
           <Route path="/google-success" element={<GoogleSuccess />} />
           <Route path="/profile" element={<Profile />} />
-          <Route path="/complaints" element={<AllComplaints />} />
+          <Route path="/complaint" element={<AllComplaints />} />
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/analyzer" element={<AnalyzerDashboard />} />
           <Route path="/contractor" element={<ContractorDashboard />} />

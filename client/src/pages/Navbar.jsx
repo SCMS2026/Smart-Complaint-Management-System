@@ -205,7 +205,7 @@ const Navbar = () => {
                 </a>
 
                 <a
-                  href="/complaints"
+                  href="/complaint"
                   className="block px-4 py-2.5 rounded-lg hover:bg-gray-100 transition"
                 >
                   Complaints

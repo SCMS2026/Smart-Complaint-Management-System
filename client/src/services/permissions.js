@@ -14,8 +14,11 @@ export const fetchPermissions = async () => {
       headers: { "Content-Type": "application/json", ...getAuthHeader() },
       credentials: "include",
     });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.message || "Failed to fetch permissions");
+    }
     const data = await res.json();
-    if (!res.ok) throw new Error(data.message || "Failed to fetch permissions");
     return { success: true, permissions: data.permissions };
   } catch (err) {
     return { success: false, message: err.message };
@@ -30,8 +33,11 @@ export const createPermissionRequest = async (permission) => {
       credentials: "include",
       body: JSON.stringify(permission),
     });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.message || "Failed to create permission");
+    }
     const data = await res.json();
-    if (!res.ok) throw new Error(data.message || "Failed to create permission");
     return { success: true, permission: data.permission };
   } catch (err) {
     return { success: false, message: err.message };

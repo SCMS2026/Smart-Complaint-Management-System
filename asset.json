@@ -1,0 +1,234 @@
+[
+  {
+    "name": "Health Department",
+    "category": [
+      "Excessive fees charged",
+      "Doctor not present",
+      "Staff misbehavior",
+      "Lack of cleanliness",
+      "No drinking water",
+      "No toilet facility",
+      "Medicines unavailable",
+      "Ambulance service unavailable",
+      "Long waiting time",
+      "Medical negligence/Wrong treatment",
+      "Beds unavailable",
+      "Delayed medical reports",
+      "Emergency services unavailable",
+      "No parking facility",
+      "Overcharging by private hospitals",
+      "Blood bank shortage",
+      "Vaccination not available",
+      "Ayushman card issues" 
+    ]
+  },
+  {
+    "name": "Education Department",
+    "category": [
+      "Teacher not present",
+      "Excessive school fees",
+      "Lack of cleanliness",
+      "No drinking water",
+      "No toilet facility",
+      "Poor Mid-day meal quality",
+      "Dilapidated school building",
+      "Misbehavior with students",
+      "Study material unavailable",
+      "Admission related issues",
+      "No school bus facility",
+      "Delayed exam results",
+      "No sports facilities",
+      "Lack of security",
+      "No digital learning tools",
+      "Teacher shortage",
+      "Illegal tuition classes", 
+      "RTE admission problems" 
+    ]
+  },
+  {
+    "name": "Municipal Corporation",
+    "category": [
+      "Irregular garbage collection",
+      "Blocked drainage",
+      "Gutter overflow",
+      "Filth on roads",
+      "Street lights non-functional",
+      "Broken roads",
+      "Poor park maintenance",
+      "Waterlogging during rain",
+      "Mosquito/Pest menace",
+      "Dirty public toilets",
+      "Lack of dustbins",
+      "Illegal construction",
+      "Stray animal menace",
+      "Traffic due to waterlogging",
+      "General city untidiness",
+      "Illegal hoardings", 
+      "Encroachment on footpath", 
+      "Birth/Death certificate delay" 
+    ]
+  },
+  {
+    "name": "Water Supply Department",
+    "category": [
+      "No water supply",
+      "Low water pressure",
+      "Contaminated water",
+      "Pipeline leakage",
+      "High water bills",
+      "New connection delay",
+      "Unclean water tanks",
+      "Irregular water timings",
+      "Water wastage",
+      "Lack of storage facilities",
+      "Broken public taps",
+      "Damaged water lines",
+      "Water tanker mafia issues",
+      "Illegal water motor usage" 
+    ]
+  },
+  {
+    "name": "Electricity Department",
+    "category": [
+      "Frequent power cuts",
+      "High electricity bills",
+      "New connection issues",
+      "Faulty transformer",
+      "Broken wires",
+      "Street lights not working",
+      "Faulty meter",
+      "Low voltage",
+      "Sudden power failure",
+      "Hazardous hanging wires",
+      "Incorrect billing",
+      "Solar rooftop subsidy issues", 
+      "Power theft reports" 
+    ]
+  },
+  {
+    "name": "Police Department",
+    "category": [
+      "Refusal to file FIR",
+      "Police misbehavior",
+      "Inadequate security",
+      "Traffic rule violations",
+      "Illegal activities",
+      "Vehicle theft",
+      "Lack of night patrolling",
+      "Women safety issues",
+      "Noise pollution",
+      "Gambling/Drug activities",
+      "Cyber crime reports", 
+      "Bribery/Corruption complaints", 
+      "Missing person report issues" 
+    ]
+  },
+  {
+    "name": "Revenue Department",
+    "category": [
+      "Land record issues",
+      "7/12 extract unavailable",
+      "Land survey problems",
+      "Land encroachment disputes",
+      "Property registration delay",
+      "Delayed mutation (name transfer)",
+      "Incorrect land documents",
+      "Income certificate delay", 
+      "Caste certificate issues", 
+      "EWS certificate delay" 
+    ]
+  },
+  {
+    "name": "Civil Supplies (Ration Card)",
+    "category": [
+      "Ration shop not opening on time",
+      "Poor quality of grains",
+      "Black marketing of ration",
+      "Ration card update issues",
+      "Biometric failure at shop",
+      "Under-weighting of grains",
+      "Kerosene/Gas agency issues" 
+    ]
+  },
+  {
+    "name": "Tourism Department",
+    "category": [
+      "Poor maintenance of tourist spots",
+      "Lack of tourist information centers",
+      "Inadequate safety for tourists",
+      "Overcharging by local guides or vendors",
+      "Lack of clean public toilets at sites",
+      "Poor connectivity to tourist destinations"
+    ]
+  },
+  {
+    "name": "Social Welfare Department",
+    "category": [
+      "Delay in pension payments (Old age/Widow)",
+      "Scholarship issues for minority students",
+      "Problems in issuing Caste/Income certificates",
+      "Inadequate facilities in government shelters",
+      "Child labor reports",
+      "Disability certificate related issues"
+    ]
+  },
+  {
+    "name": "Forest and Environment Department",
+    "category": [
+      "Illegal tree cutting (Deforestation)",
+      "Encroachment on forest land",
+      "Air pollution from nearby factories",
+      "Industrial waste dumping in rivers",
+      "Wild animal menace in residential areas",
+      "Illegal mining activities"
+    ]
+  },
+  {
+    "name": "Post and Communication",
+    "category": [
+      "Delayed mail/parcel delivery",
+      "Rude behavior of post office staff",
+      "Savings account/Passbook entry issues",
+      "Speed Post tracking not working",
+      "Lack of staff at local post office"
+    ]
+  },
+  {
+    "name": "Civil Supplies (Ration Card)",
+    "category": [
+      "Ration shop not opening on time",
+      "Poor quality of grains",
+      "Black marketing of kerosene/sugar",
+      "Name addition/deletion in Ration card delayed",
+      "Ration shop owner misbehavior",
+      "Biometric/Fingerprint machine issues"
+    ]
+  },
+  {
+    "name": "Employment & Training",
+    "category": [
+      "Employment exchange registration issues",
+      "Lack of vocational training centers",
+      "Unemployment allowance delays",
+      "Information regarding job fairs not provided"
+    ]
+  },
+  {
+    "name": "Women and Child Development",
+    "category": [
+      "Anganwadi center not functional",
+      "Nutritional food not provided to children",
+      "Domestic violence reports",
+      "Inadequate monitoring of childcare centers"
+    ]
+  },
+  {
+    "name": "Labour Department",
+    "category": [
+      "Minimum wage violations",
+      "Unsafe working conditions in factories",
+      "Delayed salary/wage payments",
+      "Contract labor exploitation issues"
+    ]
+  }
+]

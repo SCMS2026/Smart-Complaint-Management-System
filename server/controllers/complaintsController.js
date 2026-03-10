@@ -23,8 +23,9 @@ const createComplaint = async (req, res) => {
             description,
             image: image || null
         });
+        console.log('Creating complaint with data:', newComplaint);
         await newComplaint.save();
-        res.status(201).json({ message: 'Complaint created successfully', complaint: newComplaint });
+        res.status(201).json({ message: 'Complaint created successfully', complaint: newComplaint },token);
     } catch (error) {
         console.error('Error creating complaint:', error);
         res.status(500).json({ message: 'Error creating complaint', error: error.message });

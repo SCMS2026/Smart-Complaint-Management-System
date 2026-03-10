@@ -3,15 +3,14 @@ const XLSX = require('xlsx');
 
 const getAssets = async (req, res) => {
     try {
-        const assets = await Asset.find();
+        const assets = await Asset.find()
+        console.log('Fetched assets', assets);
         res.status(200).json({ assets });
     } catch (error) {
         res.status(500).json({ message: 'Error fetching assets', error: error.message });
     }
 };
 
-// import an Excel file containing asset rows
-// expected columns: name, location, category (case‑insensitive headers)
 const importAssets = async (req, res) => {
     if (!req.file || !req.file.buffer) {
         return res.status(400).json({ message: 'No file uploaded' });
@@ -32,13 +31,12 @@ const importAssets = async (req, res) => {
 
         rows.forEach((row, index) => {
             const name = row.name || row.Name || row.NAME;
-            const location = row.location || row.Location || row.LOCATION;
             const category = row.category || row.Category || row.CATEGORY;
 
-            if (!name || !location || !category) {
+            if (!name || !category) {
                 errors.push({ row: index + 2, message: 'Missing required field(s)' });
             } else {
-                assetsToInsert.push({ name: name.toString(), location: location.toString(), category: category.toString() });
+                assetsToInsert.push({ name: name.toString(), category: category.toString() });
             }
         });
 
@@ -61,11 +59,11 @@ const importAssets = async (req, res) => {
 // create a single new asset (name, location, category in req.body)
 const createAsset = async (req, res) => {
     try {
-        const { name, location, category } = req.body;
-        if (!name || !location || !category) {
+        const { name, category } = req.body;
+        if (!name || !category) {
             return res.status(400).json({ message: 'Missing fields for asset' });
         }
-        const asset = new Asset({ name, location, category });
+        const asset = new Asset({ name, category });
         await asset.save();
         res.status(201).json({ asset });
     } catch (error) {

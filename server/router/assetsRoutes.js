@@ -8,7 +8,7 @@ const multer = require('multer');
 const upload = multer({ storage: multer.memoryStorage() });
 
 // anyone authenticated can view list of assets
-router.get('/', authMiddleware, assetsController.getAssets);
+router.get('/',  assetsController.getAssets);
 
 // allow admin to add individual asset via JSON
 router.post('/', authMiddleware, allowRoles('admin'), assetsController.createAsset);

@@ -1,10 +1,17 @@
 import { getToken } from "./auth";
-
+import axios from "axios";
 const API = "http://localhost:5000/complaints";
-
 const getAuthHeader = () => {
   const token = getToken();
   return token ? { Authorization: `Bearer ${token}` } : {};
+};
+
+const handleResponse = async (res) => {
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.message || "Request failed");
+  }
+  return res.json();
 };
 
 export const fetchComplaints = async () => {
@@ -14,27 +21,44 @@ export const fetchComplaints = async () => {
       headers: { "Content-Type": "application/json", ...getAuthHeader() },
       credentials: "include",
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message || "Failed to fetch complaints");
+    const data = await handleResponse(res);
     return { success: true, complaints: data.complaints };
   } catch (err) {
     return { success: false, message: err.message };
   }
 };
 
-export const createComplaintRequest = async (complaint) => {
+ export const createComplaintRequest = async (complaintData) => {
   try {
+    const token =getToken();
+    console.log("createComplaintRequest called with data:", complaintData, "token:", token);
+
+    if (!token) {
+      console.error("Token missing. Please login again.");
+      return { success: false, message: "User not logged in" };
+    }
+
     const res = await fetch(API, {
       method: "POST",
-      headers: { "Content-Type": "application/json", ...getAuthHeader() },
-      credentials: "include",
-      body: JSON.stringify(complaint),
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify(complaintData)
     });
+    
+    console.log("Response from create complaint API:", res);
     const data = await res.json();
-    if (!res.ok) throw new Error(data.message || "Failed to create complaint");
-    return { success: true, complaint: data.complaint };
-  } catch (err) {
-    return { success: false, message: err.message };
+
+    if (!res.ok) {
+      console.error("Token invalid or expired");
+      return { success: false, message: data.message || "Unauthorized" };
+    }
+    console.log("Complaint created successfully:", data);
+    return { success: true, complaint: data };
+
+  } catch (error) {
+    return { success: false, message: "Server connection failed" };
   }
 };
 
@@ -46,8 +70,7 @@ export const updateComplaintStatusRequest = async (id, status) => {
       credentials: "include",
       body: JSON.stringify({ status }),
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message || "Failed to update status");
+    const data = await handleResponse(res);
     return { success: true, complaint: data.complaint };
   } catch (err) {
     return { success: false, message: err.message };
@@ -61,8 +84,7 @@ export const deleteComplaintRequest = async (id) => {
       headers: { "Content-Type": "application/json", ...getAuthHeader() },
       credentials: "include",
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message || "Failed to delete complaint");
+    await handleResponse(res);
     return { success: true };
   } catch (err) {
     return { success: false, message: err.message };
@@ -76,8 +98,7 @@ export const getComplaintById = async (id) => {
       headers: { "Content-Type": "application/json", ...getAuthHeader() },
       credentials: "include",
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message || "Failed to fetch complaint");
+    const data = await handleResponse(res);
     return { success: true, complaint: data.complaint };
   } catch (err) {
     return { success: false, message: err.message };
@@ -92,8 +113,7 @@ export const addCommentToComplaint = async (id, text) => {
       credentials: "include",
       body: JSON.stringify({ text }),
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message || "Failed to add comment");
+    const data = await handleResponse(res);
     return { success: true, complaint: data.complaint };
   } catch (err) {
     return { success: false, message: err.message };
@@ -107,8 +127,7 @@ export const markComplaintAsFake = async (id) => {
       headers: { "Content-Type": "application/json", ...getAuthHeader() },
       credentials: "include",
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message || "Failed to mark as fake");
+    const data = await handleResponse(res);
     return { success: true, complaint: data.complaint };
   } catch (err) {
     return { success: false, message: err.message };

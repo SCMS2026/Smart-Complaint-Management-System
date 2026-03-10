@@ -1,7 +1,6 @@
 const express = require('express');
 const session = require('express-session');
 const path = require('path');
-// require('dotenv').config({ path: path.join(__dirname, '.env') });
 const connectDB = require('./config/DB');
 const passport = require('passport');
 const cors = require('cors');
@@ -109,20 +108,17 @@ app.use(passport.session());
 // mount API routers
 app.use('/auth', authrouter);
 app.use('/complaints', complaintRouter);
-app.use('/permissions', permissionRouter); // new permission endpoints
-app.use('/assets', assetsRouter); // list available assets
+app.use('/permissions', permissionRouter); 
+app.use('/assets', assetsRouter); 
 
-// Serve static files from client build
 if (!isDev) {
   app.use(express.static(path.join(__dirname, '../client/dist')));
 }
 
-// Debug route
 const debugRouter = require('./routes/debug');
 app.use('/debug', debugRouter);
 
 
-// Serve React app for any non-API routes (SPA routing)
 if (!isDev) {
   app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, '../client/dist/index.html'));

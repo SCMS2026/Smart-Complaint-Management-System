@@ -1,26 +1,23 @@
 const jwt = require('jsonwebtoken');
 
-const authMiddleware = (req, res, next) => {
-    // Check for session-based authentication (OAuth users)
-    if (req.isAuthenticated && req.isAuthenticated()) {
-        return next();
-    }
+const jwt = require("jsonwebtoken");
 
-    // Check for JWT token in headers
-    const header = req.headers.authorization;
+module.exports = function (req, res, next) {
 
-    if (!header)
-        return res.status(401).json({ message: "Token required" });
+  const authHeader = req.headers.authorization;
 
-    const token = header.split(" ")[1];
+  if (!authHeader) {
+    return res.status(401).json({ message: "Token required" });
+  }
 
-    try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        req.user = decoded;
-        next();
-    } catch (error) {
-        res.status(401).json({ message: "Invalid token", error: error.message });
-    }
+  const token = authHeader.split(" ")[1];
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch (err) {
+    return res.status(401).json({ message: "Invalid or expired token" });
+  }
 };
-
 module.exports = authMiddleware;
