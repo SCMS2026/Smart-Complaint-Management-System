@@ -19,11 +19,7 @@ const createComplaint = async (req, res) => {
     console.log("1", req.body)
     const userId = req.user?.id;
 
-    if (!userId) {
-      return res.status(401).json({
-        message: "User not authenticated",
-      });
-    }
+     
 
     // Required field validation
     if (
@@ -58,7 +54,7 @@ const createComplaint = async (req, res) => {
       updatedAt: new Date(),
     });
     console.log("2",complaint)
-    await complaint.createdAt();
+    await complaint.save();
 
     res.status(201).json({
       message: "Complaint created successfully",

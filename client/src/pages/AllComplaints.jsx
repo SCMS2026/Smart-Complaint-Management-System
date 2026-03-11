@@ -73,6 +73,7 @@ const AllComplaints = () => {
       setFormError("Please fill all required fields");
       return;
     }
+
     const payload = {
       ...complaintData,
       issue: selectedAsset?.issue || "",
@@ -103,33 +104,50 @@ const AllComplaints = () => {
     }
   };
 
-  if (loading) return <div>Loading...</div>;
+  if (loading)
+    return (
+      <div className="flex justify-center items-center h-screen text-xl font-semibold">
+        Loading...
+      </div>
+    );
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">My Complaints</h1>
+    <div className="min-h-screen min-w-screen bg-gray-100 p-6">
 
-      {/* Complaint Form */}
+      <h1 className="text-3xl font-bold mb-6 text-gray-800">
+        My Complaints
+      </h1>
+
+      {/* FORM */}
 
       <form
         onSubmit={handleSubmit}
-        className="bg-white shadow p-4 rounded mb-6"
+        className="bg-white p-6 rounded-xl  shadow-lg mb-10 max-w-screen"
       >
-        <h2 className="text-lg font-semibold mb-3">Create Complaint</h2>
+        <h2 className="text-xl font-semibold mb-4">
+          Create Complaint
+        </h2>
 
-        {formError && <p className="text-red-600">{formError}</p>}
+        {formError && (
+          <p className="bg-red-100 text-red-600 p-2 rounded mb-3">
+            {formError}
+          </p>
+        )}
 
-        {formSuccess && <p className="text-green-600">{formSuccess}</p>}
+        {formSuccess && (
+          <p className="bg-green-100 text-green-600 p-2 rounded mb-3">
+            {formSuccess}
+          </p>
+        )}
 
-        <div className="flex flex-col gap-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
           <input
             type="text"
             value={currentUser?.name || ""}
             disabled
             className="border p-2 rounded bg-gray-100"
           />
-
-          {/* Department */}
 
           <select
             value={complaintData.assetId}
@@ -150,8 +168,6 @@ const AllComplaints = () => {
               </option>
             ))}
           </select>
-
-          {/* Category */}
 
           <select
             value={complaintData.category}
@@ -174,7 +190,7 @@ const AllComplaints = () => {
 
           <input
             type="text"
-            placeholder="location"
+            placeholder="Location"
             value={complaintData.location}
             onChange={(e) =>
               setComplaintData({
@@ -259,10 +275,8 @@ const AllComplaints = () => {
                 description: e.target.value,
               })
             }
-            className="border p-2 rounded"
+            className="border p-2 rounded md:col-span-2"
           />
-
-          {/* Image Upload */}
 
           <input
             type="file"
@@ -288,36 +302,55 @@ const AllComplaints = () => {
             <img
               src={complaintData.image}
               alt="preview"
-              className="w-32 mt-2 rounded"
+              className="w-32 rounded shadow"
             />
           )}
-
-          <button
-            type="submit"
-            className="bg-blue-600 text-white p-2 rounded mt-2"
-          >
-            Submit Complaint
-          </button>
         </div>
+
+        <button
+          type="submit"
+          className="mt-5 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
+        >
+          Submit Complaint
+        </button>
       </form>
 
-      {/* Complaints List */}
+      {/* COMPLAINT LIST */}
 
       {complaints.length === 0 ? (
-        <p>No complaints found</p>
+        <p className="text-gray-500">No complaints found</p>
       ) : (
-        <div className="space-y-4">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {complaints.map((c) => (
-            <div key={c._id} className="bg-white shadow p-4 rounded">
-              <h3 className="font-bold">{c.issue}</h3>
+            <div
+              key={c._id}
+              className="bg-white  rounded-xl shadow-md overflow-hidden hover:shadow-xl transition"
+            >
+              {c.image && (
+                <img
+                  src={c.image}
+                  alt=""
+                  className="h-80 w-full object-cover"
+                />
+              )}
 
-              <p>{c.description}</p>
+              <div className="p-4">
+                <h3 className="font-bold text-lg text-gray-800">
+                  {c.issue}
+                </h3>
 
-              <p className="text-sm text-gray-500">
-                {c.city} - {c.village}
-              </p>
+                <p className="text-gray-600 text-sm mt-1">
+                  {c.description}
+                </p>
 
-              <p className="text-sm mt-1">Status: {c.status}</p>
+                <p className="text-gray-500 text-sm mt-2">
+                  {c.city} - {c.village}
+                </p>
+
+                <span className="inline-block mt-3 px-3 py-1 text-xs rounded-full bg-yellow-100 text-yellow-700">
+                  {c.status}
+                </span>
+              </div>
             </div>
           ))}
         </div>
