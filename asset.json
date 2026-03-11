@@ -1,6 +1,6 @@
 [
   {
-    "name": "Health Department",
+    "issue": "Health Department",
     "category": [
       "Excessive fees charged",
       "Doctor not present",
@@ -23,7 +23,7 @@
     ]
   },
   {
-    "name": "Education Department",
+    "issue": "Education Department",
     "category": [
       "Teacher not present",
       "Excessive school fees",
@@ -46,7 +46,7 @@
     ]
   },
   {
-    "name": "Municipal Corporation",
+    "issue": "Municipal Corporation",
     "category": [
       "Irregular garbage collection",
       "Blocked drainage",
@@ -69,7 +69,7 @@
     ]
   },
   {
-    "name": "Water Supply Department",
+    "issue": "Water Supply Department",
     "category": [
       "No water supply",
       "Low water pressure",
@@ -88,7 +88,7 @@
     ]
   },
   {
-    "name": "Electricity Department",
+    "issue": "Electricity Department",
     "category": [
       "Frequent power cuts",
       "High electricity bills",
@@ -106,7 +106,7 @@
     ]
   },
   {
-    "name": "Police Department",
+    "issue": "Police Department",
     "category": [
       "Refusal to file FIR",
       "Police misbehavior",
@@ -124,14 +124,14 @@
     ]
   },
   {
-    "name": "Revenue Department",
+    "issue": "Revenue Department",
     "category": [
       "Land record issues",
       "7/12 extract unavailable",
       "Land survey problems",
       "Land encroachment disputes",
       "Property registration delay",
-      "Delayed mutation (name transfer)",
+      "Delayed mutation (issue transfer)",
       "Incorrect land documents",
       "Income certificate delay", 
       "Caste certificate issues", 
@@ -139,7 +139,7 @@
     ]
   },
   {
-    "name": "Civil Supplies (Ration Card)",
+    "issue": "Civil Supplies (Ration Card)",
     "category": [
       "Ration shop not opening on time",
       "Poor quality of grains",
@@ -151,7 +151,7 @@
     ]
   },
   {
-    "name": "Tourism Department",
+    "issue": "Tourism Department",
     "category": [
       "Poor maintenance of tourist spots",
       "Lack of tourist information centers",
@@ -162,7 +162,7 @@
     ]
   },
   {
-    "name": "Social Welfare Department",
+    "issue": "Social Welfare Department",
     "category": [
       "Delay in pension payments (Old age/Widow)",
       "Scholarship issues for minority students",
@@ -173,7 +173,7 @@
     ]
   },
   {
-    "name": "Forest and Environment Department",
+    "issue": "Forest and Environment Department",
     "category": [
       "Illegal tree cutting (Deforestation)",
       "Encroachment on forest land",
@@ -184,7 +184,7 @@
     ]
   },
   {
-    "name": "Post and Communication",
+    "issue": "Post and Communication",
     "category": [
       "Delayed mail/parcel delivery",
       "Rude behavior of post office staff",
@@ -194,18 +194,18 @@
     ]
   },
   {
-    "name": "Civil Supplies (Ration Card)",
+    "issue": "Civil Supplies (Ration Card)",
     "category": [
       "Ration shop not opening on time",
       "Poor quality of grains",
       "Black marketing of kerosene/sugar",
-      "Name addition/deletion in Ration card delayed",
+      "issue addition/deletion in Ration card delayed",
       "Ration shop owner misbehavior",
       "Biometric/Fingerprint machine issues"
     ]
   },
   {
-    "name": "Employment & Training",
+    "issue": "Employment & Training",
     "category": [
       "Employment exchange registration issues",
       "Lack of vocational training centers",
@@ -214,7 +214,7 @@
     ]
   },
   {
-    "name": "Women and Child Development",
+    "issue": "Women and Child Development",
     "category": [
       "Anganwadi center not functional",
       "Nutritional food not provided to children",
@@ -223,7 +223,7 @@
     ]
   },
   {
-    "name": "Labour Department",
+    "issue": "Labour Department",
     "category": [
       "Minimum wage violations",
       "Unsafe working conditions in factories",

@@ -1,9 +1,26 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-const assetSchema = new mongoose.Schema({
-    name: { type: String, required: true },
-    category: { type: Array, required: true },
-});
+const assetSchema = new mongoose.Schema(
+  {
+    issue: {
+      type: String,
+      required: true,
+      trim: true
+    },
 
-const Asset = mongoose.model('Asset', assetSchema);
+    category: [
+      {
+        type: String,
+        required: true,
+        trim: true
+      }
+    ]
+  },
+  {
+    timestamps: true
+  }
+);
+
+const Asset = mongoose.model("Asset", assetSchema);
+
 module.exports = Asset;

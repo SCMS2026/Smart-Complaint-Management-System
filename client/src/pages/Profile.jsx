@@ -96,7 +96,7 @@ const Profile = () => {
             {/* Information Grid */}
             <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6 border-t border-gray-100 dark:border-gray-700 pt-8">
               <div>
-                <h3 className="text-sm font-medium text-gray-500 uppercase mb-2">Email Address</h3>
+                <h3 className="text-sm font-medium text-gray-500 uppercase mb-2">Email location</h3>
                 <p className="text-gray-900 dark:text-gray-200">{user.email || "Not provided"}</p>
               </div>
               <div>

@@ -32,7 +32,7 @@ export const fetchComplaints = async () => {
   try {
     const token =getToken();
     console.log("createComplaintRequest called with data:", complaintData, "token:", token);
-
+  
     if (!token) {
       console.error("Token missing. Please login again.");
       return { success: false, message: "User not logged in" };
@@ -46,7 +46,7 @@ export const fetchComplaints = async () => {
       },
       body: JSON.stringify(complaintData)
     });
-    
+      
     console.log("Response from create complaint API:", res);
     const data = await res.json();
 
@@ -54,6 +54,7 @@ export const fetchComplaints = async () => {
       console.error("Token invalid or expired");
       return { success: false, message: data.message || "Unauthorized" };
     }
+
     console.log("Complaint created successfully:", data);
     return { success: true, complaint: data };
 

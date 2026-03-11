@@ -127,7 +127,7 @@ const Signup = () => {
 
             {/* Email */}
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-slate-300 ml-1">Email Address</label>
+              <label className="text-sm font-medium text-slate-300 ml-1">Email location</label>
               <input
                 type="email"
                 name="email"
