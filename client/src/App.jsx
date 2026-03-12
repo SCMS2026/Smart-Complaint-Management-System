@@ -3,6 +3,7 @@ import Navbar from "./pages/Navbar";
 import { Routes, Route } from "react-router-dom";
 import "./App.css";
 import Login from "./pages/Login";
+import Home from "./pages/Home";
 import Signup from "./pages/Signup";
 import GoogleSuccess from "./pages/GoogleSuccess";
 import { getCurrentUser } from "./services/auth";
@@ -36,6 +37,7 @@ function App() {
     <div>
       <main className="container">
         <Routes>
+          <Route path="/" element={<Home />} />
           <Route path="/" element={<Navbar user={user} />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
