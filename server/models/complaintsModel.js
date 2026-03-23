@@ -7,7 +7,10 @@ const complaintSchema = new mongoose.Schema(
       ref: "User",
       required: true
     },
-
+    department_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Department"
+    },
     assetId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Asset"
@@ -24,28 +27,28 @@ const complaintSchema = new mongoose.Schema(
     },
 
     location: {
-        type: String,
-        required: true
+      type: String,
+      required: true
     },
-    city:  {
-        type: String,
-        required: true
+    city: {
+      type: String,
+      required: true
     },
-    District:  {
-        type: String,
-        required: true
+    District: {
+      type: String,
+      required: true
     },
-    Taluka:  {
-        type: String,
-        required: true
+    Taluka: {
+      type: String,
+      required: true
     },
-    village:  {
-        type: String,
-        required: true
+    village: {
+      type: String,
+      required: true
     },
-    pincode:  {
-        type: String,
-        required: true
+    pincode: {
+      type: String,
+      required: true
     },
 
     description: {
@@ -58,11 +61,27 @@ const complaintSchema = new mongoose.Schema(
       default: null
     },
 
+
+    priority: {
+      type: String,
+      enum: ["low", "medium", "high", "critical"],
+      default: "medium"
+    },
+
     status: {
       type: String,
-      enum: ["pending", "in_progress", "resolved"],
-      default: "pending"
-    }
+      enum: [
+        "submitted",
+        "under_review",
+        "worker_assigned",
+        "in_progress",
+        "completed",
+        "user_approval",
+        "closed",
+        "rejected"
+      ],
+      default: "submitted"
+    },
   },
   {
     timestamps: true
