@@ -139,7 +139,7 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen min-w-screen bg-gray-100">
+    <div className="min-h-screen min-w-screen pt-20 ">
       {/* Header */}
       <div className="bg-gradient-to-r from-slate-900 to-slate-800 text-white p-6 shadow-lg">
         <h1 className="text-3xl font-bold text-center">Admin Dashboard</h1>

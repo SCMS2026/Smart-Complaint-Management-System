@@ -39,7 +39,7 @@ const Navbar = () => {
   return (
     <header className="fixed top-0 left-0 w-full z-50">
       {/* Glass Navbar */}
-      <div className="backdrop-blur-xl bg-white/70 border-b border-white/30 shadow-sm">
+      <div className="backdrop-blur-xl bg-white/70 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
 
           {/* ================= LOGO ================= */}

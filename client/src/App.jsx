@@ -35,10 +35,10 @@ function App() {
 
   return (
     <div>
+      <Navbar user={user} />
       <main className="container">
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/" element={<Navbar user={user} />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/google-success" element={<GoogleSuccess />} />

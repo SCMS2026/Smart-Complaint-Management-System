@@ -32,6 +32,8 @@ app.use(express.urlencoded({ extended: true }));
 const authrouter = require('./router/authRoutes');
 const complaintRouter = require('./router/complaintRoutes');
 const permissionRouter = require('./router/permissionRoutes');
+const departmentRouter = require('./router/departmentRoutes');
+const workerTaskRouter = require('./router/workerTaskRoutes');
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const assetsRouter = require('./router/assetsRoutes');
@@ -109,7 +111,9 @@ app.use(passport.session());
 app.use('/auth', authrouter);
 app.use('/complaints', complaintRouter);
 app.use('/permissions', permissionRouter); 
-app.use('/assets', assetsRouter); 
+app.use('/assets', assetsRouter);
+app.use('/departments', departmentRouter);
+app.use('/worker-tasks', workerTaskRouter); 
 
 if (!isDev) {
   app.use(express.static(path.join(__dirname, '../client/dist')));
