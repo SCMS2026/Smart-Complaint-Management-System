@@ -228,16 +228,27 @@ const getAllUsers = async (req, res) => {
 };
 
 const setUserRole = async (req, res) => {
-    const { role } = req.body;
+    const { role, department_id } = req.body;
 
-    if (!["user", "admin", "analyzer"].includes(role))
+    if (!["user", "admin", "super_admin", "department_admin", "worker", "contractor", "analyzer"].includes(role))
         return res.status(400).json({ message: "Invalid role" });
+
+    if (role === 'department_admin' && !department_id) {
+        return res.status(400).json({ message: "Department is required for department admin" });
+    }
+
+    const updateData = { role };
+    if (department_id) updateData.department_id = department_id;
 
     const user = await User.findByIdAndUpdate(
         req.params.id,
-        { role },
+        updateData,
         { new: true }
     ).select("-password");
+
+    if (!user) {
+        return res.status(404).json({ message: "User not found" });
+    }
 
     res.json(user);
 };

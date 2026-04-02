@@ -1,8 +1,10 @@
-import React,{ useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { fetchComplaints } from "../services/complaints";
 import { fetchPermissions } from "../services/permissions";
 import { importAssets } from "../services/assets";
+import { fetchUsers } from "../services/auth";
+import { createWorkerTask } from "../services/workerTask";
 import ComplaintDetail from "./ComplaintDetail";
 
 const AdminDashboard = () => {
@@ -27,11 +29,14 @@ const AdminDashboard = () => {
   const [error, setError] = useState("");
 
   const [permissions, setPermissions] = useState([]);
+  const [workers, setWorkers] = useState([]);
   const [selectedComplaintId, setSelectedComplaintId] = useState(null);
+  const [selectedWorkerId, setSelectedWorkerId] = useState("");
+  const [assignMessage, setAssignMessage] = useState("");
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("user") || "null");
-    if (!user || user.role !== "admin") {
+    if (!user || (user.role !== "admin" && user.role !== "department_admin")) {
       nav("/");
       return;
     }
@@ -76,8 +81,20 @@ const AdminDashboard = () => {
       }
     };
 
+    const loadWorkers = async () => {
+      const res = await fetchUsers();
+      if (res.success) {
+        const admin = JSON.parse(localStorage.getItem("user") || "null");
+        const filtered = res.users.filter(
+          (u) => u.role === "worker" && u.department_id === admin?.department_id
+        );
+        setWorkers(filtered);
+      }
+    };
+
     loadComplaints();
     loadPermissions();
+    loadWorkers();
   }, [nav]);
 
   const getStatusColor = (status) => {
@@ -138,16 +155,39 @@ const AdminDashboard = () => {
     URL.revokeObjectURL(url);
   };
 
+  const assignWorker = async (complaint) => {
+    if (!selectedWorkerId) {
+      setAssignMessage('Please select a worker to assign.');
+      return;
+    }
+
+    const payload = {
+      complaint_id: complaint._id,
+      worker_id: selectedWorkerId,
+      status: 'assigned'
+    };
+
+    const res = await createWorkerTask(payload);
+    if (res.success) {
+      setAssignMessage(`Complaint assigned to worker successfully.`);
+      await fetchComplaints().then((r) => {
+        if (r.success) setComplaints(r.complaints || []);
+      });
+    } else {
+      setAssignMessage(res.message || 'Failed to assign worker.');
+    }
+  };
+
   return (
     <div className="min-h-screen min-w-screen pt-20 ">
       {/* Header */}
-      <div className="bg-gradient-to-r from-slate-900 to-slate-800 text-white p-6 shadow-lg">
+      <div className="bg-linear-to-r from-slate-900 to-slate-800 text-white p-6 shadow-lg">
         <h1 className="text-3xl font-bold text-center">Admin Dashboard</h1>
       </div>
 
       {/* Loading State */}
       {loading && (
-        <div className="flex justify-center items-center min-h-[400px]">
+        <div className="flex justify-center items-center min-h-100">
           <div className="text-lg text-gray-600">Loading complaints...</div>
         </div>
       )}
@@ -253,11 +293,49 @@ const AdminDashboard = () => {
             {/* Recent Complaints */}
             <div className="lg:col-span-2 bg-white rounded-lg shadow-md p-6">
               <h2 className="text-xl font-bold mb-4 text-gray-800">Recent Complaints</h2>
-              {complaints.length === 0 ? (
+              {complaints.length === 0 && (
                 <div className="text-center py-8 text-gray-500">No complaints found</div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
+              )}
+
+              {complaints.length > 0 && (
+                <>
+                  <div className="mb-4 bg-gray-100 p-4 rounded">
+                    <p className="font-semibold text-gray-700">Assign Worker to Selected Complaint</p>
+                    <p className="text-sm text-gray-600">Selected Complaint: {selectedComplaintId ? selectedComplaintId.slice(-6) : 'None'}</p>
+                    <div className="mt-2 flex gap-2 flex-wrap">
+                      <select
+                        value={selectedWorkerId}
+                        onChange={(e) => setSelectedWorkerId(e.target.value)}
+                        className="border rounded px-3 py-2"
+                      >
+                        <option value="">Select worker</option>
+                        {workers.map((w) => (
+                          <option key={w._id} value={w._id}>{w.name} ({w.email})</option>
+                        ))}
+                      </select>
+                      <button
+                        onClick={() => {
+                          if (!selectedComplaintId) {
+                            setAssignMessage('Please select a complaint first from table below.');
+                            return;
+                          }
+                          const comp = complaints.find(c => c._id === selectedComplaintId);
+                          if (!comp) {
+                            setAssignMessage('Selected complaint not found.');
+                            return;
+                          }
+                          assignWorker(comp);
+                        }}
+                        className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+                      >
+                        Assign Worker
+                      </button>
+                    </div>
+                    {assignMessage && <p className="text-sm text-green-700 mt-2">{assignMessage}</p>}
+                  </div>
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-gray-200">
                         <th className="text-left py-3 px-4 font-semibold text-gray-700">ID</th>
@@ -284,7 +362,7 @@ const AdminDashboard = () => {
                     </tbody>
                   </table>
                 </div>
-              )}
+              </>)}
             </div>
 
             {/* Right Column */}

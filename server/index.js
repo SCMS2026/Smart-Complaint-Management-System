@@ -119,7 +119,7 @@ if (!isDev) {
   app.use(express.static(path.join(__dirname, '../client/dist')));
 }
 
-const debugRouter = require('./routes/debug');
+const debugRouter = require('./router/debug');
 app.use('/debug', debugRouter);
 
 

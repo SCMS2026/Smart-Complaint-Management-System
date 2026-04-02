@@ -1,4 +1,5 @@
 const Complaint = require("../models/complaintsModel");
+const Asset = require("../models/assetsModels");
 
 // Create Complaint
 const createComplaint = async (req, res) => {
@@ -37,8 +38,17 @@ const createComplaint = async (req, res) => {
       });
     }
 
+    let department_id = null;
+    if (assetId) {
+      const asset = await Asset.findById(assetId);
+      if (asset) {
+        department_id = asset.department_id;
+      }
+    }
+
     const complaint = new Complaint({
       userId,
+      department_id,
       assetId: assetId || null,
       category,
       issue,
@@ -75,14 +85,20 @@ const getComplaints = async (req, res) => {
 
     if (req.user && req.user.role === "user") {
       filter.userId = req.user.id;
+    } else if (req.user && (req.user.role === "admin" || req.user.role === "department_admin")) {
+      if (req.user.department_id) {
+        filter.department_id = req.user.department_id;
+      }
     }
 
     const complaints = await Complaint.find(filter)
       .populate("userId", "name")
-      .populate("assetId", "name");
+      .populate("assetId", "name")
+      .populate("department_id", "name");
 
     res.status(200).json({ complaints });
   } catch (error) {
+    console.error("Get complaints error:", error);
     res.status(500).json({
       message: "Error fetching complaints",
     });

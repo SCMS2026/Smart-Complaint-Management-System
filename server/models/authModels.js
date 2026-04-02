@@ -1,72 +1,30 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-const UserSchema = new mongoose.Schema({
-    name: {
-        type: String,
-        required: true
-    },
-    email: {
-        type: String,
-        required: true,
-        unique: true
-    },
-    password: {
-        type: String,
-        default: null
-    },
-    profileImage: {
-        type: String,
-        default: null
-    },
-    googleId: {
-        type: String,
-        unique: true,
-        sparse: true
-    },
-    googleProfile: {
-        provider: String,
-        id: String,
-        displayName: String,
-        photos: [{
-            value: String
-        }]
-    },
-    role: {
-        type: String,
-        enum: [
-            "user",
-            "super_admin",
-            "department_admin",
-            "worker",
-            "analyzer"
-        ],
-        default: "user"
-    },
+const userSchema = new mongoose.Schema({
+  name: String,
+  email: { type: String, unique: true },
+  password: String,
 
-    department_id: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Department",
-        default: null
-    },
+  role: {
+    type: String,
+    enum: ["super_admin", "department_admin", "worker", "user", "analyzer"],
+    default: "user"
+  },
 
-    current_tasks: {
-        type: Number,
-        default: 0
-    },
-    isVerified: {
-        type: Boolean,
-        default: false
-    },
-    createdAt: {
-        type: Date,
-        default: Date.now
-    },
-    updatedAt: {
-        type: Date,
-        default: Date.now
-    }
-})
+  department: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Department",
+    default: null
+  },
 
-const User = mongoose.model('User', UserSchema);
+  phone: String,
 
-module.exports = User;
+  status: {
+    type: String,
+    enum: ["active", "inactive"],
+    default: "active"
+  }
+
+}, { timestamps: true });
+
+module.exports = mongoose.model("User", userSchema);

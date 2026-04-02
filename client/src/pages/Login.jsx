@@ -54,14 +54,14 @@ const Login = () => {
     <div className="min-h-screen flex items-center justify-center bg-slate-50 relative overflow-hidden font-sans selection:bg-blue-200 p-6">
 
       {/* Background Decorative Elements */}
-      <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 -z-10"></div>
+      <div className="absolute top-0 left-0 w-full h-full bg-linear-to-br from-blue-50 via-indigo-50 to-purple-50 -z-10"></div>
       <div className="absolute top-20 left-10 w-96 h-96 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
       <div className="absolute bottom-20 right-10 w-96 h-96 bg-purple-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse delay-1000"></div>
 
       <div className="w-full max-w-5xl bg-white rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col md:flex-row z-10 border border-white/50 relative backdrop-blur-sm">
 
         {/* Left Side: Branding/Info */}
-        <div className="w-full md:w-1/2 bg-gradient-to-br from-blue-600 to-indigo-700 p-12 text-white flex flex-col justify-between relative overflow-hidden">
+        <div className="w-full md:w-1/2 bg-linear-to-br from-blue-600 to-indigo-700 p-12 text-white flex flex-col justify-between relative overflow-hidden">
           {/* Internal graphics */}
           <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 bg-white opacity-10 rounded-full blur-2xl"></div>
           <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-64 h-64 bg-black opacity-10 rounded-full blur-2xl"></div>
@@ -78,7 +78,7 @@ const Login = () => {
 
             <h1 className="text-4xl lg:text-5xl font-extrabold mb-6 leading-tight">
               Welcome back to <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-200 to-indigo-200">SWAGAT</span>
+              <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-200 to-indigo-200">SWAGAT</span>
             </h1>
             <p className="text-blue-100 text-lg leading-relaxed max-w-sm">
               Your intelligent platform for managing and resolving complaints transparently and securely.
@@ -156,7 +156,7 @@ const Login = () => {
 
               {error && (
                 <div className="bg-red-50 text-red-600 p-3.5 rounded-xl text-sm font-medium border border-red-100 flex items-center gap-2">
-                  <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <svg className="w-5 h-5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                   </svg>
                   {error}

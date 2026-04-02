@@ -3,7 +3,7 @@ const XLSX = require('xlsx');
 
 const getAssets = async (req, res) => {
     try {
-        const assets = await Asset.find()
+        const assets = await Asset.find().populate('department_id', 'name');
         console.log('Fetched assets', assets);
         res.status(200).json({ assets });
     } catch (error) {
@@ -59,13 +59,14 @@ const importAssets = async (req, res) => {
 // create a single new asset (name, location, category in req.body)
 const createAsset = async (req, res) => {
     try {
-        const { name, category } = req.body;
+        const { name, category, department_id } = req.body;
         if (!name || !category) {
             return res.status(400).json({ message: 'Missing fields for asset' });
         }
-        const asset = new Asset({ name, category });
+        const asset = new Asset({ name, category, department_id: department_id || null });
         await asset.save();
-        res.status(201).json({ asset });
+        const populated = await asset.populate('department_id', 'name');
+        res.status(201).json({ asset: populated });
     } catch (error) {
         res.status(500).json({ message: 'Error creating asset', error: error.message });
     }

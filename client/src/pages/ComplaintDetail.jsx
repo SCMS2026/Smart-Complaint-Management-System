@@ -91,7 +91,7 @@ const ComplaintDetail = ({ complaintId, onClose, onStatusChange }) => {
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto">
       <div className="bg-white rounded-lg shadow-2xl max-w-2xl w-full mx-4 my-8">
         {/* Header */}
-        <div className="bg-gradient-to-r from-slate-900 to-slate-800 text-white p-6 flex justify-between items-center">
+        <div className="bg-linear-to-r from-slate-900 to-slate-800 text-white p-6 flex justify-between items-center">
           <h2 className="text-2xl font-bold">Verify Complaint</h2>
           <button
             onClick={onClose}

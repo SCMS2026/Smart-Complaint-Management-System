@@ -9,13 +9,13 @@ router.get('/', authMiddleware, departmentController.getDepartments);
 // Get department by ID - authenticated users can view
 router.get('/:departmentId', authMiddleware, departmentController.getDepartmentById);
 
-// Create department - admin only
-router.post('/', authMiddleware, allowRoles('admin'), departmentController.createDepartment);
+// Create department - admin or super_admin
+router.post('/', authMiddleware, allowRoles('admin','super_admin'), departmentController.createDepartment);
 
-// Update department - admin only
-router.put('/:departmentId', authMiddleware, allowRoles('admin'), departmentController.updateDepartment);
+// Update department - admin or super_admin
+router.put('/:departmentId', authMiddleware, allowRoles('admin','super_admin'), departmentController.updateDepartment);
 
-// Delete department - admin only
-router.delete('/:departmentId', authMiddleware, allowRoles('admin'), departmentController.deleteDepartment);
+// Delete department - admin or super_admin
+router.delete('/:departmentId', authMiddleware, allowRoles('admin','super_admin'), departmentController.deleteDepartment);
 
 module.exports = router;

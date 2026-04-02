@@ -12,6 +12,7 @@ import AllComplaints from "./pages/AllComplaints";
 import AdminDashboard from "./pages/AdminDashboard";
 import AnalyzerDashboard from "./pages/AnalyzerDashboard";
 import ContractorDashboard from "./pages/ContractorDashboard";
+import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 
 function App() {
   const [user, setUser] = useState(null);
@@ -45,6 +46,7 @@ function App() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/complaint" element={<AllComplaints />} />
           <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/super-admin" element={<SuperAdminDashboard />} />
           <Route path="/analyzer" element={<AnalyzerDashboard />} />
           <Route path="/contractor" element={<ContractorDashboard />} />
         </Routes>

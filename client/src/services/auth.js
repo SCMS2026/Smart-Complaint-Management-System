@@ -147,6 +147,89 @@ export const logout = () => {
   window.location.reload();
 };
 
+export const createUser = async (userData) => {
+  try {
+    const token = getToken();
+    if (!token) {
+      return { success: false, message: "User not logged in" };
+    }
+
+    const res = await fetch(`${API}/register`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify(userData)
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      return { success: false, message: data.message || "Failed to create user" };
+    }
+
+    return { success: true, user: data.user };
+  } catch (err) {
+    return { success: false, message: err.message };
+  }
+};
+
+export const fetchUsers = async () => {
+  try {
+    const token = getToken();
+    if (!token) return { success: false, message: "Not authenticated" };
+
+    const res = await fetch(`${API}/admin/users`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      credentials: "include",
+    });
+
+    if (!res.ok) {
+      const data = await res.json();
+      return { success: false, message: data.message || "Failed to fetch users" };
+    }
+
+    const data = await res.json();
+    return { success: true, users: data };
+  } catch (error) {
+    return { success: false, message: error.message };
+  }
+};
+
+export const setUserRole = async (id, role, department_id) => {
+  try {
+    const token = getToken();
+    if (!token) return { success: false, message: "Not authenticated" };
+
+    const body = { role };
+    if (department_id) body.department_id = department_id;
+
+    const res = await fetch(`${API}/admin/users/${id}/role`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(body),
+      credentials: "include",
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      return { success: false, message: data.message || "Failed to update role" };
+    }
+
+    return { success: true, user: data };
+  } catch (error) {
+    return { success: false, message: error.message };
+  }
+};
+
 // Legacy alias for backward compatibility
 export const getMe = getCurrentUser;
 

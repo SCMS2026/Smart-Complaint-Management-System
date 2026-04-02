@@ -1,4 +1,4 @@
-import React,{ useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { getMe,logout } from "../services/auth";
 
 const Navbar = () => {
@@ -44,7 +44,7 @@ const Navbar = () => {
 
           {/* ================= LOGO ================= */}
           <a href="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-500 to-indigo-600 flex items-center justify-center text-white font-bold shadow-md">
+            <div className="w-10 h-10 rounded-xl bg-linear-to-br from-sky-500 to-indigo-600 flex items-center justify-center text-white font-bold shadow-md">
               SC
             </div>
 
@@ -122,6 +122,14 @@ const Navbar = () => {
                 Admin
               </a>
             )}
+            {user && user.role === 'super_admin' && (
+              <a
+                href="/super-admin"
+                className="px-4 py-2 rounded-lg hover:bg-black/5 transition"
+              >
+                Super Admin
+              </a>
+            )}
             {user && user.role === 'analyzer' && (
               <a
                 href="/analyzer"
@@ -130,7 +138,7 @@ const Navbar = () => {
                 Analytics
               </a>
             )}
-            {user && user.role === 'contractor' && (
+            {(user && (user.role === 'contractor' || user.role === 'worker')) && (
               <a
                 href="/contractor"
                 className="px-4 py-2 rounded-lg hover:bg-black/5 transition"
@@ -152,7 +160,7 @@ const Navbar = () => {
 
               <a
                 href="/signup"
-                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 text-white font-semibold shadow-md hover:shadow-lg hover:scale-[1.02] transition"
+                className="px-5 py-2.5 rounded-xl bg-linear-to-r from-sky-500 to-indigo-600 text-white font-semibold shadow-md hover:shadow-lg hover:scale-[1.02] transition"
               >
                 Sign Up
               </a>

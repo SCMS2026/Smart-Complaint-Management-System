@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   fetchComplaints,
   createComplaintRequest,
+  updateComplaintStatusRequest,
 } from "../services/complaints";
 import { fetchAssets } from "../services/assets";
 
@@ -53,6 +54,16 @@ const AllComplaints = () => {
 
     if (res.success) {
       setAssets(res.assets || []);
+    }
+  };
+
+  const handleApproval = async (complaintId, approved) => {
+    const newStatus = approved ? "resolved" : "pending";
+    const res = await updateComplaintStatusRequest(complaintId, newStatus);
+    if (res.success) {
+      loadComplaints();
+    } else {
+      setError(res.message || "Unable to update approval status");
     }
   };
 
@@ -111,6 +122,13 @@ const AllComplaints = () => {
       </div>
     );
 
+  if (error)
+    return (
+      <div className="flex justify-center items-center h-screen text-xl font-semibold text-red-600">
+        Error: {error}
+      </div>
+    );
+
   return (
     <div className="min-h-screen min-w-screen bg-gray-100 p-6">
 
@@ -164,7 +182,7 @@ const AllComplaints = () => {
 
             {assets.map((asset) => (
               <option key={asset._id} value={asset._id}>
-                {asset.issue}
+                {asset.issue} {asset.department_id ? `(${asset.department_id.name})` : "(No department)"}
               </option>
             ))}
           </select>
@@ -350,6 +368,23 @@ const AllComplaints = () => {
                 <span className="inline-block mt-3 px-3 py-1 text-xs rounded-full bg-yellow-100 text-yellow-700">
                   {c.status}
                 </span>
+
+                {currentUser?.role === "user" && c.status === "waiting_user" && (
+                  <div className="mt-4 flex gap-2">
+                    <button
+                      onClick={() => handleApproval(c._id, true)}
+                      className="px-3 py-1 text-sm bg-green-500 text-white rounded"
+                    >
+                      Approve
+                    </button>
+                    <button
+                      onClick={() => handleApproval(c._id, false)}
+                      className="px-3 py-1 text-sm bg-red-500 text-white rounded"
+                    >
+                      Reject
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           ))}

@@ -73,13 +73,13 @@ router.post('/logout', authController.logout);
 
 router.get('/admin/users',
   authMiddleware,
-  allowRoles('admin'),
+  allowRoles('admin','super_admin'),
   authController.getAllUsers
 );
 
 router.put('/admin/users/:id/role',
   authMiddleware,
-  allowRoles('admin'),
+  allowRoles('admin','super_admin'),
   authController.setUserRole
 );
 

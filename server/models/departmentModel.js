@@ -1,15 +1,14 @@
-const mongoose = require("mongoose");
 
-const department = new mongoose.Schema({
+const mongoose = require("mongoose");
+const departmentSchema = new mongoose.Schema({
   name: String,
   description: String,
 
-  admin_id: {
+  admin: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User"
   }
+
 }, { timestamps: true });
 
-const Department = mongoose.model("Department", department);
-
-module.exports = Department;
+module.exports = mongoose.model("Department", departmentSchema);
