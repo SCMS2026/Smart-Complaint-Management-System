@@ -134,3 +134,32 @@ export const markComplaintAsFake = async (id) => {
     return { success: false, message: err.message };
   }
 };
+
+export const fetchComplaintAnalytics = async () => {
+  try {
+    const res = await fetch(`${API}/analytics`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json", ...getAuthHeader() },
+      credentials: "include",
+    });
+    const data = await handleResponse(res);
+    return { success: true, analytics: data };
+  } catch (err) {
+    return { success: false, message: err.message };
+  }
+};
+
+export const userApproveComplaintRequest = async (id, action) => {
+  try {
+    const res = await fetch(`${API}/${id}/user-approval`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...getAuthHeader() },
+      credentials: "include",
+      body: JSON.stringify({ action })
+    });
+    const data = await handleResponse(res);
+    return { success: true, complaint: data.complaint };
+  } catch (err) {
+    return { success: false, message: err.message };
+  }
+};

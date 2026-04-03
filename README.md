@@ -1,141 +1,311 @@
-# Smart-Complaint-Management-System 
+# 🚀 Smart Complaint Management System
 
-1️⃣ Super Admin Powers
-Super Admin = System Owner
-Super Admin કરી શકે:
-Create Department
-Delete Department
-Add Department Admin
-Update Department Admin
-Delete Department Admin
-Add Workers
-Delete Workers
-View All Complaints
-View Analytics
-Manage Assets
-Approve Permissions
-Example:
-Electricity Department
-Admin → Raj Patel
-Workers → 5 Electricians
-જો Admin કામ ન કરે તો:
-Super Admin → Delete / Replace Department Admin
+A **Smart Complaint Management System** is an intelligent civic-tech platform designed to automate and streamline public issue reporting and resolution.
 
-2️⃣ Department Admin Powers
-Department Admin = Department Manager
-Example:
-Electricity Department Admin
-તે કરી શકે:
-View Department Complaints
-Approve Complaint
-Assign Worker
-Track Worker Work
-Update Complaint Status
-Example Flow
-User Complaint → Street Light
+---
+
+## 📌 Project Overview
+
+This system allows users to report public issues such as:
+
+- Electricity problems ⚡
+- Water leakage 💧
+- Road damage 🛣️
+- Garbage issues 🗑️
+- Traffic signal failures 🚦
+
+The system automatically routes complaints to the correct department, assigns workers, and tracks progress until resolution.
+
+---
+
+## 🎯 Key Objectives
+
+- Automate complaint routing
+- Reduce manual work
+- Improve response time
+- Ensure transparency
+- Provide real-time tracking
+
+---
+
+## 🧠 Core Features
+
+### 1️⃣ Auto Department Routing
+Complaints are automatically assigned to the correct department based on category.
+
+```
+Street Light → Electricity Department
+Water Leakage → Water Department
+Road Damage → Road Department
+```
+
+---
+
+### 2️⃣ Smart Worker Auto Assignment
+System assigns the **least busy worker** automatically.
+
+- Based on department
+- Based on workload
+- Faster resolution
+
+---
+
+### 3️⃣ Priority Based Routing
+Complaints are prioritized:
+
+- 🔴 Critical (Traffic Signal Failure)
+- 🟠 High (Road Damage)
+- 🟡 Medium (Street Light)
+- 🟢 Low (Minor Issues)
+
+---
+
+### 4️⃣ Fake Complaint Prevention
+- Duplicate complaint detection
+- Photo verification
+- User reputation tracking
+
+---
+
+### 5️⃣ User Approval System
+- User approves → Complaint closed
+- User rejects → Rework assigned
+
+---
+
+### 6️⃣ Permission Request Module (Unique)
+Users can request permissions for:
+
+- Road digging
+- Water connection
+- Electric line work
+
+---
+
+### 7️⃣ Heatmap Analytics
+- Area-wise complaint analysis
+- Department performance tracking
+- Smart decision making
+
+---
+
+## 👥 Roles
+
+| Role | Description |
+|------|------------|
+| Super Admin | Full system control |
+| Department Admin | Manages department complaints |
+| Worker | Executes tasks |
+| User | Submits complaints |
+| Analyzer | Views analytics |
+
+---
+
+## 🏗️ Tech Stack
+
+### Frontend
+- React.js
+- Tailwind CSS
+
+### Backend
+- Node.js
+- Express.js
+
+### Database
+- MongoDB
+
+### Authentication
+- JWT
+- Google OAuth
+
+---
+
+## 📂 Project Structure
+
+```
+backend/
+│
+├── config/
+├── controllers/
+├── models/
+├── routes/
+├── middleware/
+├── utils/
+├── services/
+└── server.js
+```
+
+---
+
+## 🔄 Complaint Lifecycle
+
+```
+Submitted
 ↓
-Electricity Department Admin
+Under Review
 ↓
-Assign Electrician
-
-3️⃣ Worker Data Manage કેવી રીતે કરવું
-Worker data Department Admin અથવા Super Admin add કરે.
-Example Worker Table
-workers
--------
-id
-name
-phone
-department_id
-role
-status
-created_at
-Example:
-1  Ramesh Patel  9876543210  Electricity  electrician
-2  Imran Shaikh  9876543200  Water        plumber
-
-4️⃣ Worker Assign Logic
-Complaint create થાય:
-Street Light Not Working
-System detect:
-Category → Electricity
-Department Admin assign worker:
-Complaint → Worker
-Example table
-complaint_assignments
----------------------
-id
-complaint_id
-worker_id
-assigned_at
-status
-
-5️⃣ Worker Work Flow
-Worker dashboard
-Assigned Tasks
+Worker Assigned
 ↓
-Start Work
+In Progress
 ↓
-Upload Photo
+Completed
 ↓
-Mark Completed
-Example:
-Complaint ID: CMP1023
-Task: Fix Street Light
-Status: Completed
-
-6️⃣ User Approval Flow
-Worker mark complete કરે પછી:
-User Notification
+User Approval
 ↓
-User Check Work
+Closed
+```
+
+---
+
+## ⚙️ Installation
+
+```bash
+git clone https://github.com/your-username/project-name.git
+cd project-name
+npm install
+npm run dev
+```
+
+---
+
+## 🔑 Environment Variables
+
+Create `.env` file:
+
+```
+PORT=5000
+MONGO_URI=your_mongodb_url
+JWT_SECRET=your_secret_key
+```
+
+
+
+---
+
+### 4️⃣ Fake Complaint Prevention
+- Duplicate complaint detection
+- Photo verification
+- User reputation tracking
+
+---
+
+### 5️⃣ User Approval System
+- User approves → Complaint closed
+- User rejects → Rework assigned
+
+---
+
+### 6️⃣ Permission Request Module (Unique)
+Users can request permissions for:
+
+- Road digging
+- Water connection
+- Electric line work
+
+---
+
+### 7️⃣ Heatmap Analytics
+- Area-wise complaint analysis
+- Department performance tracking
+- Smart decision making
+
+---
+
+## 👥 Roles
+
+| Role | Description |
+|------|------------|
+| Super Admin | Full system control |
+| Department Admin | Manages department complaints |
+| Worker | Executes tasks |
+| User | Submits complaints |
+| Analyzer | Views analytics |
+
+---
+
+## 🏗️ Tech Stack
+
+### Frontend
+- React.js
+- Tailwind CSS
+
+### Backend
+- Node.js
+- Express.js
+
+### Database
+- MongoDB
+
+### Authentication
+- JWT
+- Google OAuth
+
+---
+
+## 📂 Project Structure
+
+```
+
+backend/
+│
+├── config/
+├── controllers/
+├── models/
+├── routes/
+├── middleware/
+├── utils/
+├── services/
+└── server.js
+
+```
+
+---
+
+## 🔄 Complaint Lifecycle
+
+```
+
+Submitted
 ↓
-Approve / Reject
-Approve
-Complaint Closed
-Reject
-Back to Department Admin
+Under Review
+↓
+Worker Assigned
+↓
+In Progress
+↓
+Completed
+↓
+User Approval
+↓
+Closed
 
-7️⃣ Final Role Structure
-Super Admin
-  ↓
-Department Admin
-  ↓
-Workers
-અને
-User
-Analyzer
+````
 
-8️⃣ Database Structure (Final)
-Users
-id
-name
-email
-password
-role
-department_id
-Roles
-super_admin
-department_admin
-worker
-user
-analyzer
+---
 
-Complaints
-id
-user_id
-department_id
-category_id
-description
-status
-created_at
+## ⚙️ Installation
 
+```bash
+git clone https://github.com/your-username/project-name.git
+cd project-name
+npm install
+npm run dev
+````
+
+---
+
+## 🔑 Environment Variables
+
+Create `.env` file:
+
+```
+PORT=5000
+MONGO_URI=your_mongodb_url
+JWT_SECRET=your_secret_key
+```
+
+---
 
 
-Worker Assignments
-id
-complaint_id
-worker_id
-status
-assigned_at
+
 

@@ -1,4 +1,6 @@
 const mongoose = require('mongoose');
+require('./authModels');
+require('./complaintsModel');
 const workerTaskSchema = new mongoose.Schema({
   complaint_id: {
     type: mongoose.Schema.Types.ObjectId,

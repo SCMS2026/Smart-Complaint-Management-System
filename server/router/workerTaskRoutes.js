@@ -15,6 +15,9 @@ router.get('/complaint/:complaintId', authMiddleware, workerTaskController.getWo
 // Create worker task - admin and contractor can create
 router.post('/', authMiddleware, allowRoles('admin', 'contractor'), workerTaskController.createWorkerTask);
 
+// Auto assign complaint to least busy worker
+router.post('/auto-assign', authMiddleware, allowRoles('admin','department_admin','super_admin'), workerTaskController.autoAssignWorkerToComplaint);
+
 // Update worker task status - admin, contractor, and worker can update
 router.patch('/:taskId', authMiddleware, allowRoles('admin', 'contractor', 'worker'), workerTaskController.updateWorkerTaskStatus);
 

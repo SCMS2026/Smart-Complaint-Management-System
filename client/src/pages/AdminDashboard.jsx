@@ -4,7 +4,7 @@ import { fetchComplaints } from "../services/complaints";
 import { fetchPermissions } from "../services/permissions";
 import { importAssets } from "../services/assets";
 import { fetchUsers } from "../services/auth";
-import { createWorkerTask } from "../services/workerTask";
+import { createWorkerTask, autoAssignWorker } from "../services/workerTask";
 import ComplaintDetail from "./ComplaintDetail";
 
 const AdminDashboard = () => {
@@ -178,6 +178,23 @@ const AdminDashboard = () => {
     }
   };
 
+  const autoAssignToSelectedComplaint = async () => {
+    if (!selectedComplaintId) {
+      setAssignMessage('Please select a complaint first from table below.');
+      return;
+    }
+
+    const res = await autoAssignWorker(selectedComplaintId);
+    if (res.success) {
+      setAssignMessage(`Complaint auto-assigned to worker: ${res.assignedWorker?.name || 'unknown'}`);
+      await fetchComplaints().then((r) => {
+        if (r.success) setComplaints(r.complaints || []);
+      });
+    } else {
+      setAssignMessage(res.message || 'Auto assignment failed.');
+    }
+  };
+
   return (
     <div className="min-h-screen min-w-screen pt-20 ">
       {/* Header */}
@@ -329,6 +346,12 @@ const AdminDashboard = () => {
                         className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
                       >
                         Assign Worker
+                      </button>
+                      <button
+                        onClick={autoAssignToSelectedComplaint}
+                        className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                      >
+                        Auto Assign Least Busy Worker
                       </button>
                     </div>
                     {assignMessage && <p className="text-sm text-green-700 mt-2">{assignMessage}</p>}

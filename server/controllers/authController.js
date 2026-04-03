@@ -62,7 +62,7 @@ const login = async (req, res) => {
             return res.status(401).json({ message: "Invalid credentials" });
 
         const token = jwt.sign(
-            { id: user._id, role: user.role },
+            { id: user._id, role: user.role, department: user.department },
             process.env.JWT_SECRET,
             { expiresIn: "7d" }
         );
@@ -87,12 +87,10 @@ const googleCallback = (req, res) => {
         }
 
         const token = jwt.sign(
-            { id: user._id, role: user.role },
+            { id: user._id, role: user.role, department: user.department },
             process.env.JWT_SECRET,
             { expiresIn: "7d" }
         );
-
-        // Encode user data for URL param
         const userStr = encodeURIComponent(JSON.stringify({
             id: user._id,
             name: user.name,

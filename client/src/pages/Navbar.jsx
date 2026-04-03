@@ -122,6 +122,14 @@ const Navbar = () => {
                 Admin
               </a>
             )}
+            {user && user.role === 'department_admin' && (
+              <a
+                href="/department-admin"
+                className="px-4 py-2 rounded-lg hover:bg-black/5 transition"
+              >
+                Department Admin
+              </a>
+            )}
             {user && user.role === 'super_admin' && (
               <a
                 href="/super-admin"
@@ -195,6 +203,8 @@ const Navbar = () => {
                 {/* compute dashboard path based on role */}
                 <a
                   href={
+                    user.role === 'super_admin' ? '/super-admin' :
+                    user.role === 'department_admin' ? '/department-admin' :
                     user.role === 'admin' ? '/admin' :
                     user.role === 'analyzer' ? '/analyzer' :
                     user.role === 'contractor' ? '/contractor' :

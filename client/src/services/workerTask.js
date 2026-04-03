@@ -86,3 +86,26 @@ export const getWorkerTasksByComplaint = async (complaintId) => {
     return { success: false, message: err.message };
   }
 };
+
+export const autoAssignWorker = async (complaintId) => {
+  try {
+    const token = getToken();
+    if (!token) {
+      return { success: false, message: "User not logged in" };
+    }
+
+    const res = await fetch(`${API}/auto-assign`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({ complaint_id: complaintId })
+    });
+
+    const data = await handleResponse(res);
+    return { success: true, workerTask: data.workerTask, assignedWorker: data.assignedWorker };
+  } catch (err) {
+    return { success: false, message: err.message };
+  }
+};

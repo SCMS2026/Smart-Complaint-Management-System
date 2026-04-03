@@ -12,6 +12,7 @@ import AllComplaints from "./pages/AllComplaints";
 import AdminDashboard from "./pages/AdminDashboard";
 import AnalyzerDashboard from "./pages/AnalyzerDashboard";
 import ContractorDashboard from "./pages/ContractorDashboard";
+import DepartmentAdminDashboard from "./pages/DepartmentAdminDashboard";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 
 function App() {
@@ -46,6 +47,7 @@ function App() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/complaint" element={<AllComplaints />} />
           <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/department-admin" element={<DepartmentAdminDashboard />} />
           <Route path="/super-admin" element={<SuperAdminDashboard />} />
           <Route path="/analyzer" element={<AnalyzerDashboard />} />
           <Route path="/contractor" element={<ContractorDashboard />} />

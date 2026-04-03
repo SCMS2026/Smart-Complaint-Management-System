@@ -1,4 +1,5 @@
 const WorkerTask = require('../models/workerTaskModel');
+const User = require('../models/authModels');
 
 // Create Worker Task
 const createWorkerTask = async (req, res) => {
@@ -26,6 +27,55 @@ const createWorkerTask = async (req, res) => {
     } catch (error) {
         console.error('Create worker task error:', error);
         res.status(500).json({ message: 'Error creating worker task', error: error.message });
+    }
+};
+
+const autoAssignWorkerToComplaint = async (req, res) => {
+    try {
+        const { complaint_id } = req.body;
+
+        if (!complaint_id) {
+            return res.status(400).json({ message: 'Complaint ID is required for auto assignment' });
+        }
+
+        const workers = await User.find({ role: 'worker', status: 'active' });
+        if (!workers.length) {
+            return res.status(404).json({ message: 'No active workers found' });
+        }
+
+        const tasks = await WorkerTask.aggregate([
+            { $match: { status: { $in: ['assigned', 'started'] } } },
+            { $group: { _id: '$worker_id', count: { $sum: 1 } } }
+        ]);
+
+        const countMap = tasks.reduce((map, item) => {
+            map[item._id.toString()] = item.count;
+            return map;
+        }, {});
+
+        let selectedWorker = workers[0];
+        let minLoad = countMap[selectedWorker._id.toString()] || 0;
+
+        for (const worker of workers) {
+            const load = countMap[worker._id.toString()] || 0;
+            if (load < minLoad) {
+                minLoad = load;
+                selectedWorker = worker;
+            }
+        }
+
+        const workerTask = new WorkerTask({
+            complaint_id,
+            worker_id: selectedWorker._id,
+            status: 'assigned'
+        });
+
+        await workerTask.save();
+
+        res.status(201).json({ message: 'Complaint auto-assigned', workerTask, assignedWorker: selectedWorker });
+    } catch (error) {
+        console.error('Auto-assign worker error:', error);
+        res.status(500).json({ message: 'Error auto-assigning worker', error: error.message });
     }
 };
 
@@ -138,6 +188,7 @@ const getWorkerTasksByComplaint = async (req, res) => {
 
 module.exports = {
     createWorkerTask,
+    autoAssignWorkerToComplaint,
     getWorkerTasks,
     getWorkerTaskById,
     updateWorkerTaskStatus,

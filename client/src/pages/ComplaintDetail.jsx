@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { getComplaintById, updateComplaintStatusRequest, markComplaintAsFake, addCommentToComplaint } from "../services/complaints";
+import { getComplaintById, updateComplaintStatusRequest, markComplaintAsFake, addCommentToComplaint, userApproveComplaintRequest } from "../services/complaints";
 
 const ComplaintDetail = ({ complaintId, onClose, onStatusChange }) => {
   const [complaint, setComplaint] = useState(null);
@@ -7,8 +7,12 @@ const ComplaintDetail = ({ complaintId, onClose, onStatusChange }) => {
   const [error, setError] = useState("");
   const [commentText, setCommentText] = useState("");
   const [submittingComment, setSubmittingComment] = useState(false);
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
+    const userFromStorage = JSON.parse(localStorage.getItem("user") || "null");
+    setUser(userFromStorage);
+
     const loadComplaint = async () => {
       const res = await getComplaintById(complaintId);
       if (res.success) {
@@ -48,6 +52,16 @@ const ComplaintDetail = ({ complaintId, onClose, onStatusChange }) => {
       onStatusChange?.();
     } else {
       setError(res.message || "Failed to request more info");
+    }
+  };
+
+  const handleUserApproval = async (action) => {
+    const res = await userApproveComplaintRequest(complaintId, action);
+    if (res.success) {
+      setComplaint(res.complaint);
+      onStatusChange?.();
+    } else {
+      setError(res.message || "Failed to submit user approval");
     }
   };
 
@@ -143,7 +157,7 @@ const ComplaintDetail = ({ complaintId, onClose, onStatusChange }) => {
           )}
 
           {/* Action Buttons */}
-          {complaint.status !== "verified" && complaint.status !== "rejected" && (
+          {complaint.status !== "verified" && complaint.status !== "rejected" && user?.role !== "user" && (
             <div className="flex gap-2 mt-6 flex-wrap">
               <button
                 onClick={handleVerify}
@@ -163,6 +177,29 @@ const ComplaintDetail = ({ complaintId, onClose, onStatusChange }) => {
               >
                 ❓ Request More Info
               </button>
+            </div>
+          )}
+
+          {user?.role === "user" && complaint.status === "completed" && (
+            <div className="flex gap-2 mt-6 flex-wrap">
+              <button
+                onClick={() => handleUserApproval("approve")}
+                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-semibold transition"
+              >
+                ✅ Approve Completion
+              </button>
+              <button
+                onClick={() => handleUserApproval("reject")}
+                className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded font-semibold transition"
+              >
+                ❌ Reject Completion
+              </button>
+            </div>
+          )}
+
+          {user?.role === "user" && complaint.status === "user_approval_pending" && (
+            <div className="bg-yellow-100 p-3 rounded">
+              <p>Waiting for user approval</p>
             </div>
           )}
 
