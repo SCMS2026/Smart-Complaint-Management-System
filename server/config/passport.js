@@ -23,18 +23,39 @@ passport.use(
     async (accessToken, refreshToken, profile, done) => {
       try {
         console.log('✅ Google OAuth Success - Profile:', profile.emails[0].value);
-        let user = await User.findOne({ googleId: profile.id });
+        const googleId = profile.id;
+        const email = profile.emails[0].value;
+        const profileImage = profile.photos && profile.photos.length > 0 ? profile.photos[0].value : "";
+
+        let user = await User.findOne({ googleId });
 
         if (user) {
           console.log('✅ User exists:', user.email);
+          // Update profileImage on every login to keep it fresh
+          if (profileImage && user.profileImage !== profileImage) {
+            await User.findByIdAndUpdate(user._id, { profileImage });
+            user.profileImage = profileImage;
+          }
           return done(null, user);
+        }
+
+        // Check if email already exists
+        let existingEmailUser = await User.findOne({ email });
+        if (existingEmailUser) {
+          console.log('✅ User with email exists:', email);
+          // Attach Google ID to existing user
+          existingEmailUser.googleId = googleId;
+          existingEmailUser.profileImage = profileImage || existingEmailUser.profileImage;
+          existingEmailUser.isVerified = true;
+          await existingEmailUser.save();
+          return done(null, existingEmailUser);
         }
 
         const newUser = new User({
           name: profile.displayName,
-          email: profile.emails[0].value,
-          googleId: profile.id,
-          profileImage: profile.photos && profile.photos.length > 0 ? profile.photos[0].value : "",
+          email,
+          googleId,
+          profileImage,
           isVerified: true
         });
 

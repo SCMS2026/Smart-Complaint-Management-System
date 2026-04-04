@@ -91,6 +91,9 @@ const Profile = () => {
                 </h1>
               )}
               <p className="text-sm text-gray-500 mt-1">Role: {user.role || 'user'}</p>
+              <p className="text-sm text-gray-500 mt-1">
+                Department: {user.department && typeof user.department === 'object' ? user.department.name : user.department || 'Not assigned'}
+              </p>
             </div>
 
             {/* Information Grid */}

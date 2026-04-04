@@ -2,11 +2,15 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { fetchDepartments, createDepartment, updateDepartment, deleteDepartment } from "../services/department";
 import { fetchUsers, createUser, setUserRole } from "../services/auth";
+import { fetchComplaints } from "../services/complaints";
+import { fetchWorkerTasks } from "../services/workerTask";
 
 const SuperAdminDashboard = () => {
   const nav = useNavigate();
   const [departments, setDepartments] = useState([]);
   const [users, setUsers] = useState([]);
+  const [complaints, setComplaints] = useState([]);
+  const [workerTasks, setWorkerTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -24,7 +28,25 @@ const SuperAdminDashboard = () => {
 
     loadDepartments();
     loadUsers();
+    loadComplaints();
+    loadWorkerTasks();
   }, [nav]);
+
+  const loadComplaints = async () => {
+    const res = await fetchComplaints();
+    if (res.success) {
+      setComplaints(res.complaints || []);
+    } else {
+      setError(res.message);
+    }
+  };
+
+  const loadWorkerTasks = async () => {
+    const res = await fetchWorkerTasks();
+    if (res.success) {
+      setWorkerTasks(res.workerTasks || []);
+    }
+  };
 
   const loadDepartments = async () => {
     setLoading(true);
@@ -374,6 +396,59 @@ const SuperAdminDashboard = () => {
           </div>
         </div>
       )}
+
+      {/* Complaints & Worker Tasks Section */}
+      <div className="bg-white rounded-lg shadow p-6 mb-6">
+        <h2 className="text-xl font-semibold mb-4">All Complaints & Assigned Workers</h2>
+        
+        <div className="overflow-x-auto">
+          <table className="w-full table-auto">
+            <thead>
+              <tr className="bg-gray-50">
+                <th className="px-4 py-2 text-left">Complaint ID</th>
+                <th className="px-4 py-2 text-left">Issue</th>
+                <th className="px-4 py-2 text-left">Status</th>
+                <th className="px-4 py-2 text-left">Department</th>
+                <th className="px-4 py-2 text-left">Assigned Worker</th>
+                <th className="px-4 py-2 text-left">Created Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {complaints.length === 0 ? (
+                <tr>
+                  <td colSpan="6" className="px-4 py-2 text-center text-gray-500">No complaints found</td>
+                </tr>
+              ) : (
+                complaints.map(complaint => {
+                  const assignedTask = workerTasks.find(t => t.complaint_id === complaint._id);
+                  const workerName = assignedTask?.worker_id?.name || assignedTask?.worker?.name || "Not assigned";
+                  
+                  return (
+                    <tr key={complaint._id} className="border-t hover:bg-gray-50">
+                      <td className="px-4 py-2 text-sm">{complaint._id?.slice(-6) || "-"}</td>
+                      <td className="px-4 py-2">{complaint.issue || "-"}</td>
+                      <td className="px-4 py-2">
+                        <span className={`px-2 py-1 rounded text-xs font-semibold ${
+                          complaint.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                          complaint.status === 'verified' ? 'bg-blue-100 text-blue-700' :
+                          complaint.status === 'in_progress' ? 'bg-purple-100 text-purple-700' :
+                          complaint.status === 'completed' ? 'bg-green-100 text-green-700' :
+                          'bg-gray-100 text-gray-700'
+                        }`}>
+                          {complaint.status || "Unknown"}
+                        </span>
+                      </td>
+                      <td className="px-4 py-2">{complaint.department_id?.name || "-"}</td>
+                      <td className="px-4 py-2">{workerName}</td>
+                      <td className="px-4 py-2 text-sm">{new Date(complaint.createdAt).toLocaleDateString()}</td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 };

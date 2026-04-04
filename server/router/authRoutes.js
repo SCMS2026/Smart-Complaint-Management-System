@@ -73,7 +73,7 @@ router.post('/logout', authController.logout);
 
 router.get('/admin/users',
   authMiddleware,
-  allowRoles('admin','super_admin'),
+  allowRoles('admin','super_admin','department_admin'),
   authController.getAllUsers
 );
 
@@ -81,6 +81,12 @@ router.put('/admin/users/:id/role',
   authMiddleware,
   allowRoles('admin','super_admin'),
   authController.setUserRole
+);
+
+router.put('/admin/users/:id/department',
+  authMiddleware,
+  allowRoles('admin','super_admin'),
+  authController.setUserDepartment
 );
 
 module.exports = router;

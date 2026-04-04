@@ -6,7 +6,7 @@ const allowRoles = require('../middleware/roleMiddleware');
 // contractor can create a permission request
 router.post('/', authMiddleware, allowRoles('contractor'), permissionController.createPermission);
 
-// admin can view all permission requests
-router.get('/', authMiddleware, allowRoles('admin'), permissionController.getPermissions);
+// admin and department_admin can view permission requests
+router.get('/', authMiddleware, allowRoles('admin','department_admin'), permissionController.getPermissions);
 
 module.exports = router;

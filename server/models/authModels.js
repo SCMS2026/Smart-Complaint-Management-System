@@ -19,6 +19,25 @@ const userSchema = new mongoose.Schema({
 
   phone: String,
 
+  profileImage: {
+    type: String,
+    default: null
+  },
+
+  googleId: String,
+
+  googleProfile: {
+    provider: String,
+    id: String,
+    displayName: String,
+    photo: String
+  },
+
+  isVerified: {
+    type: Boolean,
+    default: false
+  },
+
   status: {
     type: String,
     enum: ["active", "inactive"],

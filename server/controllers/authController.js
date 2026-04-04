@@ -137,6 +137,16 @@ const verifyGoogleToken = async (req, res) => {
         let user = await User.findOne({ googleId });
 
         if (!user) {
+          // Check if email exists
+          user = await User.findOne({ email });
+          if (user) {
+            // Attach Google ID and picture to existing user
+            user.googleId = googleId;
+            user.profileImage = picture || user.profileImage;
+            user.isVerified = true;
+            await user.save();
+          } else {
+            // Create new user
             user = new User({
                 name,
                 email,
@@ -151,6 +161,11 @@ const verifyGoogleToken = async (req, res) => {
                 isVerified: true
             });
             await user.save();
+          }
+        } else if (picture && user.profileImage !== picture) {
+          // Update picture if it changed
+          user.profileImage = picture;
+          await user.save();
         }
 
         const jwtToken = jwt.sign(
@@ -255,6 +270,26 @@ const setUserRole = async (req, res) => {
     res.json(user);
 };
 
+const setUserDepartment = async (req, res) => {
+    try {
+        const { department_id } = req.body;
+        
+        const user = await User.findByIdAndUpdate(
+            req.params.id,
+            { department: department_id || null },
+            { new: true }
+        ).select("-password");
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        res.json(user);
+    } catch (error) {
+        res.status(500).json({ message: "Error updating user department", error: error.message });
+    }
+};
+
 module.exports = {
     register,
     login,
@@ -264,5 +299,6 @@ module.exports = {
     updateProfile,
     logout,
     getAllUsers,
-    setUserRole
+    setUserRole,
+    setUserDepartment
 };

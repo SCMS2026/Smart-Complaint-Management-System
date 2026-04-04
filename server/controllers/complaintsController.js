@@ -1,5 +1,6 @@
 const Complaint = require("../models/complaintsModel");
 const Asset = require("../models/assetsModels");
+const User = require("../models/authModels");
 
 // Create Complaint
 const createComplaint = async (req, res) => {
@@ -54,6 +55,8 @@ const createComplaint = async (req, res) => {
     }
 
     let department_id = null;
+    
+    // 1. Try to get department from selected asset
     if (assetId) {
       const asset = await Asset.findById(assetId);
       if (asset) {
@@ -61,23 +64,38 @@ const createComplaint = async (req, res) => {
       }
     }
 
+    // 2. If no asset selected, try category-based routing
     if (!department_id && category) {
-      // Simple auto department routing by category
-      const categoryToDepartment = {
+      // First try to find any asset with this category and use its department
+      const assetByCategory = await Asset.findOne({ category: category });
+      if (assetByCategory && assetByCategory.department_id) {
+        department_id = assetByCategory.department_id;
+      }
+    }
+
+    // 3. If still no department, try hardcoded mappings
+    if (!department_id && issue) {
+      const issueToCategory = {
         "Street Light": "Electricity",
-        "Electricity": "Electricity",
-        "Water Leakage": "Water",
+        "Power": "Electricity",
         "Water": "Water",
-        "Road Damage": "Road",
         "Road": "Road",
         "Garbage": "Sanitation",
       };
-      const mappedName = categoryToDepartment[category] || category;
-      const lookupDep = await Asset.findOne({ category: mappedName });
-      if (lookupDep) {
-        department_id = lookupDep.department_id || department_id;
+      
+      // Try to find matching issue and get its department
+      for (const [key, categoryName] of Object.entries(issueToCategory)) {
+        if (issue.toLowerCase().includes(key.toLowerCase())) {
+          const assetByMatched = await Asset.findOne({ category: categoryName });
+          if (assetByMatched && assetByMatched.department_id) {
+            department_id = assetByMatched.department_id;
+            break;
+          }
+        }
       }
     }
+
+    console.log("Complaint department assignment:", { assetId, category, issue, department_id });
 
     const complaint = new Complaint({
       userId,
@@ -118,16 +136,33 @@ const getComplaints = async (req, res) => {
     if (req.user && req.user.role === "user") {
       filter.userId = req.user.id;
     } else if (req.user && (req.user.role === "admin" || req.user.role === "department_admin")) {
-      if (req.user.department) {
+      // For department_admin, fetch current department from DB (not from stale JWT token)
+      if (req.user.role === "department_admin") {
+        const user = await User.findById(req.user.id);
+        console.log("Department Admin fetched:", { userId: req.user.id, department: user?.department });
+        if (user && user.department) {
+          // Show both assigned to this department AND unassigned complaints
+          filter.$or = [
+            { department_id: user.department },
+            { department_id: null }
+          ];
+        } else {
+          // If no department assigned to admin, show all unassigned complaints
+          console.log("Department admin has no department assigned");
+          filter.department_id = null;
+        }
+      } else if (req.user.department) {
         filter.department_id = req.user.department;
       }
     }
 
+    console.log("Complaint filter:", JSON.stringify(filter), "User role:", req.user?.role);
     const complaints = await Complaint.find(filter)
       .populate("userId", "name")
       .populate("assetId", "name")
       .populate("department_id", "name");
 
+    console.log("Found complaints:", complaints.length);
     res.status(200).json({ complaints });
   } catch (error) {
     console.error("Get complaints error:", error);
