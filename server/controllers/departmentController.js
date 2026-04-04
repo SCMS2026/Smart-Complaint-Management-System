@@ -13,7 +13,7 @@ const createDepartment = async (req, res) => {
         const department = new Department({
             name,
             description,
-            admin_id
+            admin: admin_id
         });
 
         await department.save();
@@ -32,7 +32,7 @@ const createDepartment = async (req, res) => {
 const getDepartments = async (req, res) => {
     try {
         const departments = await Department.find()
-            .populate('admin_id', 'name email');
+            .populate('admin', 'name email');
 
         res.status(200).json({ departments });
     } catch (error) {
@@ -47,7 +47,7 @@ const getDepartmentById = async (req, res) => {
         const { departmentId } = req.params;
 
         const department = await Department.findById(departmentId)
-            .populate('admin_id', 'name email');
+            .populate('admin', 'name email');
 
         if (!department) {
             return res.status(404).json({ message: 'Department not found' });
@@ -70,7 +70,7 @@ const updateDepartment = async (req, res) => {
             departmentId,
             { name, description, updatedAt: new Date() },
             { new: true }
-        ).populate('admin_id', 'name email');
+        ).populate('admin', 'name email');
 
         if (!department) {
             return res.status(404).json({ message: 'Department not found' });

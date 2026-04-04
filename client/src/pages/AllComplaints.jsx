@@ -68,6 +68,13 @@ const AllComplaints = () => {
   };
 
   const selectedAsset = assets.find((a) => a._id === complaintData.assetId);
+  const selectedAssetCategories = selectedAsset
+    ? Array.isArray(selectedAsset.category)
+      ? selectedAsset.category
+      : typeof selectedAsset.category === "string"
+      ? selectedAsset.category.split(",").map((item) => item.trim()).filter(Boolean)
+      : []
+    : [];
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -87,7 +94,8 @@ const AllComplaints = () => {
 
     const payload = {
       ...complaintData,
-      issue: selectedAsset?.issue || "",
+      issue: complaintData.category,
+      category: selectedAsset?.issue || complaintData.category || "",
     };
 
     const res = await createComplaintRequest(payload);
@@ -199,7 +207,7 @@ const AllComplaints = () => {
           >
             <option value="">Select Category</option>
 
-            {selectedAsset?.category?.map((cat, index) => (
+            {selectedAssetCategories.map((cat, index) => (
               <option key={index} value={cat}>
                 {cat}
               </option>

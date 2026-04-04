@@ -198,7 +198,7 @@ const SuperAdminDashboard = () => {
                   <td className="px-4 py-2">
                     <select
                       value={user.role}
-                      onChange={(e) => handleUserUpdate(user._id, e.target.value, user.department_id)}
+                      onChange={(e) => handleUserUpdate(user._id, e.target.value, user.department && typeof user.department === 'object' ? user.department._id : user.department || "")}
                       className="border rounded px-2 py-1"
                     >
                       <option value="user">User</option>
@@ -211,7 +211,7 @@ const SuperAdminDashboard = () => {
                   </td>
                   <td className="px-4 py-2">
                     <select
-                      value={user.department_id || ""}
+                      value={user.department && typeof user.department === 'object' ? user.department._id : user.department || ""}
                       onChange={(e) => {
                         if (user.role === 'department_admin' && e.target.value === "") {
                           setError("Department admin must have a department assigned");

@@ -7,11 +7,14 @@ require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
 const register = async (req, res) => {
     try {
-        const { name, email, password, profileImage,role } = req.body;
+        const { name, email, password, profileImage, role, department_id } = req.body;
 
         if (!name) return res.status(400).json({ message: "Name required" });
         if (!email) return res.status(400).json({ message: "Email required" });
         if (!password) return res.status(400).json({ message: "Password required" });
+        if (role === 'department_admin' && !department_id) {
+            return res.status(400).json({ message: "Department is required for department admin" });
+        }
 
         const existingUser = await User.findOne({ email });
         if (existingUser)
@@ -24,6 +27,7 @@ const register = async (req, res) => {
             email,
             password: hashedPassword,
             role,
+            department: department_id || null,
             profileImage: profileImage || null,
             isVerified: true
 
@@ -236,7 +240,7 @@ const setUserRole = async (req, res) => {
     }
 
     const updateData = { role };
-    if (department_id) updateData.department_id = department_id;
+    if (department_id) updateData.department = department_id;
 
     const user = await User.findByIdAndUpdate(
         req.params.id,
