@@ -7,27 +7,44 @@ import { fetchUsers } from "../services/auth";
 import { createWorkerTask, autoAssignWorker } from "../services/workerTask";
 import ComplaintDetail from "./ComplaintDetail";
 
+const statusStyles = {
+  pending: "bg-amber-100 text-amber-700",
+  verified: "bg-emerald-100 text-emerald-700",
+  in_progress: "bg-violet-100 text-violet-700",
+  waiting_user: "bg-red-100 text-red-700",
+  resolved: "bg-sky-100 text-sky-700",
+};
+
+const statusLabels = {
+  pending: "Pending",
+  verified: "Verified",
+  in_progress: "In Progress",
+  waiting_user: "Waiting User",
+  resolved: "Resolved",
+};
+
+const InfoCard = ({ label, value, description, accent }) => (
+  <div className="rounded-3xl bg-white p-6 shadow-sm border border-slate-200">
+    <p className="text-sm font-semibold text-slate-500">{label}</p>
+    <p className="mt-4 text-3xl font-semibold text-slate-900">{value}</p>
+    {description && <p className="mt-2 text-sm text-slate-400">{description}</p>}
+  </div>
+);
+
+const StatusBadge = ({ status }) => (
+  <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${statusStyles[status] || "bg-gray-100 text-gray-700"}`}>
+    {statusLabels[status] || status}
+  </span>
+);
+
 const AdminDashboard = () => {
   const nav = useNavigate();
-  const [stats, setStats] = useState({
-    pending: 0,
-    verified: 0,
-    inProgress: 0,
-    waitingForUser: 0,
-    totalComplaints: 0,
-    resolved: 0,
-    pendingApprovals: 0,
-  });
-
-  // asset import state
+  const [stats, setStats] = useState({ pending: 0, verified: 0, inProgress: 0, waitingForUser: 0, totalComplaints: 0, resolved: 0, pendingApprovals: 0 });
   const [excelFile, setExcelFile] = useState(null);
-  const [importStatus, setImportStatus] = useState('');
-
-
+  const [importStatus, setImportStatus] = useState("");
   const [complaints, setComplaints] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
   const [permissions, setPermissions] = useState([]);
   const [workers, setWorkers] = useState([]);
   const [selectedComplaintId, setSelectedComplaintId] = useState(null);
@@ -41,20 +58,23 @@ const AdminDashboard = () => {
       return;
     }
 
-    const loadComplaints = async () => {
+    const loadData = async () => {
+      setLoading(true);
       try {
-        const res = await fetchComplaints();
-        if (res.success) {
-          const data = res.complaints || [];
+        const [complaintsRes, permissionsRes, usersRes] = await Promise.all([
+          fetchComplaints(),
+          fetchPermissions(),
+          fetchUsers(),
+        ]);
+
+        if (complaintsRes.success) {
+          const data = complaintsRes.complaints || [];
           setComplaints(data);
-
-          // Calculate statistics
-          const pending = data.filter(c => c.status === "pending").length;
-          const verified = data.filter(c => c.status === "verified").length;
-          const inProgress = data.filter(c => c.status === "in_progress").length;
-          const waitingForUser = data.filter(c => c.status === "waiting_user").length;
-          const resolved = data.filter(c => c.status === "resolved").length;
-
+          const pending = data.filter((c) => c.status === "pending").length;
+          const verified = data.filter((c) => c.status === "verified").length;
+          const inProgress = data.filter((c) => c.status === "in_progress").length;
+          const waitingForUser = data.filter((c) => c.status === "waiting_user").length;
+          const resolved = data.filter((c) => c.status === "resolved").length;
           setStats({
             pending,
             verified,
@@ -62,68 +82,30 @@ const AdminDashboard = () => {
             waitingForUser,
             totalComplaints: data.length,
             resolved,
-            pendingApprovals: data.filter(c => c.status === "pending").length,
+            pendingApprovals: data.filter((c) => c.status === "pending").length,
           });
         } else {
-          setError(res.message || "Failed to load complaints");
+          setError(complaintsRes.message || "Failed to load complaints");
         }
-      } catch {
-        setError("Error loading complaints");
+
+        if (permissionsRes.success) {
+          setPermissions(permissionsRes.permissions || []);
+        }
+
+        if (usersRes.success) {
+          const admin = JSON.parse(localStorage.getItem("user") || "null");
+          const filteredWorkers = usersRes.users.filter((u) => u.role === "worker" || u.department_id === admin?.department_id);
+          setWorkers(filteredWorkers);
+        }
+      } catch (err) {
+        setError(err.message || "Unable to load dashboard data.");
       } finally {
         setLoading(false);
       }
     };
 
-    const loadPermissions = async () => {
-      const res = await fetchPermissions();
-      if (res.success) {
-        setPermissions(res.permissions || []);
-      }
-    };
-
-    const loadWorkers = async () => {
-      const res = await fetchUsers();
-      if (res.success) {
-        const admin = JSON.parse(localStorage.getItem("user") || "null");
-        const filtered = res.users.filter(
-          (u) => u.role === "worker" && u.department_id === admin?.department_id
-        );
-        setWorkers(filtered);
-      }
-    };
-
-    loadComplaints();
-    loadPermissions();
-    loadWorkers();
+    loadData();
   }, [nav]);
-
-  const getStatusColor = (status) => {
-    switch (status?.toLowerCase()) {
-      case "pending":
-        return "bg-yellow-200 text-yellow-800";
-      case "verified":
-        return "bg-green-200 text-green-800";
-      case "in_progress":
-        return "bg-orange-200 text-orange-800";
-      case "waiting_user":
-        return "bg-red-200 text-red-800";
-      case "resolved":
-        return "bg-blue-200 text-blue-800";
-      default:
-        return "bg-gray-200 text-gray-800";
-    }
-  };
-
-  const formatStatus = (status) => {
-    const statusMap = {
-      pending: "Pending",
-      verified: "Verified",
-      in_progress: "In Progress",
-      waiting_user: "Waiting User",
-      resolved: "Resolved",
-    };
-    return statusMap[status?.toLowerCase()] || status;
-  };
 
   const handleFileChange = (e) => {
     setExcelFile(e.target.files[0]);
@@ -134,10 +116,8 @@ const AdminDashboard = () => {
     setImportStatus("Importing assets...");
     const res = await importAssets(excelFile);
     if (res.success) {
-      let msg = `Added ${res.added} asset${res.added === 1 ? '' : 's'}`;
-      if (res.errors && res.errors.length) {
-        msg += `, ${res.errors.length} row${res.errors.length === 1 ? '' : 's'} skipped`;
-      }
+      let msg = `Added ${res.added || 0} asset`;
+      if (res.errors?.length) msg += `, ${res.errors.length} row skipped`;
       setImportStatus(msg);
     } else {
       setImportStatus(res.message || "Import failed");
@@ -146,308 +126,165 @@ const AdminDashboard = () => {
 
   const downloadTemplate = () => {
     const csv = "name,location,category\nExample Asset,Office,Electronics\n";
-    const blob = new Blob([csv], { type: 'text/csv' });
+    const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
-    a.download = 'assets-template.csv';
+    a.download = "assets-template.csv";
     a.click();
     URL.revokeObjectURL(url);
   };
 
   const assignWorker = async (complaint) => {
     if (!selectedWorkerId) {
-      setAssignMessage('Please select a worker to assign.');
+      setAssignMessage("Please select a worker to assign.");
       return;
     }
 
-    const payload = {
-      complaint_id: complaint._id,
-      worker_id: selectedWorkerId,
-      status: 'assigned'
-    };
-
-    const res = await createWorkerTask(payload);
+    const res = await createWorkerTask({ complaint_id: complaint._id, worker_id: selectedWorkerId, status: "assigned" });
     if (res.success) {
-      setAssignMessage(`Complaint assigned to worker successfully.`);
-      await fetchComplaints().then((r) => {
-        if (r.success) setComplaints(r.complaints || []);
-      });
+      setAssignMessage("Complaint assigned to worker successfully.");
+      const refreshed = await fetchComplaints();
+      if (refreshed.success) setComplaints(refreshed.complaints || []);
     } else {
-      setAssignMessage(res.message || 'Failed to assign worker.');
+      setAssignMessage(res.message || "Failed to assign worker.");
     }
   };
 
   const autoAssignToSelectedComplaint = async () => {
     if (!selectedComplaintId) {
-      setAssignMessage('Please select a complaint first from table below.');
+      setAssignMessage("Please select a complaint first.");
       return;
     }
-
     const res = await autoAssignWorker(selectedComplaintId);
     if (res.success) {
-      setAssignMessage(`Complaint auto-assigned to worker: ${res.assignedWorker?.name || 'unknown'}`);
-      await fetchComplaints().then((r) => {
-        if (r.success) setComplaints(r.complaints || []);
-      });
+      setAssignMessage(`Complaint auto-assigned to worker: ${res.workerName || ""}`);
+      const refreshed = await fetchComplaints();
+      if (refreshed.success) setComplaints(refreshed.complaints || []);
     } else {
-      setAssignMessage(res.message || 'Auto assignment failed.');
+      setAssignMessage(res.message || "Auto assignment failed.");
     }
   };
 
+  const selectedComplaint = complaints.find((c) => c._id === selectedComplaintId);
+
   return (
-    <div className="min-h-screen min-w-screen pt-20 ">
-      {/* Header */}
-      <div className="bg-linear-to-r from-slate-900 to-slate-800 text-white p-6 shadow-lg">
-        <h1 className="text-3xl font-bold text-center">Admin Dashboard</h1>
-      </div>
-
-      {/* Loading State */}
-      {loading && (
-        <div className="flex justify-center items-center min-h-100">
-          <div className="text-lg text-gray-600">Loading complaints...</div>
+    <div className="min-h-screen bg-slate-50 pt-20 pb-10">
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="rounded-[2rem] bg-gradient-to-r from-slate-900 to-slate-800 text-white p-10 shadow-xl mb-8">
+          <p className="text-sm uppercase tracking-[0.3em] text-slate-400">Admin Command Center</p>
+          <h1 className="mt-4 text-4xl font-bold">Administrator Dashboard</h1>
+          <p className="mt-3 max-w-2xl text-slate-300 leading-7">Manage complaints, assign workers, and import assets from a unified operations hub.</p>
         </div>
-      )}
 
-      {/* Error State */}
-      {error && (
-        <div className="p-6">
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-            {error}
-          </div>
-        </div>
-      )}
-
-      {/* Main Content */}
-      {!loading && !error && (
-        <div className="p-6">
-          {/* Asset import panel */}
-          <div className="bg-white rounded-lg shadow-md p-4 mb-6">
-            <h2 className="text-lg font-semibold mb-2">Import Assets (Excel)</h2>
-            <div className="flex items-center gap-2 flex-wrap">
-              <input
-                type="file"
-                accept=".xlsx,.xls"
-                onChange={handleFileChange}
-                className="border p-1"
-              />
-              <button
-                onClick={handleImport}
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-              >
-                Upload
-              </button>
-              <button
-                onClick={downloadTemplate}
-                className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition"
-              >
-                Download Template
-              </button>
-            </div>
-            {importStatus && <p className="mt-2 text-sm text-gray-700">{importStatus}</p>}
-            <p className="text-xs text-gray-500 mt-1">
-              Excel must include headers <code>name</code>, <code>location</code>, and <code>category</code> (case-insensitive).
-            </p>
-          </div>
-
-          {/* Stat Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            {/* Pending Complaints */}
-            <div className="bg-blue-600 text-white p-6 rounded-lg shadow-md flex items-center gap-4">
-              <div className="bg-blue-500 p-4 rounded">
-                <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-1.414 0l-2.414-2.414a1 1 0 00-.707-.293H4a1 1 0 110-2V4z" />
-                </svg>
-              </div>
-              <div>
-                <p className="text-sm opacity-90">Pending Complaints</p>
-                <p className="text-2xl font-bold">{stats.pending}</p>
-              </div>
+        {loading ? (
+          <div className="rounded-[1.75rem] bg-white p-12 shadow-sm text-center text-slate-500">Loading dashboard data…</div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
+              <InfoCard label="Total Complaints" value={stats.totalComplaints} />
+              <InfoCard label="Pending" value={stats.pending} description="Needs review" />
+              <InfoCard label="Verified" value={stats.verified} description="Passed initial checks" />
+              <InfoCard label="Resolved" value={stats.resolved} description="Completed cases" />
             </div>
 
-            {/* Verified Complaints */}
-            <div className="bg-green-600 text-white p-6 rounded-lg shadow-md flex items-center gap-4">
-              <div className="bg-green-500 p-4 rounded">
-                <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div>
-                <p className="text-sm opacity-90">Verified Complaints</p>
-                <p className="text-2xl font-bold">{stats.verified}</p>
-              </div>
-            </div>
-
-            {/* In Progress */}
-            <div className="bg-orange-500 text-white p-6 rounded-lg shadow-md flex items-center gap-4">
-              <div className="bg-orange-400 p-4 rounded">
-                <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M14.828 14.828a4 4 0 01-5.656 0M17.657 17.657a8 8 0 10-11.314 0m5.858-5.858a2 2 0 11-2.828-2.829m2.828 2.829L9.172 9.172" />
-                </svg>
-              </div>
-              <div>
-                <p className="text-sm opacity-90">In Progress</p>
-                <p className="text-2xl font-bold">{stats.inProgress}</p>
-              </div>
-            </div>
-
-            {/* Waiting for User */}
-            <div className="bg-red-600 text-white p-6 rounded-lg shadow-md flex items-center gap-4">
-              <div className="bg-red-500 p-4 rounded">
-                <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M13.477 14.89A6 6 0 015.11 2.36a6 6 0 008.367 8.529m7.016.036a7 7 0 11-9.9-9.9m5.116 8.08a7 7 0 01-9.9-9.9" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div>
-                <p className="text-sm opacity-90">Waiting for User</p>
-                <p className="text-2xl font-bold">{stats.waitingForUser}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Recent Complaints */}
-            <div className="lg:col-span-2 bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-xl font-bold mb-4 text-gray-800">Recent Complaints</h2>
-              {complaints.length === 0 && (
-                <div className="text-center py-8 text-gray-500">No complaints found</div>
-              )}
-
-              {complaints.length > 0 && (
-                <>
-                  <div className="mb-4 bg-gray-100 p-4 rounded">
-                    <p className="font-semibold text-gray-700">Assign Worker to Selected Complaint</p>
-                    <p className="text-sm text-gray-600">Selected Complaint: {selectedComplaintId ? selectedComplaintId.slice(-6) : 'None'}</p>
-                    <div className="mt-2 flex gap-2 flex-wrap">
-                      <select
-                        value={selectedWorkerId}
-                        onChange={(e) => setSelectedWorkerId(e.target.value)}
-                        className="border rounded px-3 py-2"
-                      >
-                        <option value="">Select worker</option>
-                        {workers.map((w) => (
-                          <option key={w._id} value={w._id}>{w.name} ({w.email})</option>
-                        ))}
-                      </select>
-                      <button
-                        onClick={() => {
-                          if (!selectedComplaintId) {
-                            setAssignMessage('Please select a complaint first from table below.');
-                            return;
-                          }
-                          const comp = complaints.find(c => c._id === selectedComplaintId);
-                          if (!comp) {
-                            setAssignMessage('Selected complaint not found.');
-                            return;
-                          }
-                          assignWorker(comp);
-                        }}
-                        className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
-                      >
-                        Assign Worker
-                      </button>
-                      <button
-                        onClick={autoAssignToSelectedComplaint}
-                        className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-                      >
-                        Auto Assign Least Busy Worker
-                      </button>
-                    </div>
-                    {assignMessage && <p className="text-sm text-green-700 mt-2">{assignMessage}</p>}
+            <div className="grid gap-6 xl:grid-cols-[2fr_1fr] mb-6">
+              <section className="rounded-[1.75rem] bg-white p-6 shadow-sm border border-slate-200">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-5">
+                  <div>
+                    <p className="text-sm uppercase tracking-[0.3em] text-slate-500">Recent complaints</p>
+                    <h2 className="mt-2 text-2xl font-semibold text-slate-900">Active ticket queue</h2>
                   </div>
+                  <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">{complaints.length} tickets</span>
+                </div>
 
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-gray-200">
-                        <th className="text-left py-3 px-4 font-semibold text-gray-700">ID</th>
-                        <th className="text-left py-3 px-4 font-semibold text-gray-700">User</th>
-                        <th className="text-left py-3 px-4 font-semibold text-gray-700">Issue</th>
-                        <th className="text-left py-3 px-4 font-semibold text-gray-700">Location</th>
-                        <th className="text-left py-3 px-4 font-semibold text-gray-700">Status</th>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full text-left text-sm text-slate-700">
+                    <thead className="border-b border-slate-200 text-slate-500">
+                      <tr>
+                        <th className="px-4 py-3">ID</th>
+                        <th className="px-4 py-3">Issue</th>
+                        <th className="px-4 py-3">Location</th>
+                        <th className="px-4 py-3">Status</th>
+                        <th className="px-4 py-3">Action</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {complaints.slice(0, 5).map((complaint) => (
-                        <tr key={complaint._id} onClick={() => setSelectedComplaintId(complaint._id)} className="border-b border-gray-100 hover:bg-gray-50 cursor-pointer">
-                          <td className="py-3 px-4 text-gray-700">{complaint._id?.slice(-4) || "—"}</td>
-                          <td className="py-3 px-4 text-gray-700">{complaint.userId?.name || "—"}</td>
-                          <td className="py-3 px-4 text-gray-700">{complaint.issue || "—"}</td>
-                          <td className="py-3 px-4 text-gray-700">{complaint.location || "—"}</td>
-                          <td className="py-3 px-4">
-                            <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(complaint.status)}`}>
-                              {formatStatus(complaint.status)}
-                            </span>
-                          </td>
+                      {complaints.slice(0, 10).map((complaint) => (
+                        <tr key={complaint._id} className="border-b border-slate-200 hover:bg-slate-50 transition-colors">
+                          <td className="px-4 py-3 text-slate-600">{complaint._id.slice(-6)}</td>
+                          <td className="px-4 py-3">{complaint.issue || complaint.category}</td>
+                          <td className="px-4 py-3">{complaint.location}</td>
+                          <td className="px-4 py-3"><StatusBadge status={complaint.status} /></td>
+                          <td className="px-4 py-3"><button className="text-blue-600 hover:text-blue-800 text-sm" onClick={() => setSelectedComplaintId(complaint._id)}>Select</button></td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
-              </>)}
+              </section>
+
+              <section className="rounded-[1.75rem] bg-white p-6 shadow-sm border border-slate-200">
+                <div className="mb-6">
+                  <p className="text-sm uppercase tracking-[0.3em] text-slate-500">Assignment</p>
+                  <h2 className="mt-2 text-2xl font-semibold text-slate-900">Worker dispatch</h2>
+                </div>
+                <div className="space-y-4">
+                  <select value={selectedWorkerId} onChange={(e) => setSelectedWorkerId(e.target.value)} className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800">
+                    <option value="">Choose worker</option>
+                    {workers.map((worker) => (
+                      <option key={worker._id} value={worker._id}>{worker.name || worker.email}</option>
+                    ))}
+                  </select>
+                  <button onClick={() => {
+                    const complaint = complaints.find((item) => item._id === selectedComplaintId);
+                    if (!complaint) { setAssignMessage("Select a complaint first."); return; }
+                    assignWorker(complaint);
+                  }} className="w-full rounded-2xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-700 transition">Assign Worker</button>
+                  <button onClick={autoAssignToSelectedComplaint} className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-100 transition">Auto Assign</button>
+                  <p className="text-sm text-slate-600">Selected complaint: {selectedComplaint ? selectedComplaint.issue || selectedComplaint.category : "None"}</p>
+                  {assignMessage && <p className="text-sm text-slate-600">{assignMessage}</p>}
+                </div>
+              </section>
             </div>
 
-            {/* Right Column */}
-            <div className="space-y-6">
-              {/* Statistics */}
-              <div className="bg-white rounded-lg shadow-md p-6">
-                <h2 className="text-xl font-bold mb-4 text-gray-800">Statistics</h2>
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
-                    <span className="text-gray-700">Total Complaints: <strong>{stats.totalComplaints}</strong></span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
-                    <span className="text-gray-700">Resolved Complaints: <strong>{stats.resolved}</strong></span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
-                    <span className="text-gray-700">Pending Approvals: <strong>{stats.pendingApprovals}</strong></span>
-                  </div>
+            <section className="rounded-[1.75rem] bg-white p-6 shadow-sm border border-slate-200">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
+                <div>
+                  <p className="text-sm uppercase tracking-[0.3em] text-slate-500">Permissions</p>
+                  <h2 className="mt-2 text-2xl font-semibold text-slate-900">Pending approvals</h2>
                 </div>
+                <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">{permissions.length} requests</span>
               </div>
-
-              {/* Permission Requests */}
-              <div className="bg-white rounded-lg shadow-md p-6">
-                <h2 className="text-xl font-bold mb-4 text-gray-800">Permission Requests</h2>
-                <div className="space-y-3">
+              {permissions.length === 0 ? (
+                <p className="text-sm text-slate-500">No pending permission requests.</p>
+              ) : (
+                <div className="grid gap-4">
                   {permissions.map((permission) => (
-                    <div key={permission._id} className="flex justify-between items-center pb-3 border-b border-gray-100 last:border-b-0">
-                      <span className="text-gray-700">{permission.assetId?.name || "Asset"}</span>
-                      <span className={`text-xs font-semibold px-3 py-1 rounded ${
-                        permission.status === "approved" 
-                          ? "bg-blue-200 text-blue-800" 
-                          : permission.status === "rejected"
-                            ? "bg-red-200 text-red-800"
-                            : "bg-yellow-200 text-yellow-800"
-                      }`}>
-                        {permission.status.charAt(0).toUpperCase() + permission.status.slice(1)}
-                      </span>
+                    <div key={permission._id} className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <p className="font-semibold text-slate-900">{permission.assetId?.name || "Asset request"}</p>
+                          <p className="text-sm text-slate-500">Requested by {permission.requestBy?.name || "Unknown"}</p>
+                        </div>
+                        <span className="text-xs uppercase font-semibold text-slate-500">{permission.status || "pending"}</span>
+                      </div>
                     </div>
                   ))}
                 </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+              )}
+            </section>
 
-      {/* Complaint Detail Modal */}
-      {selectedComplaintId && (
-        <ComplaintDetail
-          complaintId={selectedComplaintId}
-          onClose={() => setSelectedComplaintId(null)}
-          onStatusChange={async () => {
-            // Reload complaints when status changes
-            const res = await fetchComplaints();
-            if (res.success) {
-              setComplaints(res.complaints || []);
-            }
-          }}
-        />
-      )}
+            {selectedComplaintId && (
+              <div className="mt-6">
+                <ComplaintDetail complaintId={selectedComplaintId} onClose={() => setSelectedComplaintId(null)} onStatusChange={() => {
+                  fetchComplaints().then((r) => { if (r.success) setComplaints(r.complaints || []); });
+                }} />
+              </div>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 };

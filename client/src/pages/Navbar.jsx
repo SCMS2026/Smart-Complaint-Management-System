@@ -107,6 +107,15 @@ const Navbar = () => {
               Resources
             </a>
 
+            {user && (
+              <a
+                href="/company"
+                className="px-4 py-2 rounded-lg hover:bg-black/5 transition"
+              >
+                Company
+              </a>
+            )}
+
             <a
               href="#"
               className="px-4 py-2 rounded-lg hover:bg-black/5 transition"
