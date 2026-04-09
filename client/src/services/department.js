@@ -95,3 +95,25 @@ export const deleteDepartment = async (departmentId) => {
     return { success: false, message: err.message };
   }
 };
+export const getDepartmentById = async (departmentId) => {
+  try {
+    const token = getToken();
+    if (!token) {
+      return { success: false, message: "User not logged in" };
+    }
+
+    const res = await fetch(`${API}/${departmentId}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      }
+    });
+
+    const data = await handleResponse(res);
+    return { success: true, department: data.department };
+  }
+  catch (err) {
+    return { success: false, message: err.message };
+  }
+};

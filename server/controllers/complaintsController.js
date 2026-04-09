@@ -1,6 +1,7 @@
 const Complaint = require("../models/complaintsModel");
 const Asset = require("../models/assetsModels");
 const User = require("../models/authModels");
+const WorkerTask = require("../models/workerTaskModel");
 
 // Create Complaint
 const createComplaint = async (req, res) => {
@@ -235,6 +236,51 @@ const updateComplaintStatus = async (req, res) => {
       return res.status(404).json({
         message: "Complaint not found",
       });
+    }
+
+    // Auto-assign worker when complaint is verified
+    if (targetStatus === 'verified') {
+      try {
+        const workers = await User.find({ role: 'worker', status: 'active' });
+        
+        if (workers.length > 0) {
+          // Get count of assigned/started tasks for each worker
+          const tasks = await WorkerTask.aggregate([
+            { $match: { status: { $in: ['assigned', 'started'] } } },
+            { $group: { _id: '$worker_id', count: { $sum: 1 } } }
+          ]);
+
+          const countMap = tasks.reduce((map, item) => {
+            map[item._id.toString()] = item.count;
+            return map;
+          }, {});
+
+          // Find worker with minimum load
+          let selectedWorker = workers[0];
+          let minLoad = countMap[selectedWorker._id.toString()] || 0;
+
+          for (const worker of workers) {
+            const load = countMap[worker._id.toString()] || 0;
+            if (load < minLoad) {
+              minLoad = load;
+              selectedWorker = worker;
+            }
+          }
+
+          // Create worker task (auto-assign)
+          const workerTask = new WorkerTask({
+            complaint_id: complaint._id,
+            worker_id: selectedWorker._id,
+            status: 'assigned'
+          });
+
+          await workerTask.save();
+          console.log(`Complaint ${complaint._id} auto-assigned to worker ${selectedWorker._id}`);
+        }
+      } catch (autoAssignError) {
+        console.error('Auto-assign error:', autoAssignError);
+        // Don't fail the complaint update if auto-assign fails
+      }
     }
 
     res.status(200).json({

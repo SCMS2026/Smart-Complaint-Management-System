@@ -1,5 +1,4 @@
 import { getToken } from "./auth";
-import axios from "axios";
 const API = "http://localhost:5000/complaints";
 const getAuthHeader = () => {
   const token = getToken();
@@ -58,22 +57,32 @@ export const fetchComplaints = async () => {
     console.log("Complaint created successfully:", data);
     return { success: true, complaint: data };
 
-  } catch (error) {
+  } catch {
     return { success: false, message: "Server connection failed" };
   }
 };
 
 export const updateComplaintStatusRequest = async (id, status) => {
   try {
+    const token = getToken();
+    if (!token) {
+      console.error("❌ No token found in localStorage");
+      return { success: false, message: "Authentication token missing. Please login again." };
+    }
+
+    console.log("📤 Sending PATCH request with token:", token.substring(0, 20) + "...");
     const res = await fetch(`${API}/${id}/status`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json", ...getAuthHeader() },
       credentials: "include",
       body: JSON.stringify({ status }),
     });
+    
+    console.log("📥 Response status:", res.status);
     const data = await handleResponse(res);
     return { success: true, complaint: data.complaint };
   } catch (err) {
+    console.error("❌ updateComplaintStatusRequest error:", err.message);
     return { success: false, message: err.message };
   }
 };

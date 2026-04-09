@@ -20,8 +20,9 @@ const Login = () => {
     try {
       const res = await loginUser(form);
       if (res.success) {
-        // 🔥 ડેટા સેવ કરવો ફરજિયાત છે
+        // 🔥 Persist auth token and user data for API calls
         const userData = { ...res.user, token: res.token };
+        localStorage.setItem("user_token", res.token);
         localStorage.setItem("user", JSON.stringify(userData));
         nav("/profile");
       } else {

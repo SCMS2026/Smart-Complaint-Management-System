@@ -1,7 +1,38 @@
 const API = "http://localhost:5000/auth";
 
 // Get JWT token from localStorage
-export const getToken = () => localStorage.getItem("user_token");
+export const getToken = () => {
+  const token = localStorage.getItem("user_token");
+  if (token && token.startsWith("Bearer ")) {
+    // Remove "Bearer " prefix if it exists
+    return token.substring(7);
+  }
+  return token;
+};
+
+// Decode JWT token to inspect its claims (for debugging)
+export const getTokenPayload = () => {
+  const token = getToken();
+  if (!token) {
+    console.error("❌ No token found!");
+    return null;
+  }
+  try {
+    const parts = token.split(".");
+    if (parts.length !== 3) {
+      console.error("❌ Invalid token format - expected 3 parts, got", parts.length);
+      return null;
+    }
+    const payload = JSON.parse(atob(parts[1]));
+    console.log("✅ Token Payload:", payload);
+    console.log("   Role in token:", payload.role);
+    console.log("   User ID:", payload.id);
+    return payload;
+  } catch (err) {
+    console.error("❌ Failed to decode token:", err.message);
+    return null;
+  }
+};
 
 // Get auth header with JWT token
 const getAuthHeader = () => {

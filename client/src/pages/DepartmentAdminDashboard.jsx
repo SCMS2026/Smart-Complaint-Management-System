@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { fetchComplaints } from "../services/complaints";
+import { fetchComplaints, updateComplaintStatusRequest } from "../services/complaints";
 import { fetchPermissions } from "../services/permissions";
-import { fetchUsers } from "../services/auth";
+import { fetchUsers, getTokenPayload } from "../services/auth";
 import { createWorkerTask, autoAssignWorker } from "../services/workerTask";
 import ComplaintDetail from "./ComplaintDetail";
 
@@ -145,6 +145,22 @@ const DepartmentAdminDashboard = () => {
     }
   };
 
+  const verifyAndAutoAssign = async (complaintId) => {
+    try {
+      setAssignMessage("Processing...");
+      console.log("🔍 Token Payload before request:", getTokenPayload());
+      const res = await updateComplaintStatusRequest(complaintId, 'verified');
+      if (res.success) {
+        setAssignMessage("Complaint verified and auto-assigned to worker!");
+        await refreshData();
+      } else {
+        setAssignMessage(res.message || "Failed to verify and assign complaint.");
+      }
+    } catch (err) {
+      setAssignMessage(err.message || "Error processing complaint.");
+    }
+  };
+
   const selectedComplaint = complaints.find((c) => c._id === selectedComplaintId);
 
   return (
@@ -213,7 +229,18 @@ const DepartmentAdminDashboard = () => {
                           <td className="px-4 py-3">{complaint.issue || complaint.category}</td>
                           <td className="px-4 py-3 capitalize">{complaint.status}</td>
                           <td className="px-4 py-3">{complaint.assignedWorker?.name || "—"}</td>
-                          <td className="px-4 py-3"><button className="text-blue-600 hover:text-blue-800 text-sm" onClick={() => setSelectedComplaintId(complaint._id)}>View</button></td>
+                          <td className="px-4 py-3 flex gap-2">
+                            <button className="text-blue-600 hover:text-blue-800 text-sm font-semibold" onClick={() => setSelectedComplaintId(complaint._id)}>View</button>
+                            {complaint.status === 'pending' && (
+                              <button 
+                                className="text-green-600 hover:text-green-800 text-sm font-semibold" 
+                                onClick={() => verifyAndAutoAssign(complaint._id)}
+                                title="Verify complaint and automatically assign to a worker"
+                              >
+                                Auto
+                              </button>
+                            )}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
