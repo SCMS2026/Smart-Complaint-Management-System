@@ -312,8 +312,8 @@ const userApproveComplaint = async (req, res) => {
       return res.status(403).json({ message: 'You can approve/reject only your own resolved complaints' });
     }
 
-    if (['completed', 'approved_by_user', 'rejected_by_user'].includes(complaint.status) === false) {
-      return res.status(400).json({ message: 'Complaint not ready for user approval' });
+    if (!['user_approval_pending', 'completed'].includes(complaint.status)) {
+      return res.status(400).json({ message: `Complaint not ready for user approval. Current status: ${complaint.status}` });
     }
 
     const newStatus = action === 'approve' ? 'approved_by_user' : 'rejected_by_user';

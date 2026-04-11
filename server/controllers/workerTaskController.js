@@ -1,7 +1,8 @@
 const WorkerTask = require('../models/workerTaskModel');
 const User = require('../models/authModels');
+const Complaint = require('../models/complaintsModel');
 
-// Create Worker Task
+// Create Worker Task (manual assign by admin/department_admin)
 const createWorkerTask = async (req, res) => {
     try {
         const { complaint_id, worker_id, status, before_photo, after_photo } = req.body;
@@ -20,6 +21,9 @@ const createWorkerTask = async (req, res) => {
 
         await workerTask.save();
 
+        // Update complaint status to 'assigned'
+        await Complaint.findByIdAndUpdate(complaint_id, { status: 'assigned' });
+
         res.status(201).json({
             message: 'Worker task created successfully',
             workerTask
@@ -30,6 +34,7 @@ const createWorkerTask = async (req, res) => {
     }
 };
 
+// FIX 3: Auto Assign Worker - Least Busy (minLoad = Infinity fix applied)
 const autoAssignWorkerToComplaint = async (req, res) => {
     try {
         const { complaint_id } = req.body;
@@ -53,8 +58,9 @@ const autoAssignWorkerToComplaint = async (req, res) => {
             return map;
         }, {});
 
-        let selectedWorker = workers[0];
-        let minLoad = countMap[selectedWorker._id.toString()] || 0;
+        // FIXED: Infinity use karyo so every worker properly compared
+        let selectedWorker = null;
+        let minLoad = Infinity;
 
         for (const worker of workers) {
             const load = countMap[worker._id.toString()] || 0;
@@ -62,6 +68,10 @@ const autoAssignWorkerToComplaint = async (req, res) => {
                 minLoad = load;
                 selectedWorker = worker;
             }
+        }
+
+        if (!selectedWorker) {
+            return res.status(404).json({ message: 'Could not select a worker' });
         }
 
         const workerTask = new WorkerTask({
@@ -72,7 +82,19 @@ const autoAssignWorkerToComplaint = async (req, res) => {
 
         await workerTask.save();
 
-        res.status(201).json({ message: 'Complaint auto-assigned', workerTask, assignedWorker: selectedWorker });
+        // Update complaint status to 'assigned'
+        await Complaint.findByIdAndUpdate(complaint_id, { status: 'assigned' });
+
+        res.status(201).json({
+            message: 'Complaint auto-assigned to least busy worker',
+            workerTask,
+            assignedWorker: {
+                _id: selectedWorker._id,
+                name: selectedWorker.name,
+                email: selectedWorker.email,
+                currentLoad: minLoad
+            }
+        });
     } catch (error) {
         console.error('Auto-assign worker error:', error);
         res.status(500).json({ message: 'Error auto-assigning worker', error: error.message });
@@ -84,13 +106,12 @@ const getWorkerTasks = async (req, res) => {
     try {
         const filter = {};
 
-        // If user is a worker, only show their tasks
         if (req.user && req.user.role === 'worker') {
             filter.worker_id = req.user.id;
         }
 
         const workerTasks = await WorkerTask.find(filter)
-            .populate('complaint_id', 'issue description status')
+            .populate('complaint_id', 'issue description status location city')
             .populate('worker_id', 'name email');
 
         res.status(200).json({ workerTasks });
@@ -141,6 +162,22 @@ const updateWorkerTaskStatus = async (req, res) => {
 
         if (!workerTask) {
             return res.status(404).json({ message: 'Worker task not found' });
+        }
+
+        // Worker completes task -> complaint goes to user_approval_pending
+        if (status === 'completed' && workerTask.complaint_id) {
+            await Complaint.findByIdAndUpdate(
+                workerTask.complaint_id._id,
+                { status: 'user_approval_pending' }
+            );
+        }
+
+        // Worker starts task -> complaint goes to in_progress
+        if (status === 'started' && workerTask.complaint_id) {
+            await Complaint.findByIdAndUpdate(
+                workerTask.complaint_id._id,
+                { status: 'in_progress' }
+            );
         }
 
         res.status(200).json({

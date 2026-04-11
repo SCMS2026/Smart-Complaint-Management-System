@@ -89,4 +89,11 @@ router.put('/admin/users/:id/department',
   authController.setUserDepartment
 );
 
+// Delete User — Super Admin only
+router.delete('/admin/users/:id',
+  authMiddleware,
+  allowRoles('admin','super_admin'),
+  authController.deleteUser
+);
+
 module.exports = router;

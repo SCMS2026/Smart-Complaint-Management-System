@@ -22,7 +22,8 @@ const DepartmentAdminDashboard = () => {
   const [error, setError] = useState("");
   const [permissions, setPermissions] = useState([]);
   const [workers, setWorkers] = useState([]);
-  const [selectedComplaintId, setSelectedComplaintId] = useState(null);
+  const [selectedComplaintId, setSelectedComplaintId] = useState(null); // assignment માટે
+  const [viewComplaintId, setViewComplaintId] = useState(null); // view/detail માટે
   const [selectedWorkerId, setSelectedWorkerId] = useState("");
   const [assignMessage, setAssignMessage] = useState("");
 
@@ -45,32 +46,21 @@ const DepartmentAdminDashboard = () => {
         if (complaintsRes.success) {
           const data = complaintsRes.complaints || [];
           setComplaints(data);
-          const pending = data.filter((c) => c.status === "pending").length;
-          const verified = data.filter((c) => c.status === "verified").length;
-          const inProgress = data.filter((c) => c.status === "in_progress").length;
-          const waitingForUser = data.filter((c) => c.status === "waiting_user").length;
-          const resolved = data.filter((c) => ["completed", "approved_by_user", "resolved"].includes(c.status)).length;
-          const pendingApprovals = data.filter((c) => c.status === "user_approval_pending").length;
           setStats({
-            pending,
-            verified,
-            inProgress,
-            waitingForUser,
+            pending: data.filter((c) => c.status === "pending").length,
+            verified: data.filter((c) => c.status === "verified").length,
+            inProgress: data.filter((c) => c.status === "in_progress").length,
+            waitingForUser: data.filter((c) => c.status === "waiting_user").length,
             totalComplaints: data.length,
-            resolved,
-            pendingApprovals,
+            resolved: data.filter((c) => ["completed", "approved_by_user", "resolved"].includes(c.status)).length,
+            pendingApprovals: data.filter((c) => c.status === "user_approval_pending").length,
           });
         } else {
           setError(complaintsRes.message || "Failed to load complaints");
         }
 
-        if (permissionsRes.success) {
-          setPermissions(permissionsRes.permissions || []);
-        }
-
-        if (usersRes.success) {
-          setWorkers(usersRes.users.filter((u) => u.role === "worker"));
-        }
+        if (permissionsRes.success) setPermissions(permissionsRes.permissions || []);
+        if (usersRes.success) setWorkers(usersRes.users.filter((u) => u.role === "worker"));
       } catch (err) {
         setError(err.message || "Unable to load dashboard data.");
       } finally {
@@ -86,20 +76,14 @@ const DepartmentAdminDashboard = () => {
     if (res.success) {
       const data = res.complaints || [];
       setComplaints(data);
-      const pending = data.filter((c) => c.status === "pending").length;
-      const verified = data.filter((c) => c.status === "verified").length;
-      const inProgress = data.filter((c) => c.status === "in_progress").length;
-      const waitingForUser = data.filter((c) => c.status === "waiting_user").length;
-      const resolved = data.filter((c) => ["completed", "approved_by_user", "resolved"].includes(c.status)).length;
-      const pendingApprovals = data.filter((c) => c.status === "user_approval_pending").length;
       setStats({
-        pending,
-        verified,
-        inProgress,
-        waitingForUser,
+        pending: data.filter((c) => c.status === "pending").length,
+        verified: data.filter((c) => c.status === "verified").length,
+        inProgress: data.filter((c) => c.status === "in_progress").length,
+        waitingForUser: data.filter((c) => c.status === "waiting_user").length,
         totalComplaints: data.length,
-        resolved,
-        pendingApprovals,
+        resolved: data.filter((c) => ["completed", "approved_by_user", "resolved"].includes(c.status)).length,
+        pendingApprovals: data.filter((c) => c.status === "user_approval_pending").length,
       });
     }
 
@@ -123,7 +107,7 @@ const DepartmentAdminDashboard = () => {
     });
 
     if (res.success) {
-      setAssignMessage("Worker assigned successfully.");
+      setAssignMessage("✅ Worker assigned successfully.");
       await refreshData();
     } else {
       setAssignMessage(res.message || "Failed to assign worker.");
@@ -138,7 +122,7 @@ const DepartmentAdminDashboard = () => {
 
     const res = await autoAssignWorker(selectedComplaintId);
     if (res.success) {
-      setAssignMessage(`Auto-assigned to ${res.assignedWorker?.name || "a worker"}.`);
+      setAssignMessage(`✅ Auto-assigned to ${res.assignedWorker?.name || "a worker"}.`);
       await refreshData();
     } else {
       setAssignMessage(res.message || "Auto assignment failed.");
@@ -147,14 +131,22 @@ const DepartmentAdminDashboard = () => {
 
   const verifyAndAutoAssign = async (complaintId) => {
     try {
+      setSelectedComplaintId(complaintId);
       setAssignMessage("Processing...");
-      console.log("🔍 Token Payload before request:", getTokenPayload());
-      const res = await updateComplaintStatusRequest(complaintId, 'verified');
-      if (res.success) {
-        setAssignMessage("Complaint verified and auto-assigned to worker!");
+
+      const verifyRes = await updateComplaintStatusRequest(complaintId, "verified");
+      if (!verifyRes.success) {
+        setAssignMessage(verifyRes.message || "Failed to verify complaint.");
+        return;
+      }
+
+      const assignRes = await autoAssignWorker(complaintId);
+      if (assignRes.success) {
+        setAssignMessage(`✅ Verified & assigned to ${assignRes.assignedWorker?.name || "a worker"}.`);
         await refreshData();
       } else {
-        setAssignMessage(res.message || "Failed to verify and assign complaint.");
+        setAssignMessage(assignRes.message || "Verified but auto-assignment failed.");
+        await refreshData();
       }
     } catch (err) {
       setAssignMessage(err.message || "Error processing complaint.");
@@ -215,6 +207,7 @@ const DepartmentAdminDashboard = () => {
                   <table className="min-w-full text-left text-sm text-slate-700">
                     <thead className="border-b border-slate-200 text-slate-500">
                       <tr>
+                        <th className="px-4 py-3">Select</th>
                         <th className="px-4 py-3">ID</th>
                         <th className="px-4 py-3">Issue</th>
                         <th className="px-4 py-3">Status</th>
@@ -224,22 +217,60 @@ const DepartmentAdminDashboard = () => {
                     </thead>
                     <tbody>
                       {complaints.map((complaint) => (
-                        <tr key={complaint._id} className="border-b border-slate-200 hover:bg-slate-50 transition-colors">
+                        <tr
+                          key={complaint._id}
+                          className={`border-b border-slate-200 transition-colors ${
+                            selectedComplaintId === complaint._id
+                              ? "bg-blue-50"
+                              : "hover:bg-slate-50"
+                          }`}
+                        >
+                          {/* ✅ Radio - ફક્ત select કરે, view નહીં */}
+                          <td className="px-4 py-3">
+                            <input
+                              type="radio"
+                              name="selectedComplaint"
+                              checked={selectedComplaintId === complaint._id}
+                              onChange={() => {
+                                setSelectedComplaintId(complaint._id);
+                                setAssignMessage("");
+                              }}
+                              className="w-4 h-4 accent-blue-600 cursor-pointer"
+                            />
+                          </td>
                           <td className="px-4 py-3 text-slate-600">{complaint._id.slice(-6)}</td>
                           <td className="px-4 py-3">{complaint.issue || complaint.category}</td>
-                          <td className="px-4 py-3 capitalize">{complaint.status}</td>
+                          <td className="px-4 py-3">
+                            <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                              complaint.status === "pending" ? "bg-yellow-100 text-yellow-700" :
+                              complaint.status === "verified" ? "bg-blue-100 text-blue-700" :
+                              complaint.status === "in_progress" ? "bg-purple-100 text-purple-700" :
+                              complaint.status === "resolved" ? "bg-green-100 text-green-700" :
+                              "bg-slate-100 text-slate-600"
+                            }`}>
+                              {complaint.status}
+                            </span>
+                          </td>
                           <td className="px-4 py-3">{complaint.assignedWorker?.name || "—"}</td>
-                          <td className="px-4 py-3 flex gap-2">
-                            <button className="text-blue-600 hover:text-blue-800 text-sm font-semibold" onClick={() => setSelectedComplaintId(complaint._id)}>View</button>
-                            {complaint.status === 'pending' && (
-                              <button 
-                                className="text-green-600 hover:text-green-800 text-sm font-semibold" 
-                                onClick={() => verifyAndAutoAssign(complaint._id)}
-                                title="Verify complaint and automatically assign to a worker"
+                          <td className="px-4 py-3">
+                            <div className="flex gap-2">
+                              {/* ✅ View - ફક્ત detail open કરે, select નહીં */}
+                              <button
+                                className="text-blue-600 hover:text-blue-800 text-sm font-semibold"
+                                onClick={() => setViewComplaintId(complaint._id)}
                               >
-                                Auto
+                                View
                               </button>
-                            )}
+                              {complaint.status === "pending" && (
+                                <button
+                                  className="text-green-600 hover:text-green-800 text-sm font-semibold"
+                                  onClick={() => verifyAndAutoAssign(complaint._id)}
+                                  title="Verify and auto-assign to a worker"
+                                >
+                                  Auto
+                                </button>
+                              )}
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -253,8 +284,26 @@ const DepartmentAdminDashboard = () => {
                   <p className="text-sm uppercase tracking-[0.3em] text-slate-500">Assignment tools</p>
                   <h2 className="mt-2 text-2xl font-semibold text-slate-900">Worker dispatch</h2>
                 </div>
+
+                {/* ✅ Selected complaint info card */}
+                <div className={`mb-4 rounded-2xl p-4 border ${selectedComplaint ? "bg-blue-50 border-blue-200" : "bg-slate-50 border-slate-200"}`}>
+                  <p className="text-xs uppercase tracking-widest text-slate-500 mb-1">Selected Complaint</p>
+                  {selectedComplaint ? (
+                    <>
+                      <p className="font-semibold text-slate-900">{selectedComplaint.issue || selectedComplaint.category}</p>
+                      <p className="text-xs text-slate-500 mt-1">ID: {selectedComplaint._id.slice(-6)} · Status: {selectedComplaint.status}</p>
+                    </>
+                  ) : (
+                    <p className="text-sm text-slate-400">Radio button દબાવો complaint select કરવા</p>
+                  )}
+                </div>
+
                 <div className="space-y-4">
-                  <select value={selectedWorkerId} onChange={(e) => setSelectedWorkerId(e.target.value)} className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800">
+                  <select
+                    value={selectedWorkerId}
+                    onChange={(e) => setSelectedWorkerId(e.target.value)}
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800"
+                  >
                     <option value="">Choose worker</option>
                     {workers.map((worker) => (
                       <option key={worker._id} value={worker._id}>{worker.name || worker.email}</option>
@@ -262,20 +311,30 @@ const DepartmentAdminDashboard = () => {
                   </select>
                   <button
                     onClick={() => {
-                      const complaint = complaints.find((c) => c._id === selectedComplaintId);
-                      if (!complaint) {
+                      if (!selectedComplaint) {
                         setAssignMessage("Select a complaint first.");
                         return;
                       }
-                      assignWorker(complaint);
+                      assignWorker(selectedComplaint);
                     }}
-                    className="w-full rounded-2xl bg-slate-900 text-white px-4 py-3 hover:bg-slate-800 transition"
+                    disabled={!selectedComplaintId}
+                    className="w-full rounded-2xl bg-slate-900 text-white px-4 py-3 hover:bg-slate-800 transition disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     Assign Worker
                   </button>
-                  <button onClick={autoAssignToSelectedComplaint} className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-700 hover:bg-slate-100 transition">Auto Assign</button>
-                  <p className="text-sm text-slate-600">Selected complaint: {selectedComplaint ? selectedComplaint.issue || selectedComplaint.category : "None"}</p>
-                  {assignMessage && <p className="text-sm text-slate-600">{assignMessage}</p>}
+                  <button
+                    onClick={autoAssignToSelectedComplaint}
+                    disabled={!selectedComplaintId}
+                    className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-700 hover:bg-slate-100 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    Auto Assign
+                  </button>
+
+                  {assignMessage && (
+                    <p className={`text-sm font-medium ${assignMessage.startsWith("✅") ? "text-green-600" : "text-slate-600"}`}>
+                      {assignMessage}
+                    </p>
+                  )}
                 </div>
               </section>
             </div>
@@ -307,9 +366,14 @@ const DepartmentAdminDashboard = () => {
               )}
             </section>
 
-            {selectedComplaintId && (
+            {/* ✅ viewComplaintId વાપરે છે - selectedComplaintId નહીં */}
+            {viewComplaintId && (
               <div className="mt-6">
-                <ComplaintDetail complaintId={selectedComplaintId} onClose={() => setSelectedComplaintId(null)} onStatusChange={refreshData} />
+                <ComplaintDetail
+                  complaintId={viewComplaintId}
+                  onClose={() => setViewComplaintId(null)}
+                  onStatusChange={refreshData}
+                />
               </div>
             )}
           </>

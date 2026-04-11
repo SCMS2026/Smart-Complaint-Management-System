@@ -290,6 +290,28 @@ const setUserDepartment = async (req, res) => {
     }
 };
 
+// Delete User — Super Admin only
+const deleteUser = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Super admin cannot delete themselves
+        if (id === req.user.id) {
+            return res.status(400).json({ message: "You cannot delete your own account" });
+        }
+
+        const user = await User.findByIdAndDelete(id);
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        res.json({ message: `User '${user.name}' deleted successfully` });
+    } catch (error) {
+        res.status(500).json({ message: "Error deleting user", error: error.message });
+    }
+};
+
 module.exports = {
     register,
     login,
@@ -300,5 +322,6 @@ module.exports = {
     logout,
     getAllUsers,
     setUserRole,
-    setUserDepartment
+    setUserDepartment,
+    deleteUser
 };
