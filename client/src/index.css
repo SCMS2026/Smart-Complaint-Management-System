@@ -1,4 +1,113 @@
 @import "tailwindcss";
-html, body {
-  overflow-x: hidden;
+
+:root {
+  --bg-main: #f8fafc;
+  --bg-primary: #ffffff;
+  --bg-secondary: #f1f5f9;
+  --text-main: #1e293b;
+  --text-secondary: #64748b;
+  --text-primary: #1e293b;
+  --nav-bg: rgba(255, 255, 255, 0.9);
+  --border-color: #e2e8f0;
+}
+
+html.dark {
+  --bg-main: #0f172a;
+  --bg-primary: #1e293b;
+  --bg-secondary: #111827;
+  --text-main: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-primary: #f8fafc;
+  --nav-bg: rgba(15, 23, 42, 0.92);
+  --border-color: #334155;
+}
+
+@layer base {
+  html, body {
+    overflow-x: hidden;
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    transition: background-color 0.3s ease, color 0.3s ease;
+    min-height: 100vh;
+  }
+
+  body {
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    padding-top: 5rem; /* Account for fixed navbar height */
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    color: inherit;
+  }
+
+  .bg-white {
+    background-color: var(--bg-primary) !important;
+  }
+
+  .bg-slate-50,
+  .bg-gray-50,
+  .bg-gray-100,
+  .bg-slate-100,
+  .bg-slate-200 {
+    background-color: var(--bg-secondary) !important;
+  }
+
+  .text-gray-900,
+  .text-gray-800,
+  .text-slate-900,
+  .text-slate-800,
+  .text-indigo-900,
+  .text-blue-900 {
+    color: var(--text-main) !important;
+  }
+
+  .text-gray-700,
+  .text-slate-700,
+  .text-gray-600,
+  .text-slate-600,
+  .text-gray-500,
+  .text-slate-500,
+  .text-gray-400,
+  .text-slate-400 {
+    color: var(--text-secondary) !important;
+  }
+
+  .text-gray-300,
+  .text-slate-300,
+  .text-gray-200,
+  .text-slate-200 {
+    color: var(--text-secondary) !important;
+    opacity: 0.85;
+  }
+
+  .border-slate-200,
+  .border-gray-200,
+  .border-gray-100,
+  .border-slate-100 {
+    border-color: var(--border-color) !important;
+  }
+
+  /* Hover effects for dark mode */
+  .hover\:bg-slate-50:hover,
+  .hover\:bg-gray-50:hover,
+  .hover\:bg-gray-100:hover,
+  .hover\:bg-slate-100:hover {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+  }
+
+  .hover\:bg-black\/5:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+  }
+
+  .hover\:text-gray-300:hover {
+    color: var(--text-secondary) !important;
+  }
+
+  .hover\:bg-red-50:hover {
+    background-color: rgba(239, 68, 68, 0.1) !important;
+  }
 }

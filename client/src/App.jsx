@@ -1,7 +1,8 @@
 import React,{ useEffect, useState } from "react";
 import Navbar from "./pages/Navbar";
 import { Routes, Route } from "react-router-dom";
-import "./App.css";
+import { ThemeProvider, useTheme } from "./context/ThemeContext";
+import "./index.css";
 import Login from "./pages/Login";
 import Home from "./pages/Home";
 import Signup from "./pages/Signup";
@@ -16,9 +17,10 @@ import ContractorDashboard from "./pages/ContractorDashboard";
 import DepartmentAdminDashboard from "./pages/DepartmentAdminDashboard";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 
-function App() {
+function AppContent() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const { theme } = useTheme();
 
   // Check if user is logged in on mount
   useEffect(() => {
@@ -33,11 +35,11 @@ function App() {
   }, []);
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
 
   return (
-    <div>
+    <div className="min-h-screen">
       <Navbar user={user} />
       <main className="container">
         <Routes>
@@ -56,6 +58,14 @@ function App() {
         </Routes>
       </main>
     </div>
+  );
+}
+
+function App() {
+  return (
+    <ThemeProvider>
+      <AppContent />
+    </ThemeProvider>
   );
 }
 

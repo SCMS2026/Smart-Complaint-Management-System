@@ -1,5 +1,7 @@
 import  { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Navbar from "./Navbar";
+import { useTheme } from "../context/ThemeContext";
 import banner_img from "../images/logo.png";
 
 // Icons
@@ -22,6 +24,8 @@ const ChartIcon = () => (
 );
 
 const Home = () => {
+  const { theme } = useTheme();
+  const navigate = useNavigate();
   const [count, setCount] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
 
@@ -51,14 +55,14 @@ const Home = () => {
   }, []);
 
   return (
-    <div className="min-h-screen w-screen bg-slate-50 overflow-x-hidden">
+    <div className="min-h-screen w-screen overflow-x-hidden" style={{ backgroundColor: 'var(--bg-main)', color: 'var(--text-main)' }}>
       <Navbar />
 
       <div className="pt-20 overflow-hidden">
 
         {/* HERO */}
         <section className="relative min-h-[90vh] flex items-center px-4 sm:px-6 py-16 sm:py-20 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 -z-10"></div>
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-slate-800 dark:via-slate-800 dark:to-slate-800 -z-10"></div>
 
           <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10 items-center w-full">
 
@@ -68,20 +72,28 @@ const Home = () => {
                 🚀 Next-Generation Issue Tracking
               </div>
 
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold mb-6 leading-tight">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold mb-6 leading-tight text-gray-900 dark:text-white">
                 We Hear You. We{" "}
                 <span className="text-blue-600">Resolve</span> It.
               </h1>
 
-              <p className="text-base sm:text-lg text-slate-600 mb-8 max-w-lg">
+              <p className="text-base sm:text-lg mb-8 max-w-lg text-gray-600 dark:text-gray-300">
                 Report, track, and resolve issues faster with full transparency.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4">
-                <button className="w-full sm:w-auto px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition">
+                <button
+                  type="button"
+                  onClick={() => navigate('/complaint')}
+                  className="w-full sm:w-auto px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition cursor-pointer"
+                >
                   Register Complaint
                 </button>
-                <button className="w-full sm:w-auto px-6 py-3 border rounded-xl hover:bg-gray-100 transition">
+                <button
+                  type="button"
+                  onClick={() => navigate('/complaint')}
+                  className="w-full sm:w-auto px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-200 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition cursor-pointer"
+                >
                   Track Status
                 </button>
               </div>
@@ -100,16 +112,16 @@ const Home = () => {
         </section>
 
         {/* HOW IT WORKS */}
-        <section className="py-20 bg-white">
+        <section className="py-20 bg-white dark:bg-slate-800">
           <div className="max-w-7xl mx-auto px-4 text-center">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-12">How It Works</h2>
+            <h2 className="text-3xl sm:text-4xl font-bold mb-12 text-gray-900 dark:text-white">How It Works</h2>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
               {["Submit Complaint", "Smart Routing", "Resolution"].map((title, i) => (
-                <div key={i} className="p-6 border rounded-2xl hover:shadow-lg transition">
+                <div key={i} className="p-6 border border-gray-200 dark:border-gray-700 rounded-2xl hover:shadow-lg transition bg-slate-50 dark:bg-slate-700">
                   <div className="text-2xl font-bold text-blue-600 mb-3">0{i + 1}</div>
-                  <h3 className="text-xl font-semibold mb-2">{title}</h3>
-                  <p className="text-gray-500 text-sm">
+                  <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-white">{title}</h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
                     Easy and fast process to manage complaints efficiently.
                   </p>
                 </div>
@@ -119,66 +131,70 @@ const Home = () => {
         </section>
 
         {/* FEATURES */}
-        <section className="py-20 bg-slate-50">
+        <section className="py-20 bg-slate-50 dark:bg-slate-900">
           <div className="max-w-7xl mx-auto px-4 text-center">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-12">Features</h2>
+            <h2 className="text-3xl sm:text-4xl font-bold mb-12 text-gray-900 dark:text-white">Features</h2>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
               
-              <div className="p-6 bg-white rounded-2xl shadow hover:shadow-lg">
+              <div className="p-6 rounded-2xl shadow hover:shadow-lg bg-white dark:bg-slate-800">
                 <LightningIcon />
-                <h3 className="mt-4 font-bold">Fast Reporting</h3>
+                <h3 className="mt-4 font-bold text-gray-900 dark:text-white">Fast Reporting</h3>
               </div>
 
-              <div className="p-6 bg-white rounded-2xl shadow hover:shadow-lg">
+              <div className="p-6 rounded-2xl shadow hover:shadow-lg bg-white dark:bg-slate-800">
                 <ChartIcon />
-                <h3 className="mt-4 font-bold">Analytics</h3>
+                <h3 className="mt-4 font-bold text-gray-900 dark:text-white">Analytics</h3>
               </div>
 
-              <div className="p-6 bg-white rounded-2xl shadow hover:shadow-lg">
+              <div className="p-6 rounded-2xl shadow hover:shadow-lg bg-white dark:bg-slate-800">
                 <ShieldIcon />
-                <h3 className="mt-4 font-bold">Secure</h3>
+                <h3 className="mt-4 font-bold text-gray-900 dark:text-white">Secure</h3>
               </div>
 
             </div>
           </div>
         </section>
 
-        {/* STATS */}
-        <section className="py-20 bg-slate-900 text-white text-center">
+{/* STATS */}
+        <section className="py-20 text-center" style={{ backgroundColor: theme === 'dark' ? '#0f172a' : '#0f172a' }}>
           <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-
+ 
             <div>
-              <h1 className="text-4xl font-bold">{count}+</h1>
-              <p>Complaints</p>
+              <h1 className="text-4xl font-bold text-white">{count}+</h1>
+              <p className="text-gray-400">Complaints</p>
             </div>
-
+ 
             <div>
-              <h1 className="text-4xl font-bold">{Math.floor(count * 0.85)}+</h1>
-              <p>Resolved</p>
+              <h1 className="text-4xl font-bold text-white">{Math.floor(count * 0.85)}+</h1>
+              <p className="text-gray-400">Resolved</p>
             </div>
-
+ 
             <div>
-              <h1 className="text-4xl font-bold">98%</h1>
-              <p>Satisfaction</p>
+              <h1 className="text-4xl font-bold text-white">98%</h1>
+              <p className="text-gray-400">Satisfaction</p>
             </div>
-
+ 
           </div>
         </section>
-
+ 
         {/* CTA */}
         <section className="py-20 bg-blue-600 text-white text-center">
           <h2 className="text-3xl sm:text-4xl font-bold mb-6">
             Ready to get started?
           </h2>
-          <button className="px-6 py-3 bg-white text-blue-600 rounded-xl font-bold">
+          <button
+            type="button"
+            onClick={() => navigate('/signup')}
+            className="px-6 py-3 bg-white text-blue-600 rounded-xl font-bold cursor-pointer hover:bg-slate-100 transition"
+          >
             Register Now
           </button>
         </section>
-
+ 
         {/* FOOTER */}
-        <footer className="bg-black text-gray-400 py-10 text-center">
-          <p>© 2026 SmartComplaint</p>
+        <footer className="py-10 text-center bg-white dark:bg-slate-800">
+          <p className="text-gray-500 dark:text-gray-400">© 2026 SmartComplaint</p>
         </footer>
 
       </div>

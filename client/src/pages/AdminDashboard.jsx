@@ -186,10 +186,10 @@ const AdminDashboard = () => {
   const selectedComplaint = complaints.find((c) => c._id === selectedComplaintId);
 
   return (
-    <div className="min-h-screen bg-slate-50 pt-20 pb-10">
+    <div className="min-h-screen bg-slate-50 pt-25 pb-10">
       <div className="max-w-7xl mx-auto px-6">
         <div className="rounded-[2rem] bg-gradient-to-r from-slate-900 to-slate-800 text-white p-10 shadow-xl mb-8">
-          <p className="text-sm uppercase tracking-[0.3em] text-slate-400">Admin Command Center</p>
+          <p className="text-sm uppercase text-slate-400">Admin Command Center</p>
           <h1 className="mt-4 text-4xl font-bold">Administrator Dashboard</h1>
           <p className="mt-3 max-w-2xl text-slate-300 leading-7">Manage complaints, assign workers, and import assets from a unified operations hub.</p>
         </div>
@@ -209,7 +209,7 @@ const AdminDashboard = () => {
               <section className="rounded-[1.75rem] bg-white p-6 shadow-sm border border-slate-200">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-5">
                   <div>
-                    <p className="text-sm uppercase tracking-[0.3em] text-slate-500">Recent complaints</p>
+                    <p className="text-sm uppercase text-slate-500">Recent complaints</p>
                     <h2 className="mt-2 text-2xl font-semibold text-slate-900">Active ticket queue</h2>
                   </div>
                   <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">{complaints.length} tickets</span>
@@ -259,7 +259,7 @@ const AdminDashboard = () => {
 
               <section className="rounded-[1.75rem] bg-white p-6 shadow-sm border border-slate-200">
                 <div className="mb-6">
-                  <p className="text-sm uppercase tracking-[0.3em] text-slate-500">Assignment</p>
+                  <p className="text-sm uppercase text-slate-500">Assignment</p>
                   <h2 className="mt-2 text-2xl font-semibold text-slate-900">Worker dispatch</h2>
                 </div>
                 <div className="space-y-4">
@@ -284,7 +284,7 @@ const AdminDashboard = () => {
             <section className="rounded-[1.75rem] bg-white p-6 shadow-sm border border-slate-200">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
                 <div>
-                  <p className="text-sm uppercase tracking-[0.3em] text-slate-500">Permissions</p>
+                  <p className="text-sm uppercase text-slate-500">Permissions</p>
                   <h2 className="mt-2 text-2xl font-semibold text-slate-900">Pending approvals</h2>
                 </div>
                 <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">{permissions.length} requests</span>
