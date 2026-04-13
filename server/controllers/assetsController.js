@@ -3,7 +3,14 @@ const XLSX = require('xlsx');
 
 const getAssets = async (req, res) => {
     try {
-        const assets = await Asset.find().populate('department_id', 'name');
+        const filter = {};
+
+        // Department-wise filtering
+        if (req.user && req.user.role === 'department_admin' && req.user.department) {
+            filter.department_id = req.user.department;
+        }
+
+        const assets = await Asset.find(filter).populate('department_id', 'name');
         console.log('Fetched assets', assets);
         res.status(200).json({ assets });
     } catch (error) {

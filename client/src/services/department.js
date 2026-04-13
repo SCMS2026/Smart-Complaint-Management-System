@@ -28,6 +28,20 @@ export const fetchDepartments = async () => {
   }
 };
 
+export const fetchDepartmentDashboard = async (departmentId) => {
+  try {
+    const res = await fetch(`${API}/${departmentId}/dashboard`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json", ...getAuthHeader() },
+      credentials: "include",
+    });
+    const data = await handleResponse(res);
+    return { success: true, ...data };
+  } catch (err) {
+    return { success: false, message: err.message };
+  }
+};
+
 export const createDepartment = async (departmentData) => {
   try {
     const token = getToken();

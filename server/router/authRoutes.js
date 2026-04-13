@@ -65,6 +65,7 @@ router.get(
 
 
 // Google Token Verification (for client-side Google Sign-In)
+router.post('/google', authController.verifyGoogleToken);
 router.post('/google/verify', authController.verifyGoogleToken);
 
 router.get('/me', authMiddleware, authController.getCurrentUser);

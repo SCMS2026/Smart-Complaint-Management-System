@@ -74,7 +74,7 @@ const AllComplaints = () => {
       : typeof selectedAsset.category === "string"
       ? selectedAsset.category.split(",").map((item) => item.trim()).filter(Boolean)
       : []
-    : [];
+    : ["Street Light", "Power", "Water", "Road", "Garbage", "Sanitation", "Electricity", "General"];
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -83,10 +83,14 @@ const AllComplaints = () => {
     setFormSuccess("");
 
     if (
-      !complaintData.assetId ||
       !complaintData.category ||
       !complaintData.description ||
-      !complaintData.location
+      !complaintData.location ||
+      !complaintData.city ||
+      !complaintData.District ||
+      !complaintData.Taluka ||
+      !complaintData.village ||
+      !complaintData.pincode
     ) {
       setFormError("Please fill all required fields");
       return;
@@ -95,7 +99,7 @@ const AllComplaints = () => {
     const payload = {
       ...complaintData,
       issue: complaintData.category,
-      category: selectedAsset?.issue || complaintData.category || "",
+      category: selectedAsset?.category || complaintData.category || "",
     };
 
     const res = await createComplaintRequest(payload);
@@ -186,7 +190,7 @@ const AllComplaints = () => {
             }
             className="border p-2 rounded"
           >
-            <option value="">Select Department</option>
+            <option value="">Select Asset (Optional)</option>
 
             {assets.map((asset) => (
               <option key={asset._id} value={asset._id}>

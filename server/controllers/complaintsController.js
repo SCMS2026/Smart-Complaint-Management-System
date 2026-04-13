@@ -172,21 +172,33 @@ const getComplaints = async (req, res) => {
 
 const getComplaintAnalytics = async (req, res) => {
   try {
-    const totalComplaints = await Complaint.countDocuments();
+    const user = req.user;
+    let filter = {};
+
+    // Department-wise analytics for department_admin
+    if (user.role === 'department_admin' && user.department) {
+      filter.department_id = user.department;
+    }
+
+    const totalComplaints = await Complaint.countDocuments(filter);
 
     const statusBreakdown = await Complaint.aggregate([
+      { $match: filter },
       { $group: { _id: "$status", count: { $sum: 1 } } }
     ]);
 
     const categoryBreakdown = await Complaint.aggregate([
+      { $match: filter },
       { $group: { _id: "$category", count: { $sum: 1 } } }
     ]);
 
     const locationBreakdown = await Complaint.aggregate([
+      { $match: filter },
       { $group: { _id: { city: "$city", District: "$District" }, count: { $sum: 1 } } }
     ]);
 
     const dailyTrend = await Complaint.aggregate([
+      { $match: filter },
       {
         $group: {
           _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
@@ -196,12 +208,56 @@ const getComplaintAnalytics = async (req, res) => {
       { $sort: { _id: 1 } }
     ]);
 
+    // Department-wise breakdown (for super_admin and admin)
+    let departmentBreakdown = [];
+    if (user.role === 'super_admin' || user.role === 'admin') {
+      departmentBreakdown = await Complaint.aggregate([
+        {
+          $lookup: {
+            from: 'departments',
+            localField: 'department_id',
+            foreignField: '_id',
+            as: 'department'
+          }
+        },
+        {
+          $unwind: {
+            path: '$department',
+            preserveNullAndEmptyArrays: true
+          }
+        },
+        {
+          $group: {
+            _id: {
+              departmentId: '$department_id',
+              departmentName: { $ifNull: ['$department.name', 'Unassigned'] }
+            },
+            count: { $sum: 1 },
+            pending: { $sum: { $cond: [{ $eq: ['$status', 'pending'] }, 1, 0] } },
+            completed: { $sum: { $cond: [{ $eq: ['$status', 'completed'] }, 1, 0] } },
+            inProgress: { $sum: { $cond: [{ $in: ['$status', ['assigned', 'in_progress']] }, 1, 0] } }
+          }
+        },
+        {
+          $project: {
+            departmentName: '$_id.departmentName',
+            total: '$count',
+            pending: '$pending',
+            completed: '$completed',
+            inProgress: '$inProgress'
+          }
+        },
+        { $sort: { total: -1 } }
+      ]);
+    }
+
     res.status(200).json({
       totalComplaints,
       statusBreakdown,
       categoryBreakdown,
       locationBreakdown,
-      dailyTrend
+      dailyTrend,
+      departmentBreakdown
     });
   } catch (error) {
     console.error("Get complaint analytics error:", error);

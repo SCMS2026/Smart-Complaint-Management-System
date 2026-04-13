@@ -9,6 +9,9 @@ router.get('/', authMiddleware, departmentController.getDepartments);
 // Get department by ID - authenticated users can view
 router.get('/:departmentId', authMiddleware, departmentController.getDepartmentById);
 
+// Get department dashboard - department members can view their department dashboard
+router.get('/:departmentId/dashboard', authMiddleware, departmentController.getDepartmentDashboard);
+
 // Create department - admin or super_admin
 router.post('/', authMiddleware, allowRoles('admin','super_admin'), departmentController.createDepartment);
 

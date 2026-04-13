@@ -21,9 +21,20 @@ const createPermission = async (req, res) => {
 
 const getPermissions = async (req, res) => {
     try {
-        const perms = await Permission.find()
+        const filter = {};
+
+        // Department-wise filtering for department admins
+        if (req.user && req.user.role === 'department_admin' && req.user.department) {
+            // Find assets in the department
+            const Asset = require('../models/assetsModels');
+            const deptAssets = await Asset.find({ department_id: req.user.department }).select('_id');
+            const assetIds = deptAssets.map(a => a._id);
+            filter.assetId = { $in: assetIds };
+        }
+
+        const perms = await Permission.find(filter)
             .populate('requestBy', 'name role')
-            .populate('assetId', 'name');
+            .populate('assetId', 'name department_id');
         res.status(200).json({ permissions: perms });
     } catch (error) {
         console.error('Error fetching permissions:', error);

@@ -280,8 +280,7 @@ const Navbar = () => {
                 style={{
                   backgroundColor: 'var(--bg-primary)',
                   borderColor: 'var(--border-color)',
-                  color: 'var(--text-main)',
-                  cursor: 'default'
+                  color: 'var(--text-main)'
                 }}
               >
                 {/* compute dashboard path based on role */}

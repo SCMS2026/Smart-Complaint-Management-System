@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { fetchComplaints, updateComplaintStatusRequest } from "../services/complaints";
 import { fetchPermissions } from "../services/permissions";
-import { fetchUsers, getTokenPayload } from "../services/auth";
-import { fetchDepartments } from "../services/department";
+import { fetchUsers, getTokenPayload, getCurrentUser } from "../services/auth";
+import { fetchDepartments, fetchDepartmentDashboard } from "../services/department";
 import { createWorkerTask, autoAssignWorker } from "../services/workerTask";
 import ComplaintDetail from "./ComplaintDetail";
 
@@ -40,8 +40,9 @@ const DepartmentAdminDashboard = () => {
 
   const [myDeptId, setMyDeptId]     = useState(null);
   const [myDeptName, setMyDeptName] = useState("");
+  const [deptDashboard, setDeptDashboard] = useState(null);
 
-  const [activeTab,           setActiveTab]           = useState("complaints");
+  const [activeTab,           setActiveTab]           = useState("dashboard");
   const [statusFilter,        setStatusFilter]        = useState("all");
   const [selectedComplaintId, setSelectedComplaintId] = useState(null);
   const [viewComplaintId,     setViewComplaintId]     = useState(null);
@@ -74,11 +75,12 @@ const DepartmentAdminDashboard = () => {
       let deptName = "";
 
       // ✅ STEP 2: Departments list fetch — name resolve karo
-      const [deptsRes, compRes, permRes, usersRes] = await Promise.all([
+      const [deptsRes, compRes, permRes, usersRes, dashRes] = await Promise.all([
         fetchDepartments(),
         fetchComplaints(),
         fetchPermissions(),
         fetchUsers(),
+        deptId ? fetchDepartmentDashboard(deptId) : Promise.resolve({ success: false })
       ]);
 
       if (deptsRes.success && deptId) {
@@ -86,7 +88,27 @@ const DepartmentAdminDashboard = () => {
         if (found) deptName = found.name;
       }
 
-      // ✅ FALLBACK: If JWT had no department, try from complaint's department_id
+      // ✅ FALLBACK: If JWT had no department, try localStorage user data first
+      if (!deptId) {
+        const storedUser = JSON.parse(localStorage.getItem("user") || "null");
+        const storedDept = storedUser?.department;
+        if (storedDept) {
+          deptId = String(typeof storedDept === "object" ? (storedDept._id || storedDept) : storedDept);
+          if (!deptName && typeof storedDept === "object" && storedDept.name) deptName = storedDept.name;
+        }
+      }
+
+      // ✅ FALLBACK 2: If still no deptId, fetch the current user from the backend
+      if (!deptId) {
+        const currentUserResp = await getCurrentUser();
+        if (currentUserResp?.user?.department) {
+          const storedDept = currentUserResp.user.department;
+          deptId = String(typeof storedDept === "object" ? (storedDept._id || storedDept) : storedDept);
+          if (!deptName && typeof storedDept === "object" && storedDept.name) deptName = storedDept.name;
+        }
+      }
+
+      // ✅ FALLBACK 3: If JWT had no department, try from complaint's department_id
       // (Backend already filters complaints for dept_admin, so first complaint = my dept)
       if (!deptId && compRes.success) {
         const first = (compRes.complaints || []).find(c => c.department_id);
@@ -111,6 +133,7 @@ const DepartmentAdminDashboard = () => {
       }
       if (permRes.success)  setPermissions(permRes.permissions || []);
       if (usersRes.success) setWorkers((usersRes.users || []).filter(u => u.role === "worker"));
+      if (dashRes.success)  setDeptDashboard(dashRes);
 
     } catch (err) {
       setError(err.message || "Failed to load dashboard");
@@ -240,6 +263,7 @@ const DepartmentAdminDashboard = () => {
         {/* Tabs */}
         <div className="flex items-center gap-1 bg-white border border-slate-100 rounded-xl p-1 mb-6 shadow-sm w-fit">
           {[
+            { id: "dashboard",   label: "Dashboard" },
             { id: "complaints",  label: "Complaints" },
             { id: "assign",      label: "Assign Worker" },
             { id: "permissions", label: permissions.length ? `Permissions (${permissions.length})` : "Permissions" },
@@ -250,6 +274,107 @@ const DepartmentAdminDashboard = () => {
             </button>
           ))}
         </div>
+
+        {/* ── DASHBOARD TAB ── */}
+        {activeTab === "dashboard" && deptDashboard && (
+          <div className="space-y-6">
+            {/* Department Overview */}
+            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-xl font-bold text-slate-800">{deptDashboard.department?.name || myDeptName}</h2>
+                  <p className="text-sm text-slate-500">Department Overview</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm text-slate-500">Admin</p>
+                  <p className="font-semibold text-slate-800">{deptDashboard.department?.admin?.name || "Not assigned"}</p>
+                </div>
+              </div>
+
+              {/* Stats Grid */}
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                <div className="bg-blue-50 rounded-xl p-4 text-center">
+                  <div className="text-2xl font-bold text-blue-600">{deptDashboard.stats?.totalComplaints || 0}</div>
+                  <div className="text-xs text-blue-500 font-semibold">Total Complaints</div>
+                </div>
+                <div className="bg-amber-50 rounded-xl p-4 text-center">
+                  <div className="text-2xl font-bold text-amber-600">{deptDashboard.stats?.pendingComplaints || 0}</div>
+                  <div className="text-xs text-amber-500 font-semibold">Pending</div>
+                </div>
+                <div className="bg-emerald-50 rounded-xl p-4 text-center">
+                  <div className="text-2xl font-bold text-emerald-600">{deptDashboard.stats?.completedComplaints || 0}</div>
+                  <div className="text-xs text-emerald-500 font-semibold">Completed</div>
+                </div>
+                <div className="bg-purple-50 rounded-xl p-4 text-center">
+                  <div className="text-2xl font-bold text-purple-600">{deptDashboard.stats?.totalWorkers || 0}</div>
+                  <div className="text-xs text-purple-500 font-semibold">Workers</div>
+                </div>
+                <div className="bg-indigo-50 rounded-xl p-4 text-center">
+                  <div className="text-2xl font-bold text-indigo-600">{deptDashboard.stats?.totalAssets || 0}</div>
+                  <div className="text-xs text-indigo-500 font-semibold">Assets</div>
+                </div>
+                <div className="bg-orange-50 rounded-xl p-4 text-center">
+                  <div className="text-2xl font-bold text-orange-600">{deptDashboard.stats?.activeTasks || 0}</div>
+                  <div className="text-xs text-orange-500 font-semibold">Active Tasks</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Performance Metrics */}
+            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+              <h3 className="text-lg font-semibold text-slate-800 mb-4">Performance Metrics</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-slate-50 rounded-xl p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-slate-500">Avg Resolution Time</p>
+                      <p className="text-2xl font-bold text-slate-800">{deptDashboard.performance?.avgResolutionTime || 0}h</p>
+                    </div>
+                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                      <span className="text-blue-600 font-bold">⏱️</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-slate-50 rounded-xl p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-slate-500">Satisfaction Rate</p>
+                      <p className="text-2xl font-bold text-slate-800">{deptDashboard.performance?.satisfactionRate || 0}%</p>
+                    </div>
+                    <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                      <span className="text-green-600 font-bold">⭐</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Recent Complaints */}
+            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+              <h3 className="text-lg font-semibold text-slate-800 mb-4">Recent Complaints</h3>
+              <div className="space-y-3">
+                {deptDashboard.recentComplaints?.length > 0 ? (
+                  deptDashboard.recentComplaints.map((complaint) => (
+                    <div key={complaint._id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                      <div>
+                        <p className="font-medium text-slate-800">{complaint.issue}</p>
+                        <p className="text-sm text-slate-500">by {complaint.userId?.name || 'Unknown'}</p>
+                      </div>
+                      <div className="text-right">
+                        <StatusBadge status={complaint.status} />
+                        <p className="text-xs text-slate-400 mt-1">
+                          {new Date(complaint.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-slate-500 text-center py-4">No recent complaints</p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* ── COMPLAINTS TAB ── */}
         {activeTab === "complaints" && (

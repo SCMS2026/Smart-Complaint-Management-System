@@ -39,19 +39,50 @@ const Login = () => {
   };
 
   useEffect(() => {
-    if (window.google && googleClientId) {
+    let googleInitInterval;
+
+    const initGoogle = () => {
+      if (!window.google || !window.google.accounts?.id) return;
+
       google.accounts.id.initialize({
         client_id: googleClientId,
         callback: async (response) => {
           const res = await googleSignIn(response.credential);
           if (res.success) {
+            localStorage.setItem("user_token", res.token);
             localStorage.setItem("user", JSON.stringify({ ...res.user, token: res.token }));
             nav("/");
+          } else {
+            setError(res.message || "Google login failed");
           }
         },
       });
-      google.accounts.id.renderButton(document.getElementById("googleSignInDiv"), { theme: "filled_blue", size: "large", width: "100%", shape: "rectangular", text: "signin_with" });
+
+      google.accounts.id.renderButton(document.getElementById("googleSignInDiv"), {
+        theme: "filled_blue",
+        size: "large",
+        width: "100%",
+        shape: "rectangular",
+        text: "signin_with",
+      });
+    };
+
+    if (googleClientId) {
+      if (window.google && window.google.accounts?.id) {
+        initGoogle();
+      } else {
+        googleInitInterval = setInterval(() => {
+          if (window.google && window.google.accounts?.id) {
+            initGoogle();
+            clearInterval(googleInitInterval);
+          }
+        }, 200);
+      }
     }
+
+    return () => {
+      if (googleInitInterval) clearInterval(googleInitInterval);
+    };
   }, [nav, googleClientId]);
 
   return (

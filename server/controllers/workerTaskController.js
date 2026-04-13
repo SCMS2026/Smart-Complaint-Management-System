@@ -108,11 +108,16 @@ const getWorkerTasks = async (req, res) => {
 
         if (req.user && req.user.role === 'worker') {
             filter.worker_id = req.user.id;
+        } else if (req.user && req.user.role === 'department_admin') {
+            // Department admins see tasks for complaints in their department
+            const complaintsInDept = await Complaint.find({ department_id: req.user.department }).select('_id');
+            const complaintIds = complaintsInDept.map(c => c._id);
+            filter.complaint_id = { $in: complaintIds };
         }
 
         const workerTasks = await WorkerTask.find(filter)
-            .populate('complaint_id', 'issue description status location city')
-            .populate('worker_id', 'name email');
+            .populate('complaint_id', 'issue description status location city department_id')
+            .populate('worker_id', 'name email department');
 
         res.status(200).json({ workerTasks });
     } catch (error) {

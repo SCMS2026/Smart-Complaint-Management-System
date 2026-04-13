@@ -325,7 +325,6 @@ const SuperAdminDashboard = () => {
                   {departments.length === 0 ? (
                     <tr><td colSpan={6} className="px-6 py-12 text-center text-sm text-slate-300">No departments yet</td></tr>
                   ) : departments.map(dept => {
-                    const admin = users.find(u => u.role === "department_admin" && (u.department?._id || u.department) === dept._id);
                     const deptComplaints = complaints.filter(c => (c.department_id?._id || c.department_id) === dept._id);
                     return (
                       <tr key={dept._id} className="border-t border-slate-50 hover:bg-slate-50/50 transition-colors">
@@ -339,10 +338,10 @@ const SuperAdminDashboard = () => {
                         </td>
                         <td className="px-6 py-4 text-sm text-slate-400 max-w-[200px] truncate">{dept.description || "—"}</td>
                         <td className="px-6 py-4">
-                          {admin ? (
+                          {dept.admin ? (
                             <span className="flex items-center gap-1.5 text-sm text-slate-700">
-                              <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 text-[10px] font-bold flex items-center justify-center">{initials(admin.name)}</span>
-                              {admin.name}
+                              <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 text-[10px] font-bold flex items-center justify-center">{initials(dept.admin.name)}</span>
+                              {dept.admin.name}
                             </span>
                           ) : <span className="text-xs text-slate-300 italic">Unassigned</span>}
                         </td>

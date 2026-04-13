@@ -1,4 +1,5 @@
 const User = require('../models/authModels');
+const Department = require('../models/departmentModel');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { OAuth2Client } = require('google-auth-library');
@@ -100,6 +101,7 @@ const googleCallback = (req, res) => {
             name: user.name,
             email: user.email,
             role: user.role,
+            department: user.department || null,
             profileImage: user.profileImage
         }));
 
@@ -169,7 +171,7 @@ const verifyGoogleToken = async (req, res) => {
         }
 
         const jwtToken = jwt.sign(
-            { id: user._id, email: user.email, role: user.role },
+            { id: user._id, email: user.email, role: user.role, department: user.department },
             process.env.JWT_SECRET,
             { expiresIn: '7d' }
         );
@@ -187,6 +189,7 @@ const verifyGoogleToken = async (req, res) => {
                     name: user.name,
                     email: user.email,
                     role: user.role,
+                    department: user.department || null,
                     profileImage: user.profileImage
                 }
             });
@@ -240,8 +243,19 @@ const logout = (req, res) => {
 };
 
 const getAllUsers = async (req, res) => {
-    const users = await User.find().select("-password").populate("department", "name");
-    res.json(users);
+    try {
+        const filter = {};
+
+        // Department-wise filtering for department admins
+        if (req.user && req.user.role === 'department_admin' && req.user.department) {
+            filter.department = req.user.department;
+        }
+
+        const users = await User.find(filter).select("-password").populate("department", "name");
+        res.json(users);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching users', error: error.message });
+    }
 };
 
 const setUserRole = async (req, res) => {
@@ -252,6 +266,20 @@ const setUserRole = async (req, res) => {
 
     if (role === 'department_admin' && !department_id) {
         return res.status(400).json({ message: "Department is required for department admin" });
+    }
+
+    // Validate department exists if provided
+    if (department_id) {
+        const department = await Department.findById(department_id);
+        if (!department) {
+            return res.status(404).json({ message: "Department not found" });
+        }
+    }
+
+    // Get current user to check previous role
+    const currentUser = await User.findById(req.params.id);
+    if (!currentUser) {
+        return res.status(404).json({ message: "User not found" });
     }
 
     const updateData = { role };
@@ -265,6 +293,21 @@ const setUserRole = async (req, res) => {
 
     if (!user) {
         return res.status(404).json({ message: "User not found" });
+    }
+
+    // Handle department admin assignments
+    if (role === 'department_admin' && department_id) {
+        // If user was previously department_admin for a different department, clear that
+        if (currentUser.role === 'department_admin' && currentUser.department && currentUser.department.toString() !== department_id) {
+            await Department.findByIdAndUpdate(currentUser.department, { admin: null });
+        }
+        // Assign this user as department admin for the new department
+        await Department.findByIdAndUpdate(department_id, { admin: user._id });
+    } else if (currentUser.role === 'department_admin' && role !== 'department_admin') {
+        // If changing from department_admin to another role, clear the department admin
+        if (currentUser.department) {
+            await Department.findByIdAndUpdate(currentUser.department, { admin: null });
+        }
     }
 
     res.json(user);
