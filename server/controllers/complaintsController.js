@@ -142,15 +142,12 @@ const getComplaints = async (req, res) => {
         const user = await User.findById(req.user.id);
         console.log("Department Admin fetched:", { userId: req.user.id, department: user?.department });
         if (user && user.department) {
-          // Show both assigned to this department AND unassigned complaints
-          filter.$or = [
-            { department_id: user.department },
-            { department_id: null }
-          ];
+          // ✅ ફક્ત ej department ની complaints show કરો
+          filter.department_id = user.department;
         } else {
-          // If no department assigned to admin, show all unassigned complaints
-          console.log("Department admin has no department assigned");
-          filter.department_id = null;
+          // If no department assigned to admin, show nothing
+          console.log("Department admin has no department assigned - showing empty list");
+          filter.department_id = new (require("mongoose").Types.ObjectId)();  // non-existent id = 0 results
         }
       } else if (req.user.department) {
         filter.department_id = req.user.department;

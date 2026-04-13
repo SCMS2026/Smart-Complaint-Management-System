@@ -203,7 +203,7 @@ const verifyGoogleToken = async (req, res) => {
 
 const getCurrentUser = async (req, res) => {
     try {
-        const user = await User.findById(req.user.id).select("-password");
+        const user = await User.findById(req.user.id).select("-password").populate("department", "name");
         res.json({
             user
         });
@@ -240,7 +240,7 @@ const logout = (req, res) => {
 };
 
 const getAllUsers = async (req, res) => {
-    const users = await User.find().select("-password");
+    const users = await User.find().select("-password").populate("department", "name");
     res.json(users);
 };
 
