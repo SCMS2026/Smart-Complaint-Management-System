@@ -2,7 +2,7 @@ const Complaint = require("../models/complaintsModel");
 const Asset = require("../models/assetsModels");
 const User = require("../models/authModels");
 const WorkerTask = require("../models/workerTaskModel");
-
+const mongoose = require("mongoose");
 // Create Complaint
 const createComplaint = async (req, res) => {
   try {
@@ -19,12 +19,9 @@ const createComplaint = async (req, res) => {
       description,
       image,
     } = req.body;
-    console.log("1", req.body)
+
     const userId = req.user?.id;
 
-     
-
-    // Required field validation
     if (
       !issue ||
       !description ||
@@ -40,7 +37,7 @@ const createComplaint = async (req, res) => {
       });
     }
 
-    // Fake complaint prevention: check duplicate unresolved complaints from same user and location
+    // 🚫 Duplicate check
     const duplicate = await Complaint.findOne({
       userId,
       issue: issue.trim(),
@@ -51,43 +48,49 @@ const createComplaint = async (req, res) => {
 
     if (duplicate) {
       return res.status(409).json({
-        message: "Duplicate complaint detected. Please avoid creating duplicate complaints."
+        message: "Duplicate complaint detected."
       });
     }
 
     let department_id = null;
-    
-    // 1. Try to get department from selected asset
+
+    // ✅ 1. From Asset
     if (assetId) {
       const asset = await Asset.findById(assetId);
-      if (asset) {
+      if (asset && asset.department_id) {
         department_id = asset.department_id;
       }
     }
 
-    // 2. If no asset selected, try category-based routing
+    // ✅ 2. From Category
     if (!department_id && category) {
-      // First try to find any asset with this category and use its department
-      const assetByCategory = await Asset.findOne({ category: category });
+      const assetByCategory = await Asset.findOne({
+        category: { $regex: new RegExp(`^${category}$`, "i") } // case-insensitive
+      });
+
       if (assetByCategory && assetByCategory.department_id) {
         department_id = assetByCategory.department_id;
       }
     }
 
-    // 3. If still no department, try hardcoded mappings
+    // ✅ 3. Smart Issue Matching
     if (!department_id && issue) {
       const issueToCategory = {
-        "Street Light": "Electricity",
-        "Power": "Electricity",
-        "Water": "Water",
-        "Road": "Road",
-        "Garbage": "Sanitation",
+        "streetlight": "Electricity",
+        "power": "Electricity",
+        "water": "Water",
+        "road": "Road",
+        "garbage": "Sanitation",
       };
-      
-      // Try to find matching issue and get its department
+
+      const normalizedIssue = issue.toLowerCase().replace(/\s/g, "");
+
       for (const [key, categoryName] of Object.entries(issueToCategory)) {
-        if (issue.toLowerCase().includes(key.toLowerCase())) {
-          const assetByMatched = await Asset.findOne({ category: categoryName });
+        if (normalizedIssue.includes(key)) {
+          const assetByMatched = await Asset.findOne({
+            category: { $regex: new RegExp(`^${categoryName}$`, "i") }
+          });
+
           if (assetByMatched && assetByMatched.department_id) {
             department_id = assetByMatched.department_id;
             break;
@@ -96,7 +99,14 @@ const createComplaint = async (req, res) => {
       }
     }
 
-    console.log("Complaint department assignment:", { assetId, category, issue, department_id });
+    // ❌ FINAL SAFETY CHECK
+    if (!department_id) {
+      return res.status(400).json({
+        message: "Department not assigned. Please select correct category or asset."
+      });
+    }
+
+    console.log("FINAL department_id:", department_id);
 
     const complaint = new Complaint({
       userId,
@@ -112,15 +122,16 @@ const createComplaint = async (req, res) => {
       pincode,
       description,
       image: image || null,
-      status: 'pending'
+      status: "pending"
     });
-    console.log("2",complaint)
+
     await complaint.save();
 
     res.status(201).json({
       message: "Complaint created successfully",
       complaint,
     });
+
   } catch (error) {
     console.error("Create complaint error:", error);
     res.status(500).json({
@@ -129,39 +140,43 @@ const createComplaint = async (req, res) => {
   }
 };
 
-// Get Complaints
 const getComplaints = async (req, res) => {
   try {
     const filter = {};
 
     if (req.user && req.user.role === "user") {
       filter.userId = req.user.id;
-    } else if (req.user && (req.user.role === "admin" || req.user.role === "department_admin")) {
-      // For department_admin, fetch current department from DB (not from stale JWT token)
+    } 
+    else if (req.user && (req.user.role === "admin" || req.user.role === "department_admin")) {
+
       if (req.user.role === "department_admin") {
         const user = await User.findById(req.user.id);
-        console.log("Department Admin fetched:", { userId: req.user.id, department: user?.department });
+
+        console.log("Department Admin:", user?.department);
+
         if (user && user.department) {
-          // ✅ ફક્ત ej department ની complaints show કરો
-          filter.department_id = user.department;
+          // ✅ FIX: Ensure ObjectId match
+          filter.department_id = new mongoose.Types.ObjectId(user.department);
         } else {
-          // If no department assigned to admin, show nothing
-          console.log("Department admin has no department assigned - showing empty list");
-          filter.department_id = new (require("mongoose").Types.ObjectId)();  // non-existent id = 0 results
+          filter.department_id = new mongoose.Types.ObjectId(); // no result
         }
-      } else if (req.user.department) {
-        filter.department_id = req.user.department;
+      } 
+      else if (req.user.department) {
+        filter.department_id = new mongoose.Types.ObjectId(req.user.department);
       }
     }
 
-    console.log("Complaint filter:", JSON.stringify(filter), "User role:", req.user?.role);
+    console.log("FILTER:", filter);
+
     const complaints = await Complaint.find(filter)
       .populate("userId", "name")
       .populate("assetId", "name")
       .populate("department_id", "name");
 
-    console.log("Found complaints:", complaints.length);
+    console.log("Found:", complaints.length);
+
     res.status(200).json({ complaints });
+
   } catch (error) {
     console.error("Get complaints error:", error);
     res.status(500).json({

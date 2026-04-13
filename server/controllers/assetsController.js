@@ -2,20 +2,20 @@ const Asset = require('../models/assetsModels');
 const XLSX = require('xlsx');
 
 const getAssets = async (req, res) => {
-    try {
-        const filter = {};
+  try {
+    const assets = await Asset.find();
 
-        // Department-wise filtering
-        if (req.user && req.user.role === 'department_admin' && req.user.department) {
-            filter.department_id = req.user.department;
-        }
-
-        const assets = await Asset.find(filter).populate('department_id', 'name');
-        console.log('Fetched assets', assets);
-        res.status(200).json({ assets });
-    } catch (error) {
-        res.status(500).json({ message: 'Error fetching assets', error: error.message });
-    }
+    res.status(200).json({
+      success: true,
+      assets,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: "Error fetching assets",
+    });
+  }
 };
 
 const importAssets = async (req, res) => {

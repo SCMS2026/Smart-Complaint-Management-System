@@ -87,7 +87,7 @@ const DepartmentAdminDashboard = () => {
         const found = (deptsRes.departments || []).find(d => String(d._id) === String(deptId));
         if (found) deptName = found.name;
       }
-
+      console.log("Complaints fetched:", compRes.complaints?.length);
       // ✅ FALLBACK: If JWT had no department, try localStorage user data first
       if (!deptId) {
         const storedUser = JSON.parse(localStorage.getItem("user") || "null");

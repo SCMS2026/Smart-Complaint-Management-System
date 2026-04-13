@@ -2,21 +2,20 @@ const mongoose = require("mongoose");
 
 const assetSchema = new mongoose.Schema({
   issue: {
-    type: String,
-    required: true
+    type: String, // 👉 Department Name
+    required: true,
   },
 
   category: {
-    type: String,
-    required: true
+    type: [String], // 👉 MUST ARRAY
+    default: [],
   },
 
   department_id: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Department"
+    ref: "Department",
   },
 
 }, { timestamps: true });
-const Asset = mongoose.model("Asset", assetSchema);
 
-module.exports = Asset;
+module.exports = mongoose.model("Asset", assetSchema);

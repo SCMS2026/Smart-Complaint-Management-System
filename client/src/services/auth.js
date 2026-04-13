@@ -27,6 +27,7 @@ export const getTokenPayload = () => {
     console.log("✅ Token Payload:", payload);
     console.log("   Role in token:", payload.role);
     console.log("   User ID:", payload.id);
+    console.log("   Department:", payload.department);
     return payload;
   } catch (err) {
     console.error("❌ Failed to decode token:", err.message);

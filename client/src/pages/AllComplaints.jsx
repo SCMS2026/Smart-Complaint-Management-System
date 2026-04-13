@@ -1,27 +1,15 @@
 import { useEffect, useState } from "react";
-import {
-  fetchComplaints,
-  createComplaintRequest,
-  updateComplaintStatusRequest,
-} from "../services/complaints";
+import { fetchComplaints, createComplaintRequest } from "../services/complaints";
 import { fetchAssets } from "../services/assets";
 
 const AllComplaints = () => {
-  const [complaints, setComplaints] = useState([]);
   const [assets, setAssets] = useState([]);
-
+  const [complaints, setComplaints] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
 
-  const [formError, setFormError] = useState("");
-  const [formSuccess, setFormSuccess] = useState("");
-
-  const currentUser = JSON.parse(localStorage.getItem("user") || "null");
-
-  const [complaintData, setComplaintData] = useState({
+  const [form, setForm] = useState({
     assetId: "",
     category: "",
-    issue: "",
     location: "",
     city: "",
     District: "",
@@ -29,88 +17,56 @@ const AllComplaints = () => {
     village: "",
     pincode: "",
     description: "",
-    image: null,
   });
 
   useEffect(() => {
-    loadComplaints();
-    loadAssets();
+    loadData();
   }, []);
 
-  const loadComplaints = async () => {
-    const res = await fetchComplaints();
+  const loadData = async () => {
+    const assetsRes = await fetchAssets();
+    const complaintsRes = await fetchComplaints();
 
-    if (res.success) {
-      setComplaints(res.complaints || []);
-    } else {
-      setError(res.message);
-    }
+    console.log("🔥 ASSETS:", assetsRes.assets);
+
+    if (assetsRes.success) setAssets(assetsRes.assets || []);
+    if (complaintsRes.success) setComplaints(complaintsRes.complaints || []);
 
     setLoading(false);
   };
 
-  const loadAssets = async () => {
-    const res = await fetchAssets();
+  // ✅ FIX: id match safe
+  const selectedAsset = assets.find(
+    (a) => String(a._id) === String(form.assetId)
+  );
 
-    if (res.success) {
-      setAssets(res.assets || []);
-    }
-  };
+  console.log("👉 Selected:", selectedAsset);
 
-  const handleApproval = async (complaintId, approved) => {
-    const newStatus = approved ? "resolved" : "pending";
-    const res = await updateComplaintStatusRequest(complaintId, newStatus);
-    if (res.success) {
-      loadComplaints();
-    } else {
-      setError(res.message || "Unable to update approval status");
-    }
-  };
-
-  const selectedAsset = assets.find((a) => a._id === complaintData.assetId);
-  const selectedAssetCategories = selectedAsset
-    ? Array.isArray(selectedAsset.category)
+  // ✅ FIX: category safe
+  const categories =
+    selectedAsset?.category && selectedAsset.category.length > 0
       ? selectedAsset.category
-      : typeof selectedAsset.category === "string"
-      ? selectedAsset.category.split(",").map((item) => item.trim()).filter(Boolean)
-      : []
-    : ["Street Light", "Power", "Water", "Road", "Garbage", "Sanitation", "Electricity", "General"];
+      : [];
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    setFormError("");
-    setFormSuccess("");
-
-    if (
-      !complaintData.category ||
-      !complaintData.description ||
-      !complaintData.location ||
-      !complaintData.city ||
-      !complaintData.District ||
-      !complaintData.Taluka ||
-      !complaintData.village ||
-      !complaintData.pincode
-    ) {
-      setFormError("Please fill all required fields");
-      return;
-    }
-
     const payload = {
-      ...complaintData,
-      issue: complaintData.category,
-      category: selectedAsset?.category || complaintData.category || "",
+      ...form,
+      issue: selectedAsset?.issue, // department
+      category: form.category,     // issue
     };
+
+    console.log("🚀 PAYLOAD:", payload);
 
     const res = await createComplaintRequest(payload);
 
     if (res.success) {
-      setFormSuccess("Complaint submitted successfully");
+      alert("Complaint Submitted");
 
-      setComplaintData({
+      setForm({
         assetId: "",
         category: "",
-        issue: "",
         location: "",
         city: "",
         District: "",
@@ -118,290 +74,107 @@ const AllComplaints = () => {
         village: "",
         pincode: "",
         description: "",
-        image: null,
       });
 
-      loadComplaints();
-    } else {
-      setFormError(res.message);
+      loadData();
     }
   };
 
-  if (loading)
-    return (
-      <div className="flex justify-center items-center h-screen text-xl font-semibold">
-        Loading...
-      </div>
-    );
-
-  if (error)
-    return (
-      <div className="flex justify-center items-center h-screen text-xl font-semibold text-red-600">
-        Error: {error}
-      </div>
-    );
+  if (loading) return <div>Loading...</div>;
 
   return (
-    <div className="min-h-screen min-w-screen bg-gray-100 p-6">
+    <div className="p-6">
 
-      <h1 className="text-3xl font-bold mb-6 text-gray-800">
-        My Complaints
-      </h1>
+      <h2 className="text-2xl mb-4">Create Complaint</h2>
 
-      {/* FORM */}
+      <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
 
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white p-6 rounded-xl  shadow-lg mb-10 max-w-screen"
-      >
-        <h2 className="text-xl font-semibold mb-4">
-          Create Complaint
-        </h2>
-
-        {formError && (
-          <p className="bg-red-100 text-red-600 p-2 rounded mb-3">
-            {formError}
-          </p>
-        )}
-
-        {formSuccess && (
-          <p className="bg-green-100 text-green-600 p-2 rounded mb-3">
-            {formSuccess}
-          </p>
-        )}
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-          <input
-            type="text"
-            value={currentUser?.name || ""}
-            disabled
-            className="border p-2 rounded bg-gray-100"
-          />
-
-          <select
-            value={complaintData.assetId}
-            onChange={(e) =>
-              setComplaintData({
-                ...complaintData,
-                assetId: e.target.value,
-                category: "",
-              })
-            }
-            className="border p-2 rounded"
-          >
-            <option value="">Select Asset (Optional)</option>
-
-            {assets.map((asset) => (
-              <option key={asset._id} value={asset._id}>
-                {asset.issue} {asset.department_id ? `(${asset.department_id.name})` : "(No department)"}
-              </option>
-            ))}
-          </select>
-
-          <select
-            value={complaintData.category}
-            onChange={(e) =>
-              setComplaintData({
-                ...complaintData,
-                category: e.target.value,
-              })
-            }
-            className="border p-2 rounded"
-          >
-            <option value="">Select Category</option>
-
-            {selectedAssetCategories.map((cat, index) => (
-              <option key={index} value={cat}>
-                {cat}
-              </option>
-            ))}
-          </select>
-
-          <input
-            type="text"
-            placeholder="Location"
-            value={complaintData.location}
-            onChange={(e) =>
-              setComplaintData({
-                ...complaintData,
-                location: e.target.value,
-              })
-            }
-            className="border p-2 rounded"
-          />
-
-          <input
-            type="text"
-            placeholder="City"
-            value={complaintData.city}
-            onChange={(e) =>
-              setComplaintData({
-                ...complaintData,
-                city: e.target.value,
-              })
-            }
-            className="border p-2 rounded"
-          />
-
-          <input
-            type="text"
-            placeholder="District"
-            value={complaintData.District}
-            onChange={(e) =>
-              setComplaintData({
-                ...complaintData,
-                District: e.target.value,
-              })
-            }
-            className="border p-2 rounded"
-          />
-
-          <input
-            type="text"
-            placeholder="Taluka"
-            value={complaintData.Taluka}
-            onChange={(e) =>
-              setComplaintData({
-                ...complaintData,
-                Taluka: e.target.value,
-              })
-            }
-            className="border p-2 rounded"
-          />
-
-          <input
-            type="text"
-            placeholder="Village"
-            value={complaintData.village}
-            onChange={(e) =>
-              setComplaintData({
-                ...complaintData,
-                village: e.target.value,
-              })
-            }
-            className="border p-2 rounded"
-          />
-
-          <input
-            type="text"
-            placeholder="Pincode"
-            value={complaintData.pincode}
-            onChange={(e) =>
-              setComplaintData({
-                ...complaintData,
-                pincode: e.target.value,
-              })
-            }
-            className="border p-2 rounded"
-          />
-
-          <textarea
-            placeholder="Description"
-            value={complaintData.description}
-            onChange={(e) =>
-              setComplaintData({
-                ...complaintData,
-                description: e.target.value,
-              })
-            }
-            className="border p-2 rounded md:col-span-2"
-          />
-
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => {
-              const file = e.target.files[0];
-
-              if (!file) return;
-
-              const reader = new FileReader();
-
-              reader.onload = () =>
-                setComplaintData((prev) => ({
-                  ...prev,
-                  image: reader.result,
-                }));
-
-              reader.readAsDataURL(file);
-            }}
-          />
-
-          {complaintData.image && (
-            <img
-              src={complaintData.image}
-              alt="preview"
-              className="w-32 rounded shadow"
-            />
-          )}
-        </div>
-
-        <button
-          type="submit"
-          className="mt-5 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
+        {/* Department */}
+        <select
+          value={form.assetId}
+          onChange={(e) =>
+            setForm({ ...form, assetId: e.target.value, category: "" })
+          }
+          className="border p-2"
         >
-          Submit Complaint
+          <option value="">Select Department</option>
+          {assets.map((a) => (
+            <option key={a._id} value={a._id}>
+              {a.issue}
+            </option>
+          ))}
+        </select>
+
+        {/* Issues */}
+        <select
+          value={form.category}
+          onChange={(e) =>
+            setForm({ ...form, category: e.target.value })
+          }
+          className="border p-2"
+        >
+          <option value="">Select Issue</option>
+
+          {categories.length > 0 ? (
+            categories.map((c, i) => (
+              <option key={i} value={c}>
+                {c}
+              </option>
+            ))
+          ) : (
+            <option disabled>No issues available</option>
+          )}
+        </select>
+
+        <input placeholder="Location" className="border p-2"
+          value={form.location}
+          onChange={(e)=>setForm({...form, location:e.target.value})}
+        />
+
+        <input placeholder="City" className="border p-2"
+          value={form.city}
+          onChange={(e)=>setForm({...form, city:e.target.value})}
+        />
+
+        <input placeholder="District" className="border p-2"
+          value={form.District}
+          onChange={(e)=>setForm({...form, District:e.target.value})}
+        />
+
+        <input placeholder="Taluka" className="border p-2"
+          value={form.Taluka}
+          onChange={(e)=>setForm({...form, Taluka:e.target.value})}
+        />
+
+        <input placeholder="Village" className="border p-2"
+          value={form.village}
+          onChange={(e)=>setForm({...form, village:e.target.value})}
+        />
+
+        <input placeholder="Pincode" className="border p-2"
+          value={form.pincode}
+          onChange={(e)=>setForm({...form, pincode:e.target.value})}
+        />
+
+        <textarea placeholder="Description" className="border p-2 col-span-2"
+          value={form.description}
+          onChange={(e)=>setForm({...form, description:e.target.value})}
+        />
+
+        <button className="bg-blue-600 text-white p-2 col-span-2">
+          Submit
         </button>
       </form>
 
-      {/* COMPLAINT LIST */}
-
-      {complaints.length === 0 ? (
-        <p className="text-gray-500">No complaints found</p>
-      ) : (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {complaints.map((c) => (
-            <div
-              key={c._id}
-              className="bg-white  rounded-xl shadow-md overflow-hidden hover:shadow-xl transition"
-            >
-              {c.image && (
-                <img
-                  src={c.image}
-                  alt=""
-                  className="h-80 w-full object-cover"
-                />
-              )}
-
-              <div className="p-4">
-                <h3 className="font-bold text-lg text-gray-800">
-                  {c.issue}
-                </h3>
-
-                <p className="text-gray-600 text-sm mt-1">
-                  {c.description}
-                </p>
-
-                <p className="text-gray-500 text-sm mt-2">
-                  {c.city} - {c.village}
-                </p>
-
-                <span className="inline-block mt-3 px-3 py-1 text-xs rounded-full bg-yellow-100 text-yellow-700">
-                  {c.status}
-                </span>
-
-                {currentUser?.role === "user" && c.status === "waiting_user" && (
-                  <div className="mt-4 flex gap-2">
-                    <button
-                      onClick={() => handleApproval(c._id, true)}
-                      className="px-3 py-1 text-sm bg-green-500 text-white rounded"
-                    >
-                      Approve
-                    </button>
-                    <button
-                      onClick={() => handleApproval(c._id, false)}
-                      className="px-3 py-1 text-sm bg-red-500 text-white rounded"
-                    >
-                      Reject
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+      {/* LIST */}
+      <div className="grid grid-cols-3 gap-4 mt-6">
+        {complaints.map((c) => (
+          <div key={c._id} className="p-4 border">
+            <h3>{c.category}</h3>
+            <p>{c.issue}</p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
