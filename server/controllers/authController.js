@@ -62,6 +62,10 @@ const login = async (req, res) => {
         if (!user)
             return res.status(401).json({ message: "Invalid credentials" });
 
+        if (!user.password) {
+            return res.status(401).json({ message: "This account was created using Google. Please login with Google." });
+        }
+
         const match = await bcrypt.compare(password, user.password);
         if (!match)
             return res.status(401).json({ message: "Invalid credentials" });
@@ -117,13 +121,13 @@ const googleCallback = (req, res) => {
 const verifyGoogleToken = async (req, res) => {
     try {
         const { token } = req.body;
-        
+
         if (!token) {
             return res.status(400).json({ message: 'Token is required' });
         }
 
         const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-        
+
         const ticket = await client.verifyIdToken({
             idToken: token,
             audience: process.env.GOOGLE_CLIENT_ID
@@ -139,35 +143,35 @@ const verifyGoogleToken = async (req, res) => {
         let user = await User.findOne({ googleId });
 
         if (!user) {
-          // Check if email exists
-          user = await User.findOne({ email });
-          if (user) {
-            // Attach Google ID and picture to existing user
-            user.googleId = googleId;
-            user.profileImage = picture || user.profileImage;
-            user.isVerified = true;
-            await user.save();
-          } else {
-            // Create new user
-            user = new User({
-                name,
-                email,
-                googleId,
-                profileImage: picture,
-                googleProfile: {
-                    provider: 'google',
-                    id: googleId,
-                    displayName: name,
-                    photo: picture
-                },
-                isVerified: true
-            });
-            await user.save();
-          }
+            // Check if email exists
+            user = await User.findOne({ email });
+            if (user) {
+                // Attach Google ID and picture to existing user
+                user.googleId = googleId;
+                user.profileImage = picture || user.profileImage;
+                user.isVerified = true;
+                await user.save();
+            } else {
+                // Create new user
+                user = new User({
+                    name,
+                    email,
+                    googleId,
+                    profileImage: picture,
+                    googleProfile: {
+                        provider: 'google',
+                        id: googleId,
+                        displayName: name,
+                        photo: picture
+                    },
+                    isVerified: true
+                });
+                await user.save();
+            }
         } else if (picture && user.profileImage !== picture) {
-          // Update picture if it changed
-          user.profileImage = picture;
-          await user.save();
+            // Update picture if it changed
+            user.profileImage = picture;
+            await user.save();
         }
 
         const jwtToken = jwt.sign(
@@ -197,9 +201,9 @@ const verifyGoogleToken = async (req, res) => {
 
     } catch (error) {
         console.error('Google Token Verification Error:', error);
-        res.status(401).json({ 
-            message: 'Token verification failed', 
-            error: error.message 
+        res.status(401).json({
+            message: 'Token verification failed',
+            error: error.message
         });
     }
 };
@@ -316,7 +320,7 @@ const setUserRole = async (req, res) => {
 const setUserDepartment = async (req, res) => {
     try {
         const { department_id } = req.body;
-        
+
         const user = await User.findByIdAndUpdate(
             req.params.id,
             { department: department_id || null },

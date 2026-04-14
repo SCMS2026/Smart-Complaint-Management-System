@@ -221,7 +221,7 @@ const AllComplaints = () => {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(EMPTY);
   const [imagePreview, setPreview] = useState(null);
-const [imageFile, setImageFile] = useState(null);
+  const [imageFile, setImageFile] = useState(null);
   const fileRef = useRef();
 
   // ── Load data + auto-fill user info ─────────────────────────────────────────
@@ -280,10 +280,10 @@ const [imageFile, setImageFile] = useState(null);
   };
 
   const removeImage = () => {
-  setPreview(null);
-  setImageFile(null); // ✅ important
-  if (fileRef.current) fileRef.current.value = "";
-};
+    setPreview(null);
+    setImageFile(null); // ✅ important
+    if (fileRef.current) fileRef.current.value = "";
+  };
   // ── Validation ───────────────────────────────────────────────────────────────
   const validate = () => {
     const e = {};
@@ -305,50 +305,54 @@ const [imageFile, setImageFile] = useState(null);
 
   // ── Submit ───────────────────────────────────────────────────────────────────
   const handleSubmit = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  const errs = validate();
-  if (Object.keys(errs).length) {
-    setErrors(errs);
-    return;
-  }
+    const errs = validate();
+    if (Object.keys(errs).length) {
+      setErrors(errs);
+      return;
+    }
 
-  setErrors({});
-  setSubmitting(true);
-  setSubErr("");
+    setErrors({});
+    setSubmitting(true);
+    setSubErr("");
 
-  const formData = new FormData();
+    console.log("form values", form);
 
-  formData.append("assetId", form.assetId);
-  formData.append("issue", selectedAsset?.issue || "");
-  formData.append("category", form.category);
-  formData.append("location", form.location);
-  formData.append("city", form.city);
-  formData.append("District", form.District);
-  formData.append("Taluka", form.Taluka);
-  formData.append("village", form.village);
-  formData.append("pincode", form.pincode);
-  formData.append("description", form.description);
+    const formData = new FormData();
 
-  if (imageFile) {
-    formData.append("image", imageFile); // ✅ REAL FIX
-  }
+    formData.append("assetId", form.assetId);
+    formData.append("issue", selectedAsset?.issue || "");
+    formData.append("category", form.category);
+    formData.append("location", form.location);
+    formData.append("city", form.city);
+    formData.append("District", form.District);
+    formData.append("Taluka", form.Taluka);
+    formData.append("village", form.village);
+    formData.append("pincode", form.pincode);
+    formData.append("description", form.description);
 
-  const res = await createComplaintRequest(formData);
+    if (imageFile) {
+      formData.append("image", imageFile); // ✅ REAL FIX
+    }
 
-  setSubmitting(false);
+    console.log("formData", formData);
 
-  if (res.success) {
-    setSuccess(true);
-    setForm(f => ({ ...EMPTY, name: f.name, phone: f.phone }));
-    removeImage();
-    setShowForm(false);
-    reloadComplaints();
-    setTimeout(() => setSuccess(false), 5000);
-  } else {
-    setSubErr(res.message || "Submission failed");
-  }
-};
+    const res = await createComplaintRequest(formData);
+
+    setSubmitting(false);
+
+    if (res.success) {
+      setSuccess(true);
+      setForm(f => ({ ...EMPTY, name: f.name, phone: f.phone }));
+      removeImage();
+      setShowForm(false);
+      reloadComplaints();
+      setTimeout(() => setSuccess(false), 5000);
+    } else {
+      setSubErr(res.message || "Submission failed");
+    }
+  };
 
   const setField = (key, val) => {
     setForm((f) => ({ ...f, [key]: val }));

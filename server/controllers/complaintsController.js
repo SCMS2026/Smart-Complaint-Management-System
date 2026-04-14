@@ -1,9 +1,27 @@
+const fs = require("fs");
+const path = require("path");
 const Complaint = require("../models/complaintsModel");
 const Asset = require("../models/assetsModels");
 const User = require("../models/authModels");
 const WorkerTask = require("../models/workerTaskModel");
 const mongoose = require("mongoose");
 
+// Keyword mapping for NLP-like fallback classification
+const keywordMap = {
+  "water": "Water Supply",
+  "pani": "Water Supply",
+  "leak": "Water Supply",
+  "road": "Roads & Traffic",
+  "rasta": "Roads & Traffic",
+  "pothole": "Roads & Traffic",
+  "kachro": "Sanitation",
+  "garbage": "Sanitation",
+  "gutter": "Sanitation",
+  "gatar": "Sanitation",
+  "light": "Electricity",
+  "street light": "Electricity",
+  "vijli": "Electricity"
+};
 // Create Complaint - FULLY FIXED
 const createComplaint = async (req, res) => {
   try {
@@ -22,6 +40,7 @@ const createComplaint = async (req, res) => {
     } = req.body;
 
     const userId = req.user?.id;
+    console.log("req file:", req.file);
     console.log("Create complaint request by user:", userId, "with data:", req.body);
     // Validation
     if (
@@ -78,33 +97,33 @@ const createComplaint = async (req, res) => {
       const asset = await Asset.findOne({
         category: { $regex: new RegExp(`^${categoryName}$`, "i") },
       }).select('department_id');
-      
+
       if (asset?.department_id) {
         department_id = asset.department_id;
       }
     }
 
-      const normalizedIssue = issue.toLowerCase().trim();
-      
-      for (const [keyword, cat] of Object.entries(keywordMap)) {
-        if (normalizedIssue.includes(keyword)) {
-          const asset = await Asset.findOne({
-            category: { $regex: new RegExp(`^${cat}$`, "i") },
-          }).select('department_id');
-          
-          if (asset?.department_id) {
-            department_id = asset.department_id;
-            break;
-          }
+    const normalizedIssue = issue.toLowerCase().trim();
+
+    for (const [keyword, cat] of Object.entries(keywordMap)) {
+      if (normalizedIssue.includes(keyword)) {
+        const asset = await Asset.findOne({
+          category: { $regex: new RegExp(`^${cat}$`, "i") },
+        }).select('department_id');
+
+        if (asset?.department_id) {
+          department_id = asset.department_id;
+          break;
         }
       }
     }
+    // }
 
     // 4. FALLBACK - Get ANY available department (GUARANTEED SUCCESS)
     if (!department_id) {
       const Department = mongoose.model("Department");
       const departments = await Department.find({}).select('_id').limit(1);
-      
+
       if (departments.length > 0) {
         department_id = departments[0]._id;
       } else {
@@ -113,6 +132,18 @@ const createComplaint = async (req, res) => {
         await defaultDept.save();
         department_id = defaultDept._id;
       }
+    }
+
+    if (req.file) {
+      const filePath = path.join(__dirname, "..", req.file.path);
+      console.log()
+
+      const fileBuffer = fs.readFileSync(filePath);
+      const base64 = fileBuffer.toString("base64");
+
+      const mimeType = req.file.mimetype;
+
+      imageBase64 = `data:${mimeType};base64,${base64}`;
     }
 
     // Create complaint
@@ -129,7 +160,7 @@ const createComplaint = async (req, res) => {
       village,
       pincode,
       description,
-      image: image || null,
+      image: imageBase64 || null,
       status: "pending",
     });
     console.log("Creating complaint with data:", complaint);
@@ -193,8 +224,8 @@ const getComplaints = async (req, res) => {
 
     const total = await Complaint.countDocuments(filter);
 
-    res.status(200).json({ 
-      complaints, 
+    res.status(200).json({
+      complaints,
       pagination: { total, page, limit, pages: Math.ceil(total / limit) }
     });
   } catch (error) {
@@ -223,7 +254,7 @@ const getComplaintAnalytics = async (req, res) => {
     ] = await Promise.all([
       // Total complaints
       Complaint.countDocuments(matchFilter),
-      
+
       // Status breakdown
       Complaint.aggregate([
         { $match: matchFilter },
@@ -247,7 +278,7 @@ const getComplaintAnalytics = async (req, res) => {
 
       // Daily trend (last 30 days)
       Complaint.aggregate([
-        { $match: { ...matchFilter, createdAt: { $gte: new Date(Date.now() - 30*24*60*60*1000) } } },
+        { $match: { ...matchFilter, createdAt: { $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) } } },
         {
           $group: {
             _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
@@ -258,31 +289,31 @@ const getComplaintAnalytics = async (req, res) => {
       ]),
 
       // Department breakdown (for super admins only)
-      user.role === 'super_admin' || user.role === 'admin' ? 
-      Complaint.aggregate([
-        {
-          $lookup: {
-            from: 'departments',
-            localField: 'department_id',
-            foreignField: '_id',
-            as: 'department'
-          }
-        },
-        { $unwind: { path: '$department', preserveNullAndEmptyArrays: true } },
-        {
-          $group: {
-            _id: {
-              departmentId: '$department_id',
-              departmentName: { $ifNull: ['$department.name', 'Unassigned'] }
-            },
-            total: { $sum: 1 },
-            pending: { $sum: { $cond: [{ $eq: ['$status', 'pending'] }, 1, 0] } },
-            inProgress: { $sum: { $cond: [{ $in: ['$status', ['assigned', 'in_progress']] }, 1, 0] } },
-            completed: { $sum: { $cond: [{ $eq: ['$status', 'completed'] }, 1, 0] } }
-          }
-        },
-        { $sort: { total: -1 } }
-      ]) : Promise.resolve([])
+      user.role === 'super_admin' || user.role === 'admin' ?
+        Complaint.aggregate([
+          {
+            $lookup: {
+              from: 'departments',
+              localField: 'department_id',
+              foreignField: '_id',
+              as: 'department'
+            }
+          },
+          { $unwind: { path: '$department', preserveNullAndEmptyArrays: true } },
+          {
+            $group: {
+              _id: {
+                departmentId: '$department_id',
+                departmentName: { $ifNull: ['$department.name', 'Unassigned'] }
+              },
+              total: { $sum: 1 },
+              pending: { $sum: { $cond: [{ $eq: ['$status', 'pending'] }, 1, 0] } },
+              inProgress: { $sum: { $cond: [{ $in: ['$status', ['assigned', 'in_progress']] }, 1, 0] } },
+              completed: { $sum: { $cond: [{ $eq: ['$status', 'completed'] }, 1, 0] } }
+            }
+          },
+          { $sort: { total: -1 } }
+        ]) : Promise.resolve([])
     ]);
 
     res.status(200).json({
@@ -321,8 +352,8 @@ const updateComplaintStatus = async (req, res) => {
       return res.status(403).json({ message: 'Unauthorized' });
     }
 
-    if (req.user.role === 'department_admin' && 
-        complaint.department_id.toString() !== req.user.department?.toString()) {
+    if (req.user.role === 'department_admin' &&
+      complaint.department_id.toString() !== req.user.department?.toString()) {
       return res.status(403).json({ message: 'Unauthorized for this department' });
     }
 
@@ -332,8 +363,8 @@ const updateComplaintStatus = async (req, res) => {
       newStatus = "user_approval_pending";
     }
 
-    const updateData = { 
-      status: newStatus, 
+    const updateData = {
+      status: newStatus,
       updatedAt: new Date(),
       ...(assignedTo && { assignedTo }),
       ...(workerId && { assignedTo: workerId })
@@ -344,10 +375,10 @@ const updateComplaintStatus = async (req, res) => {
       updateData,
       { new: true, runValidators: true }
     )
-    .populate("userId", "name")
-    .populate("assetId", "name")
-    .populate("department_id", "name")
-    .populate("assignedTo", "name");
+      .populate("userId", "name")
+      .populate("assetId", "name")
+      .populate("department_id", "name")
+      .populate("assignedTo", "name");
 
     res.status(200).json({
       message: "Status updated successfully",
@@ -381,8 +412,8 @@ const userApproveComplaint = async (req, res) => {
 
     // Only for completed complaints
     if (!['user_approval_pending', 'completed'].includes(complaint.status)) {
-      return res.status(400).json({ 
-        message: `Complaint not ready for approval. Current status: ${complaint.status}` 
+      return res.status(400).json({
+        message: `Complaint not ready for approval. Current status: ${complaint.status}`
       });
     }
 
@@ -394,9 +425,9 @@ const userApproveComplaint = async (req, res) => {
       .populate("userId", "name")
       .populate("assetId", "name");
 
-    res.status(200).json({ 
-      message: `Complaint ${action}d successfully`, 
-      complaint: populatedComplaint 
+    res.status(200).json({
+      message: `Complaint ${action}d successfully`,
+      complaint: populatedComplaint
     });
   } catch (error) {
     console.error('User approval error:', error);
@@ -415,8 +446,8 @@ const deleteComplaint = async (req, res) => {
     }
 
     // Only owner or admin can delete
-    if (req.user.role !== 'super_admin' && 
-        complaint.userId.toString() !== req.user.id) {
+    if (req.user.role !== 'super_admin' &&
+      complaint.userId.toString() !== req.user.id) {
       return res.status(403).json({ message: 'Unauthorized to delete' });
     }
 
@@ -432,7 +463,7 @@ const deleteComplaint = async (req, res) => {
 const getComplaintById = async (req, res) => {
   try {
     const { complaintId } = req.params;
-    
+
     const complaint = await Complaint.findById(complaintId)
       .populate("userId", "name email phone")
       .populate("assetId", "name category")
@@ -468,15 +499,15 @@ const addComment = async (req, res) => {
 
     const complaint = await Complaint.findByIdAndUpdate(
       complaintId,
-      { 
-        $push: { 
-          comments: { 
-            userId, 
-            text: text.trim(), 
-            createdAt: new Date() 
-          } 
-        }, 
-        updatedAt: new Date() 
+      {
+        $push: {
+          comments: {
+            userId,
+            text: text.trim(),
+            createdAt: new Date()
+          }
+        },
+        updatedAt: new Date()
       },
       { new: true }
     )
@@ -508,9 +539,9 @@ const markAsFake = async (req, res) => {
 
     const complaint = await Complaint.findByIdAndUpdate(
       complaintId,
-      { 
-        isFake: true, 
-        status: "rejected", 
+      {
+        isFake: true,
+        status: "rejected",
         updatedAt: new Date(),
         rejectedReason: "Marked as fake by admin"
       },
@@ -522,9 +553,9 @@ const markAsFake = async (req, res) => {
       return res.status(404).json({ message: "Complaint not found" });
     }
 
-    res.status(200).json({ 
-      message: "Complaint marked as fake", 
-      complaint 
+    res.status(200).json({
+      message: "Complaint marked as fake",
+      complaint
     });
   } catch (error) {
     console.error("Mark fake error:", error);

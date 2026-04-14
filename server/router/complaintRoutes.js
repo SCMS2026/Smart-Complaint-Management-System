@@ -7,7 +7,7 @@ const upload = require('../middleware/uploadMiddleware');
 // ✅ CREATE COMPLAINT (with image upload)
 router.post(
   '/',
- 
+  authMiddleware,
   upload.single("image"), // 👈 multer add
   complaintsController.createComplaint
 );

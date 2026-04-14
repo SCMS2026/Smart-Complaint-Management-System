@@ -35,14 +35,13 @@ export const createComplaintRequest = async (complaintData) => {
     if (!token) {
       return { success: false, message: "User not logged in. Please login again." };
     }
-console.log("Sending complaint data:", complaintData);
+    console.log("Sending complaint data:", complaintData);
     const res = await fetch(API, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify(complaintData),
+      body: complaintData,
     });
 
     const data = await res.json().catch(() => ({}));
