@@ -1,5 +1,6 @@
 import { getToken } from "./auth";
 const API = "http://localhost:5000/complaints";
+
 const getAuthHeader = () => {
   const token = getToken();
   return token ? { Authorization: `Bearer ${token}` } : {};
@@ -8,7 +9,7 @@ const getAuthHeader = () => {
 const handleResponse = async (res) => {
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
-    throw new Error(data.message || "Request failed");
+    throw new Error(data.message || `Request failed (${res.status})`);
   }
   return res.json();
 };
@@ -27,38 +28,36 @@ export const fetchComplaints = async () => {
   }
 };
 
- export const createComplaintRequest = async (complaintData) => {
+export const createComplaintRequest = async (complaintData) => {
   try {
-    const token =getToken();
-    console.log("createComplaintRequest called with data:", complaintData, "token:", token);
-  
-    if (!token) {
-      console.error("Token missing. Please login again.");
-      return { success: false, message: "User not logged in" };
-    }
+    const token = getToken();
 
+    if (!token) {
+      return { success: false, message: "User not logged in. Please login again." };
+    }
+console.log("Sending complaint data:", complaintData);
     const res = await fetch(API, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`
+        Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify(complaintData)
+      body: JSON.stringify(complaintData),
     });
-      
-    console.log("Response from create complaint API:", res);
-    const data = await res.json();
+
+    const data = await res.json().catch(() => ({}));
 
     if (!res.ok) {
-      console.error("Token invalid or expired");
-      return { success: false, message: data.message || "Unauthorized" };
+      // Log the specific error from the server to identify the missing/invalid field
+      console.error("Server Validation Error:", data);
+      return { success: false, message: data.message || "Invalid complaint data." };
     }
 
-    console.log("Complaint created successfully:", data);
-    return { success: true, complaint: data };
+    return { success: true, data };
 
-  } catch {
-    return { success: false, message: "Server connection failed" };
+  } catch (err) {
+    // Network error — server unreachable
+    return { success: false, message: "Cannot connect to server. Check your internet connection." };
   }
 };
 
@@ -66,23 +65,19 @@ export const updateComplaintStatusRequest = async (id, status) => {
   try {
     const token = getToken();
     if (!token) {
-      console.error("❌ No token found in localStorage");
       return { success: false, message: "Authentication token missing. Please login again." };
     }
 
-    console.log("📤 Sending PATCH request with token:", token.substring(0, 20) + "...");
     const res = await fetch(`${API}/${id}/status`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json", ...getAuthHeader() },
       credentials: "include",
       body: JSON.stringify({ status }),
     });
-    
-    console.log("📥 Response status:", res.status);
+
     const data = await handleResponse(res);
     return { success: true, complaint: data.complaint };
   } catch (err) {
-    console.error("❌ updateComplaintStatusRequest error:", err.message);
     return { success: false, message: err.message };
   }
 };
@@ -164,7 +159,7 @@ export const userApproveComplaintRequest = async (id, action) => {
       method: "PATCH",
       headers: { "Content-Type": "application/json", ...getAuthHeader() },
       credentials: "include",
-      body: JSON.stringify({ action })
+      body: JSON.stringify({ action }),
     });
     const data = await handleResponse(res);
     return { success: true, complaint: data.complaint };

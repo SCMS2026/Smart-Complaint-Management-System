@@ -13,11 +13,12 @@ const { OAuth2Client } = require("google-auth-library");
 dotenv.config();
 const app = express();
 
-// Debug: print env presence
 console.log('Server starting with GOOGLE_CLIENT_ID present:', !!process.env.GOOGLE_CLIENT_ID);
 console.log('Server starting with GOOGLE_CALLBACK_URL:', process.env.GOOGLE_CALLBACK_URL);
-const googleAuth = require('./auth'); // Will keep the file but remove its usage for now
+const googleAuth = require('./auth');
+app.use(express.json({ limit: '50mb' }));
 
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 // CORS configuration for credentials
 const isDev = process.env.NODE_ENV === 'development';
 app.use(cors({
@@ -26,9 +27,13 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
-app.use(morgan('dev')); // "dev" mode outputs colored and well-formatted API requests
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+
+app.use(morgan('dev'));
+
+// ✅ FIX: Increased limit to 10mb for base64 image uploads
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
 const authrouter = require('./router/authRoutes');
 const complaintRouter = require('./router/complaintRoutes');
 const permissionRouter = require('./router/permissionRoutes');
@@ -54,13 +59,11 @@ app.post("/auth/google", async (req, res) => {
     const ticket = await client.verifyIdToken({
       idToken: token,
       audience: process.env.GOOGLE_CLIENT_ID,
-      
     });
 
     const payload = ticket.getPayload();
     console.log("Google ID token payload", payload);
 
-    // find or create a user in our database
     const User = require("./models/authModels");
     const { email, name, picture, sub: googleId } = payload;
 
@@ -104,17 +107,16 @@ app.post("/auth/google", async (req, res) => {
   }
 });
 
-
 app.use(passport.initialize());
 app.use(passport.session());
 
 // mount API routers
 app.use('/auth', authrouter);
 app.use('/complaints', complaintRouter);
-app.use('/permissions', permissionRouter); 
+app.use('/permissions', permissionRouter);
 app.use('/assets', assetsRouter);
 app.use('/departments', departmentRouter);
-app.use('/worker-tasks', workerTaskRouter); 
+app.use('/worker-tasks', workerTaskRouter);
 
 if (!isDev) {
   app.use(express.static(path.join(__dirname, '../client/dist')));
@@ -122,7 +124,6 @@ if (!isDev) {
 
 const debugRouter = require('./router/debug');
 app.use('/debug', debugRouter);
-
 
 if (!isDev) {
   app.get('*', (req, res) => {
@@ -134,5 +135,5 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server is up and running on port ${PORT}`);
   console.log(`Environment: ${isDev ? 'DEVELOPMENT' : 'PRODUCTION'}`);
-  connectDB()
-})
+  connectDB();
+});
