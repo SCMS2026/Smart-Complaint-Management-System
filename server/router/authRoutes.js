@@ -5,6 +5,10 @@ const authController = require('../controllers/authController');
 const authMiddleware = require('../middleware/authMiddleware');
 const allowRoles = require('../middleware/roleMiddleware');
 
+const getClientUrl = () => {
+  return process.env.CLIENT_URL || 'http://localhost:3000';
+};
+
 router.post('/register', authController.register);
 router.post('/login', authController.login);
 router.get(
@@ -22,21 +26,22 @@ router.get(
   '/google/callback',
   (req, res, next) => {
     console.log('📍 /auth/google/callback endpoint accessed');
+    const clientUrl = getClientUrl().replace(/\/+$/, '');
     passport.authenticate('google', { session: true }, (err, user, info) => {
       if (err) {
         console.error('❌ Passport Error:', err);
-        return res.redirect(`http://localhost:3000/login?error=${encodeURIComponent(err.message)}`);
+        return res.redirect(`${clientUrl}/login?error=${encodeURIComponent(err.message)}`);
       }
 
       if (!user) {
         console.warn('⚠️ No user returned from Google:', info);
-        return res.redirect(`http://localhost:3000/login?error=no_user`);
+        return res.redirect(`${clientUrl}/login?error=no_user`);
       }
 
       req.logIn(user, (loginErr) => {
         if (loginErr) {
           console.error('❌ Login Error:', loginErr);
-          return res.redirect(`http://localhost:3000/login?error=${encodeURIComponent(loginErr.message)}`);
+          return res.redirect(`${clientUrl}/login?error=${encodeURIComponent(loginErr.message)}`);
         }
 
         console.log('✅ Google Auth Success for:', user.email);
@@ -56,7 +61,7 @@ router.get(
         }));
 
         res.redirect(
-          `http://localhost:3000/google-success?token=${token}&user=${userStr}`
+          `${clientUrl}/google-success?token=${token}&user=${userStr}`
         );
       });
     })(req, res, next);

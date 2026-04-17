@@ -21,12 +21,14 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 // CORS configuration for credentials
 const isDev = process.env.NODE_ENV === 'development';
-app.use(cors({
-  origin: isDev ? ['http://localhost:3000', 'http://localhost:5174', 'http://localhost:5000'] : [process.env.CLIENT_URL || 'http://localhost:5000'],
+const corsOptions = {
+  origin: true,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  optionsSuccessStatus: 200,
+};
+app.use(cors(corsOptions));
 
 app.use(morgan('dev'));
 

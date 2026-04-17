@@ -61,7 +61,6 @@ const Login = () => {
       google.accounts.id.renderButton(document.getElementById("googleSignInDiv"), {
         theme: "filled_blue",
         size: "large",
-        width: "100%",
         shape: "rectangular",
         text: "signin_with",
       });
