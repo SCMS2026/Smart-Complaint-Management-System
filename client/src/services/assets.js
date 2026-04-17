@@ -30,7 +30,7 @@ export const importAssets = async (file) => {
     const form = new FormData();
     form.append('file', file);
 
-    const res = await fetch(`${API}/import`, {
+    const res = await fetch(`${getAPI()}/import`, {
       method: 'POST',
       headers: { ...getAuthHeader() }, // omit content-type so browser sets boundary
       credentials: 'include',
