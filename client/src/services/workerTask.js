@@ -1,5 +1,6 @@
+import API_URL from './apiConfig.js';
 import { getToken } from "./auth";
-const API = "http://localhost:5000/worker-tasks";
+const API = `${API_URL}/worker-tasks`;
 const getAuthHeader = () => {
   const token = getToken();
   return token ? { Authorization: `Bearer ${token}` } : {};

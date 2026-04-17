@@ -1,6 +1,7 @@
+import API_URL from './apiConfig.js';
 import { getToken } from "./auth";
 
-const API = "http://localhost:5000/permissions";
+const API = `${API_URL}/permissions`;
 
 const getAuthHeader = () => {
   const token = getToken();

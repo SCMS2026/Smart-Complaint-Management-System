@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { GoogleLogin } from "@react-oauth/google";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import API_URL from "../services/apiConfig";
 import { registerUser } from "../services/auth";
 import { useTheme } from "../context/ThemeContext";
 
@@ -78,7 +79,7 @@ const Signup = () => {
   };
 
   const handleSuccess = async (credentialResponse) => {
-    const res = await axios.post("http://localhost:5000/auth/google", {
+    const res = await axios.post(`${API_URL}/auth/google`, {
       token: credentialResponse.credential,
     });
 

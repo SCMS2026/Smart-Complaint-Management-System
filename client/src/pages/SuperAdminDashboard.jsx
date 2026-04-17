@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import API_URL from "../services/apiConfig";
 import { fetchDepartments, createDepartment, updateDepartment, deleteDepartment } from "../services/department";
 import { fetchUsers, createUser, setUserRole, getToken } from "../services/auth";
 import { fetchComplaints } from "../services/complaints";
@@ -7,7 +8,7 @@ import { fetchWorkerTasks } from "../services/workerTask";
 
 /* ── helpers ── */
 const initials = (name = "") => name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase() || "?";
-const API_AUTH = "http://localhost:5000/auth";
+const API_AUTH = `${API_URL}/auth`;
 
 const deleteUser = async (id) => {
   const token = getToken();

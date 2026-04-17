@@ -1,6 +1,7 @@
+import API_URL from './apiConfig.js';
 import { getToken } from "./auth";
 
-const API = "http://localhost:5000/assets";
+const API = `${API_URL}/assets`;
 
 const getAuthHeader = () => {
   const token = getToken();

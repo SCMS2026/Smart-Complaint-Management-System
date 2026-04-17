@@ -1,4 +1,6 @@
-const API = "http://localhost:5000/auth";
+import API_URL from './apiConfig.js';
+
+const API = `${API_URL}/auth`;
 
 // Get JWT token from localStorage
 export const getToken = () => {

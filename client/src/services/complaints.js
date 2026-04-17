@@ -1,5 +1,6 @@
+import API_URL from './apiConfig.js';
 import { getToken } from "./auth";
-const API = "http://localhost:5000/complaints";
+const API = `${API_URL}/complaints`;
 
 const getAuthHeader = () => {
   const token = getToken();
