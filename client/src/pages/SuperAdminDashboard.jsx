@@ -544,7 +544,7 @@ const SuperAdminDashboard = () => {
           </Field>
           <Field label="Role">
             <select required className={inputCls + " cursor-pointer"} value={userForm.role}
-              onChange={e => setUserForm({ ...userForm, role: e.target.value })}>
+              onChange={e => setUserForm({ ...userForm, role: e.target.value, department_id: e.target.value === "department_admin" ? userForm.department_id : "" })}>
               <option value="">Select role…</option>
               {["department_admin", "worker", "contractor", "analyzer", "super_admin"].map(r => (
                 <option key={r} value={r}>{r.replace(/_/g, " ")}</option>

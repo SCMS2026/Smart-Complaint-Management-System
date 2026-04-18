@@ -315,3 +315,29 @@ export const googleSignIn = async (idToken) => {
     return { success: false, message: error.message || "An error occurred during Google login" };
   }
 };
+
+export const setUserDepartment = async (userId, departmentId) => {
+  try {
+    const token = getToken();
+    if (!token) return { success: false, message: "Not authenticated" };
+
+    const res = await fetch(`${API}/admin/users/${userId}/department`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      credentials: "include",
+      body: JSON.stringify({ department_id: departmentId }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      return { success: false, message: data.message || "Failed to set department" };
+    }
+
+    return { success: true, user: data };
+  } catch (error) {
+    return { success: false, message: error.message };
+  }
+};

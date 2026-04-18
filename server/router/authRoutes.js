@@ -47,7 +47,7 @@ router.get(
         console.log('✅ Google Auth Success for:', user.email);
 
         const token = jwt.sign(
-          { id: user._id, email: user.email, role: user.role },
+          { id: user._id, email: user.email, role: user.role, department: user.department },
           process.env.JWT_SECRET,
           { expiresIn: '7d' }
         );

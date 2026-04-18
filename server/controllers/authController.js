@@ -1,5 +1,6 @@
 const User = require('../models/authModels');
 const Department = require('../models/departmentModel');
+const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { OAuth2Client } = require('google-auth-library');
@@ -35,7 +36,7 @@ const register = async (req, res) => {
         });
 
         const token = jwt.sign(
-            { id: user._id, role: user.role },
+            { id: user._id, role: user.role, department: user.department },
             process.env.JWT_SECRET,
             { expiresIn: "7d" }
         );
@@ -264,6 +265,7 @@ const getAllUsers = async (req, res) => {
 
 const setUserRole = async (req, res) => {
     const { role, department_id } = req.body;
+    console.log("setUserRole called:", req.params.id, "role:", role, "department_id:", department_id);
 
     if (!["user", "admin", "super_admin", "department_admin", "worker", "contractor", "analyzer"].includes(role))
         return res.status(400).json({ message: "Invalid role" });
@@ -287,7 +289,18 @@ const setUserRole = async (req, res) => {
     }
 
     const updateData = { role };
-    if (department_id) updateData.department = department_id;
+    if (department_id) {
+      // Convert string to ObjectId if needed
+      const deptObjId = new mongoose.Types.ObjectId(department_id);
+      updateData.department = deptObjId;
+      console.log("Setting user department to:", deptObjId);
+    } else if (role === 'department_admin' && !department_id) {
+      // department_id required for department_admin - don't allow without
+      return res.status(400).json({ message: "Department is required for department admin" });
+    } else if (role !== 'department_admin') {
+      // Clear department when removing department_admin role
+      updateData.department = null;
+    }
 
     const user = await User.findByIdAndUpdate(
         req.params.id,

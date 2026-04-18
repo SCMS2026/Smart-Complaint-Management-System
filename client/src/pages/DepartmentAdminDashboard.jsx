@@ -129,7 +129,8 @@ const DepartmentAdminDashboard = () => {
       setMyDeptName(deptName);
 
       if (compRes.success) {
-        setComplaints(filterByMyDept(compRes.complaints || [], deptId));
+        // Backend already filters by department, pass through directly
+        setComplaints(compRes.complaints || []);
       }
       if (permRes.success)  setPermissions(permRes.permissions || []);
       if (usersRes.success) setWorkers((usersRes.users || []).filter(u => u.role === "worker"));
@@ -144,10 +145,23 @@ const DepartmentAdminDashboard = () => {
 
   const refreshComplaints = async () => {
     const res = await fetchComplaints();
-    if (res.success) setComplaints(filterByMyDept(res.complaints || [], myDeptId));
+    if (res.success) setComplaints(res.complaints || []);
   };
 
   const showSuccess = (msg) => { setSuccess(msg); setTimeout(() => setSuccess(""), 3000); };
+
+  const handleVerify = async (complaintId) => {
+    setAssigning(true); setAssignMsg("Verifying…");
+    const res = await updateComplaintStatusRequest(complaintId, "verified");
+    if (res.success) { 
+      setAssignMsg("✅ Complaint verified!");
+      showSuccess("Complaint verified!");
+      await refreshComplaints(); 
+    } else { 
+      setAssignMsg(res.message || "Verify failed"); 
+    }
+    setAssigning(false);
+  };
 
   const handleVerifyAutoAssign = async (complaintId) => {
     setAssigning(true); setAssignMsg("Processing…");
@@ -185,6 +199,7 @@ const DepartmentAdminDashboard = () => {
     total:          complaints.length,
     pending:        complaints.filter(c => c.status === "pending").length,
     verified:       complaints.filter(c => c.status === "verified").length,
+    assigned:       complaints.filter(c => c.status === "assigned").length,
     inProgress:     complaints.filter(c => c.status === "in_progress").length,
     resolved:       complaints.filter(c => ["completed","approved_by_user"].includes(c.status)).length,
     approvalPending:complaints.filter(c => c.status === "user_approval_pending").length,
@@ -247,6 +262,7 @@ const DepartmentAdminDashboard = () => {
                 { label: "Total",    value: stats.total,           color: "bg-white/10 text-white" },
                 { label: "Pending",  value: stats.pending,         color: "bg-amber-500/20 text-amber-200" },
                 { label: "Verified", value: stats.verified,        color: "bg-blue-500/20 text-blue-200" },
+                { label: "Assigned", value: stats.assigned,        color: "bg-indigo-500/20 text-indigo-200" },
                 { label: "Progress", value: stats.inProgress,      color: "bg-violet-500/20 text-violet-200" },
                 { label: "Resolved", value: stats.resolved,        color: "bg-emerald-500/20 text-emerald-200" },
                 { label: "Approval", value: stats.approvalPending, color: "bg-orange-500/20 text-orange-200" },
@@ -385,7 +401,7 @@ const DepartmentAdminDashboard = () => {
                 <p className="text-xs text-slate-400 mt-0.5">{visibleComplaints.length} complaints</p>
               </div>
               <div className="flex flex-wrap gap-1.5">
-                {["all","pending","verified","in_progress","completed","rejected"].map(s => (
+                {["all","pending","verified","assigned","in_progress","completed","rejected"].map(s => (
                   <button key={s} onClick={() => setStatusFilter(s)}
                     className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${statusFilter === s ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-500 hover:bg-slate-200"}`}>
                     {s === "all" ? `All (${complaints.length})` : `${s.replace(/_/g," ")} (${complaints.filter(c=>c.status===s).length})`}
@@ -434,10 +450,16 @@ const DepartmentAdminDashboard = () => {
                           <button onClick={() => setViewComplaintId(c._id)}
                             className="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-blue-600 hover:bg-blue-50 transition">View</button>
                           {c.status === "pending" && (
-                            <button onClick={() => handleVerifyAutoAssign(c._id)} disabled={assigning}
-                              className="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-emerald-600 hover:bg-emerald-50 transition disabled:opacity-40 whitespace-nowrap">
-                              ✓ Verify
-                            </button>
+                            <>
+                              <button onClick={() => handleVerify(c._id)} disabled={assigning}
+                                className="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-emerald-600 hover:bg-emerald-50 transition disabled:opacity-40 whitespace-nowrap">
+                                ✓ Verify
+                              </button>
+                              <button onClick={() => handleVerifyAutoAssign(c._id)} disabled={assigning}
+                                className="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-purple-600 hover:bg-purple-50 transition disabled:opacity-40 whitespace-nowrap">
+                                ✓ Verify & Assign
+                              </button>
+                            </>
                           )}
                         </div>
                       </td>

@@ -85,9 +85,21 @@ const createComplaint = async (req, res) => {
 
     // 1. From Asset (PRIORITY 1)
     if (assetId) {
-      const asset = await Asset.findById(assetId).select('department_id');
-      if (asset?.department_id) {
-        department_id = asset.department_id;
+      const asset = await Asset.findById(assetId).select('department_id issue');
+      if (asset) {
+        if (asset.department_id) {
+          department_id = asset.department_id;
+        } else if (asset.issue) {
+          const Department = mongoose.model("Department");
+          let dept = await Department.findOne({ name: { $regex: new RegExp(`^${asset.issue}$`, "i") } });
+          if (!dept) {
+            dept = await Department.create({ name: asset.issue });
+          }
+          if (dept) {
+            department_id = dept._id;
+            await Asset.findByIdAndUpdate(assetId, { department_id: dept._id });
+          }
+        }
       }
     }
 
@@ -96,10 +108,22 @@ const createComplaint = async (req, res) => {
       const categoryName = category.trim();
       const asset = await Asset.findOne({
         category: { $regex: new RegExp(`^${categoryName}$`, "i") },
-      }).select('department_id');
+      }).select('department_id issue');
 
-      if (asset?.department_id) {
-        department_id = asset.department_id;
+      if (asset) {
+        if (asset.department_id) {
+          department_id = asset.department_id;
+        } else if (asset.issue) {
+          const Department = mongoose.model("Department");
+          let dept = await Department.findOne({ name: { $regex: new RegExp(`^${asset.issue}$`, "i") } });
+          if (!dept) {
+            dept = await Department.create({ name: asset.issue });
+          }
+          if (dept) {
+            department_id = dept._id;
+            await Asset.updateOne({ _id: asset._id }, { department_id: dept._id });
+          }
+        }
       }
     }
 
@@ -109,29 +133,34 @@ const createComplaint = async (req, res) => {
       if (normalizedIssue.includes(keyword)) {
         const asset = await Asset.findOne({
           category: { $regex: new RegExp(`^${cat}$`, "i") },
-        }).select('department_id');
+        }).select('department_id issue');
 
-        if (asset?.department_id) {
-          department_id = asset.department_id;
-          break;
+        if (asset) {
+          if (asset.department_id) {
+            department_id = asset.department_id;
+            break;
+          } else if (asset.issue) {
+            const Department = mongoose.model("Department");
+            let dept = await Department.findOne({ name: { $regex: new RegExp(`^${asset.issue}$`, "i") } });
+            if (!dept) {
+              dept = await Department.create({ name: asset.issue });
+            }
+            if (dept) {
+              department_id = dept._id;
+              await Asset.updateOne({ _id: asset._id }, { department_id: dept._id });
+              break;
+            }
+          }
         }
       }
     }
     // }
 
-    // 4. FALLBACK - Get ANY available department (GUARANTEED SUCCESS)
+    // 4. FALLBACK - No department found - require explicit assignment
     if (!department_id) {
-      const Department = mongoose.model("Department");
-      const departments = await Department.find({}).select('_id').limit(1);
-
-      if (departments.length > 0) {
-        department_id = departments[0]._id;
-      } else {
-        // Create default department if none exists
-        const defaultDept = new Department({ name: "General Department" });
-        await defaultDept.save();
-        department_id = defaultDept._id;
-      }
+      return res.status(400).json({
+        message: "Unable to determine department. Please select a valid asset with department.",
+      });
     }
 
     if (req.file) {
@@ -200,18 +229,23 @@ const getComplaints = async (req, res) => {
       { path: "department_id", select: "name" }
     ];
 
-    // Role-based filtering
+// Role-based filtering
     if (req.user.role === "user") {
       filter.userId = req.user.id;
     } else if (req.user.role === "department_admin") {
+      // Fetch department from database and filter
       const user = await User.findById(req.user.id).select('department');
       if (user?.department) {
-        filter.department_id = user.department;
+        // Convert to ObjectId for proper comparison
+        const deptObjId = new mongoose.Types.ObjectId(user.department);
+        filter.department_id = deptObjId;
       }
     } else if (req.user.role === "worker") {
       // Workers see only assigned complaints
+      const workerUser = await User.findById(req.user.id).select('department');
+      const workerDeptId = workerUser?.department || req.user.department;
       filter.$or = [
-        { department_id: req.user.department },
+        { department_id: workerDeptId },
         { assignedTo: req.user.id }
       ];
     }

@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Department = require('../models/departmentModel');
 
 // Create Department
