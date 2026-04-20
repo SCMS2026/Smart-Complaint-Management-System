@@ -424,11 +424,11 @@ const updateComplaintStatus = async (req, res) => {
   }
 };
 
-// User Approve/Reject - FIXED
+// User Approve/Reject
 const userApproveComplaint = async (req, res) => {
   try {
     const { complaintId } = req.params;
-    const { action } = req.body; // 'approve' or 'reject'
+    const { action, rejectionReason } = req.body;
 
     if (!['approve', 'reject'].includes(action)) {
       return res.status(400).json({ message: 'Invalid action' });
@@ -439,30 +439,53 @@ const userApproveComplaint = async (req, res) => {
       return res.status(404).json({ message: 'Complaint not found' });
     }
 
-    // Only complaint owner can approve/reject
     if (complaint.userId.toString() !== req.user.id) {
       return res.status(403).json({ message: 'Only complaint owner can approve/reject' });
     }
 
-    // Only for completed complaints
     if (!['user_approval_pending', 'completed'].includes(complaint.status)) {
       return res.status(400).json({
         message: `Complaint not ready for approval. Current status: ${complaint.status}`
       });
     }
 
-    complaint.status = action === 'approve' ? 'approved_by_user' : 'rejected_by_user';
-    complaint.updatedAt = new Date();
-    await complaint.save();
+    if (action === 'approve') {
+      complaint.status = 'approved_by_user';
+      complaint.updatedAt = new Date();
+      await complaint.save();
 
-    const populatedComplaint = await Complaint.findById(complaintId)
-      .populate("userId", "name")
-      .populate("assetId", "name");
+      const populatedComplaint = await Complaint.findById(complaintId)
+        .populate("userId", "name")
+        .populate("assetId", "name");
 
-    res.status(200).json({
-      message: `Complaint ${action}d successfully`,
-      complaint: populatedComplaint
-    });
+      return res.status(200).json({
+        message: 'Work approved successfully. Thank you!',
+        complaint: populatedComplaint
+      });
+    } else {
+      complaint.status = 'rejected_by_user';
+      complaint.rejectionReason = rejectionReason || 'Work not satisfactory';
+      complaint.updatedAt = new Date();
+      await complaint.save();
+
+      const updatedComplaint = await Complaint.findByIdAndUpdate(
+        complaintId,
+        {
+          status: 'assigned',
+          updatedAt: new Date()
+        },
+        { new: true }
+      )
+        .populate("userId", "name")
+        .populate("assetId", "name")
+        .populate("department_id", "name")
+        .populate("assignedTo", "name");
+
+      return res.status(200).json({
+        message: 'Work rejected. Complaint sent back to department for reassignment.',
+        complaint: updatedComplaint
+      });
+    }
   } catch (error) {
     console.error('User approval error:', error);
     res.status(500).json({ message: 'Error processing approval' });

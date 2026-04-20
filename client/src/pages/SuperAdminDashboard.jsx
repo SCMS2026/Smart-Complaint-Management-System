@@ -5,6 +5,7 @@ import { fetchDepartments, createDepartment, updateDepartment, deleteDepartment 
 import { fetchUsers, createUser, setUserRole, getToken } from "../services/auth";
 import { fetchComplaints } from "../services/complaints";
 import { fetchWorkerTasks } from "../services/workerTask";
+import { useTheme } from "../context/ThemeContext";
 
 /* ── helpers ── */
 const initials = (name = "") => name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase() || "?";
@@ -83,6 +84,7 @@ const inputCls = "w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 p
 /* ═══════════════════════════ MAIN ═══════════════════════════ */
 const SuperAdminDashboard = () => {
   const nav = useNavigate();
+  const { theme, toggleTheme } = useTheme();
   const [departments, setDepartments] = useState([]);
   const [users, setUsers] = useState([]);
   const [complaints, setComplaints] = useState([]);
@@ -161,10 +163,10 @@ const SuperAdminDashboard = () => {
   };
 
   if (loading) return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+    <div className={`min-h-screen flex items-center justify-center ${theme === 'dark' ? 'bg-slate-900' : 'bg-slate-50'}`}>
       <div className="text-center">
         <div className="w-12 h-12 border-4 border-blue-100 border-t-blue-500 rounded-full animate-spin mx-auto mb-4" />
-        <p className="text-sm text-slate-400 font-medium">Loading Mission Control…</p>
+        <p className={`text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-400'} font-medium`}>Loading Mission Control…</p>
       </div>
     </div>
   );
@@ -187,28 +189,31 @@ const SuperAdminDashboard = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-[#f8f9fc]">
+    <div className={`min-h-screen ${theme === 'dark' ? 'bg-slate-900' : 'bg-[#f8f9fc]'}`}>
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-white border-b border-slate-100 shadow-sm">
+      <header className={`sticky top-0 z-40 shadow-sm ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'} border-b`}>
         <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white text-xs font-bold shadow">SA</div>
             <div>
-              <p className="text-sm font-bold text-slate-800 leading-none">Mission Control</p>
-              <p className="text-[10px] text-slate-400 mt-0.5">Super Admin Dashboard</p>
+              <p className={`text-sm font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-800'} leading-none`}>Mission Control</p>
+              <p className={`text-[10px] ${theme === 'dark' ? 'text-slate-400' : 'text-slate-400'} mt-0.5`}>Super Admin Dashboard</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
             {/* Tab Nav */}
-            <nav className="hidden md:flex items-center gap-1 bg-slate-100 rounded-xl p-1">
+            <nav className={`hidden md:flex items-center gap-1 rounded-xl p-1 ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-100'}`}>
               {TABS.map(t => (
                 <button key={t.id} onClick={() => setActiveTab(t.id)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${activeTab === t.id ? "bg-white text-slate-800 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}>
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${activeTab === t.id ? (theme === 'dark' ? 'bg-slate-600 text-white shadow-sm' : 'bg-white text-slate-800 shadow-sm') : (theme === 'dark' ? 'text-slate-400 hover:text-slate-200' : 'text-slate-500 hover:text-slate-700')}`}>
                   {t.label}
                 </button>
               ))}
             </nav>
-            <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-violet-50 text-violet-600 border border-violet-100">SUPER ADMIN</span>
+            <button onClick={toggleTheme} className={`p-2 rounded-lg transition-colors ${theme === 'dark' ? 'bg-slate-700 hover:bg-slate-600' : 'bg-slate-100 hover:bg-slate-200'}`} title="Toggle theme">
+              {theme === 'dark' ? '☀️' : '🌙'}
+            </button>
+            <span className={`text-xs font-semibold px-3 py-1.5 rounded-full ${theme === 'dark' ? 'bg-violet-900/50 text-violet-300 border border-violet-700' : 'bg-violet-50 text-violet-600 border border-violet-100'}`}>SUPER ADMIN</span>
           </div>
         </div>
       </header>
@@ -235,8 +240,8 @@ const SuperAdminDashboard = () => {
         {/* ── OVERVIEW TAB ── */}
         {activeTab === "overview" && (
           <div>
-            <h1 className="text-2xl font-bold text-slate-900 mb-1">System Overview</h1>
-            <p className="text-sm text-slate-400 mb-8">Real-time snapshot of all departments, users & complaints</p>
+            <h1 className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-900'} mb-1`}>System Overview</h1>
+            <p className={`text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-400'} mb-8`}>Real-time snapshot of all departments, users & complaints</p>
 
             {/* Stat Grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
@@ -249,15 +254,15 @@ const SuperAdminDashboard = () => {
                 <div key={s.label} className={`${s.bg} border ${s.border} rounded-2xl p-5`}>
                   <p className="text-2xl mb-2">{s.icon}</p>
                   <p className={`text-3xl font-bold ${s.color} leading-none`}>{s.value}</p>
-                  <p className="text-xs text-slate-500 font-semibold mt-1 uppercase tracking-wider">{s.label}</p>
+                  <p className={`text-xs font-semibold mt-1 uppercase tracking-wider ${theme === 'dark' ? 'text-slate-600' : 'text-slate-500'}`}>{s.label}</p>
                 </div>
               ))}
             </div>
 
             <div className="grid md:grid-cols-2 gap-6">
               {/* Quick stats */}
-              <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
-                <h3 className="font-semibold text-slate-700 mb-4 text-sm uppercase tracking-wider">Quick Breakdown</h3>
+              <div className={`rounded-2xl border shadow-sm p-6 ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
+                <h3 className={`font-semibold mb-4 text-sm uppercase tracking-wider ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>Quick Breakdown</h3>
                 <div className="space-y-3">
                   {[
                     { label: "Pending Complaints", value: stats.pending, color: "bg-amber-400" },
@@ -265,31 +270,31 @@ const SuperAdminDashboard = () => {
                     { label: "Workers", value: stats.workers, color: "bg-emerald-400" },
                     { label: "Departments Active", value: stats.departments, color: "bg-violet-400" },
                   ].map(r => (
-                    <div key={r.label} className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0">
+                    <div key={r.label} className={`flex items-center justify-between py-2 ${theme === 'dark' ? 'border-b border-slate-700 last:border-0' : 'border-b border-slate-50 last:border-0'}`}>
                       <div className="flex items-center gap-2">
                         <span className={`w-2 h-2 rounded-full ${r.color}`} />
-                        <span className="text-sm text-slate-600">{r.label}</span>
+                        <span className={`text-sm ${theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>{r.label}</span>
                       </div>
-                      <span className="text-sm font-bold text-slate-800">{r.value}</span>
+                      <span className={`text-sm font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>{r.value}</span>
                     </div>
                   ))}
                 </div>
               </div>
 
               {/* Recent complaints */}
-              <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
-                <h3 className="font-semibold text-slate-700 mb-4 text-sm uppercase tracking-wider">Recent Complaints</h3>
+              <div className={`rounded-2xl border shadow-sm p-6 ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
+                <h3 className={`font-semibold mb-4 text-sm uppercase tracking-wider ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>Recent Complaints</h3>
                 <div className="space-y-2">
                   {complaints.slice(0, 5).map(c => (
-                    <div key={c._id} className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0">
+                    <div key={c._id} className={`flex items-center justify-between py-2 ${theme === 'dark' ? 'border-b border-slate-700 last:border-0' : 'border-b border-slate-50 last:border-0'}`}>
                       <div>
-                        <p className="text-sm font-medium text-slate-700 truncate max-w-[180px]">{c.issue || "—"}</p>
-                        <p className="text-xs text-slate-400">{c.department_id?.name || "No dept"}</p>
+                        <p className={`text-sm font-medium truncate max-w-[180px] ${theme === 'dark' ? 'text-white' : 'text-slate-700'}`}>{c.issue || "—"}</p>
+                        <p className={`text-xs ${theme === 'dark' ? 'text-slate-400' : 'text-slate-400'}`}>{c.department_id?.name || "No dept"}</p>
                       </div>
                       <StatusBadge status={c.status} />
                     </div>
                   ))}
-                  {complaints.length === 0 && <p className="text-sm text-slate-300 text-center py-4">No complaints yet</p>}
+                  {complaints.length === 0 && <p className={`text-sm ${theme === 'dark' ? 'text-slate-500' : 'text-slate-300'} text-center py-4`}>No complaints yet</p>}
                 </div>
               </div>
             </div>

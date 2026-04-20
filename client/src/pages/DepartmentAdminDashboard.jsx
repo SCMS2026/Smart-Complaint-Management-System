@@ -6,6 +6,7 @@ import { fetchUsers, getTokenPayload, getCurrentUser } from "../services/auth";
 import { fetchDepartments, fetchDepartmentDashboard } from "../services/department";
 import { createWorkerTask, autoAssignWorker } from "../services/workerTask";
 import ComplaintDetail from "./ComplaintDetail";
+import { useTheme } from "../context/ThemeContext";
 
 const STATUS_CONFIG = {
   pending:               { bg: "bg-amber-50",   text: "text-amber-700",   dot: "bg-amber-400",   border: "border-amber-200",   label: "Pending" },
@@ -30,6 +31,7 @@ const StatusBadge = ({ status }) => {
 
 const DepartmentAdminDashboard = () => {
   const nav = useNavigate();
+  const { theme, toggleTheme } = useTheme();
 
   const [complaints, setComplaints]   = useState([]);
   const [workers, setWorkers]         = useState([]);
@@ -212,16 +214,16 @@ const DepartmentAdminDashboard = () => {
   const selectedComplaint = complaints.find(c => c._id === selectedComplaintId);
 
   if (loading) return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center pt-20">
+    <div className={`min-h-screen ${theme === 'dark' ? 'bg-slate-900' : 'bg-slate-50'} flex items-center justify-center pt-20`}>
       <div className="text-center">
         <div className="w-10 h-10 border-4 border-blue-100 border-t-blue-500 rounded-full animate-spin mx-auto mb-3" />
-        <p className="text-sm text-slate-400">Loading dashboard…</p>
+        <p className={`text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-400'}`}>Loading dashboard…</p>
       </div>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-[#f8f9fc] pt-16 pb-12">
+    <div className={`min-h-screen ${theme === 'dark' ? 'bg-slate-900' : 'bg-[#f8f9fc]'} pt-16 pb-12`}>
 
       {/* Toasts */}
       {(error || success) && (
@@ -234,13 +236,18 @@ const DepartmentAdminDashboard = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
 
         {/* Hero */}
-        <div className="bg-gradient-to-br from-slate-800 via-slate-800 to-slate-900 rounded-2xl text-white p-8 mb-6 shadow-lg relative overflow-hidden">
+        <div className={`rounded-2xl text-white p-8 mb-6 shadow-lg relative overflow-hidden ${theme === 'dark' ? 'bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900' : 'bg-gradient-to-br from-slate-800 via-slate-800 to-slate-900'}`}>
           <div className="absolute top-0 right-0 w-72 h-72 opacity-[0.06] rounded-full pointer-events-none"
             style={{ background: "radial-gradient(circle, #60a5fa, transparent)", transform: "translate(25%,-25%)" }} />
           <div className="relative">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-400 mb-2">Department Admin</p>
+                <div className="flex items-center gap-3 mb-2">
+                  <p className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-400 mb-0">Department Admin</p>
+                  <button onClick={toggleTheme} className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors" title="Toggle theme">
+                    {theme === 'dark' ? '☀️' : '🌙'}
+                  </button>
+                </div>
                 <h1 className="text-2xl sm:text-3xl font-bold">
                   {myDeptName ? `${myDeptName} Department` : "Department Dashboard"}
                 </h1>
@@ -277,7 +284,7 @@ const DepartmentAdminDashboard = () => {
         </div>
 
         {/* Tabs */}
-        <div className="flex items-center gap-1 bg-white border border-slate-100 rounded-xl p-1 mb-6 shadow-sm w-fit">
+        <div className={`flex items-center gap-1 ${theme === 'dark' ? 'bg-slate-800 border border-slate-700' : 'bg-white border border-slate-100'} rounded-xl p-1 mb-6 shadow-sm w-fit`}>
           {[
             { id: "dashboard",   label: "Dashboard" },
             { id: "complaints",  label: "Complaints" },
@@ -285,7 +292,7 @@ const DepartmentAdminDashboard = () => {
             { id: "permissions", label: permissions.length ? `Permissions (${permissions.length})` : "Permissions" },
           ].map(t => (
             <button key={t.id} onClick={() => setActiveTab(t.id)}
-              className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${activeTab === t.id ? "bg-slate-900 text-white shadow" : "text-slate-500 hover:text-slate-700"}`}>
+              className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${activeTab === t.id ? (theme === 'dark' ? 'bg-slate-700 text-white' : 'bg-slate-900 text-white') + ' shadow' : (theme === 'dark' ? 'text-slate-400 hover:text-slate-200' : 'text-slate-500 hover:text-slate-700')}`}>
               {t.label}
             </button>
           ))}
@@ -295,15 +302,15 @@ const DepartmentAdminDashboard = () => {
         {activeTab === "dashboard" && deptDashboard && (
           <div className="space-y-6">
             {/* Department Overview */}
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+            <div className={`rounded-2xl border shadow-sm p-6 ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h2 className="text-xl font-bold text-slate-800">{deptDashboard.department?.name || myDeptName}</h2>
-                  <p className="text-sm text-slate-500">Department Overview</p>
+                  <h2 className={`text-xl font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>{deptDashboard.department?.name || myDeptName}</h2>
+                  <p className={`text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>Department Overview</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm text-slate-500">Admin</p>
-                  <p className="font-semibold text-slate-800">{deptDashboard.department?.admin?.name || "Not assigned"}</p>
+                  <p className={`text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>Admin</p>
+                  <p className={`font-semibold ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>{deptDashboard.department?.admin?.name || "Not assigned"}</p>
                 </div>
               </div>
 
@@ -337,25 +344,25 @@ const DepartmentAdminDashboard = () => {
             </div>
 
             {/* Performance Metrics */}
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
-              <h3 className="text-lg font-semibold text-slate-800 mb-4">Performance Metrics</h3>
+            <div className={`rounded-2xl border shadow-sm p-6 ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
+              <h3 className={`text-lg font-semibold ${theme === 'dark' ? 'text-white' : 'text-slate-800'} mb-4`}>Performance Metrics</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-slate-50 rounded-xl p-4">
+                <div className={`rounded-xl p-4 ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-50'}`}>
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-slate-500">Avg Resolution Time</p>
-                      <p className="text-2xl font-bold text-slate-800">{deptDashboard.performance?.avgResolutionTime || 0}h</p>
+                      <p className={`text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>Avg Resolution Time</p>
+                      <p className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>{deptDashboard.performance?.avgResolutionTime || 0}h</p>
                     </div>
                     <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
                       <span className="text-blue-600 font-bold">⏱️</span>
                     </div>
                   </div>
                 </div>
-                <div className="bg-slate-50 rounded-xl p-4">
+                <div className={`rounded-xl p-4 ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-50'}`}>
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-slate-500">Satisfaction Rate</p>
-                      <p className="text-2xl font-bold text-slate-800">{deptDashboard.performance?.satisfactionRate || 0}%</p>
+                      <p className={`text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>Satisfaction Rate</p>
+                      <p className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>{deptDashboard.performance?.satisfactionRate || 0}%</p>
                     </div>
                     <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
                       <span className="text-green-600 font-bold">⭐</span>
@@ -366,26 +373,26 @@ const DepartmentAdminDashboard = () => {
             </div>
 
             {/* Recent Complaints */}
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
-              <h3 className="text-lg font-semibold text-slate-800 mb-4">Recent Complaints</h3>
+            <div className={`rounded-2xl border shadow-sm p-6 ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
+              <h3 className={`text-lg font-semibold ${theme === 'dark' ? 'text-white' : 'text-slate-800'} mb-4`}>Recent Complaints</h3>
               <div className="space-y-3">
                 {deptDashboard.recentComplaints?.length > 0 ? (
                   deptDashboard.recentComplaints.map((complaint) => (
-                    <div key={complaint._id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                    <div key={complaint._id} className={`flex items-center justify-between p-3 rounded-lg ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-50'}`}>
                       <div>
-                        <p className="font-medium text-slate-800">{complaint.issue}</p>
-                        <p className="text-sm text-slate-500">by {complaint.userId?.name || 'Unknown'}</p>
+                        <p className={`font-medium ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>{complaint.issue}</p>
+                        <p className={`text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>by {complaint.userId?.name || 'Unknown'}</p>
                       </div>
                       <div className="text-right">
                         <StatusBadge status={complaint.status} />
-                        <p className="text-xs text-slate-400 mt-1">
+                        <p className={`text-xs ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'} mt-1`}>
                           {new Date(complaint.createdAt).toLocaleDateString()}
                         </p>
                       </div>
                     </div>
                   ))
                 ) : (
-                  <p className="text-sm text-slate-500 text-center py-4">No recent complaints</p>
+                  <p className={`text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'} text-center py-4`}>No recent complaints</p>
                 )}
               </div>
             </div>
@@ -394,16 +401,16 @@ const DepartmentAdminDashboard = () => {
 
         {/* ── COMPLAINTS TAB ── */}
         {activeTab === "complaints" && (
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
+          <div className={`rounded-2xl border shadow-sm overflow-hidden ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
+            <div className={`px-6 py-4 border-b flex flex-wrap items-center justify-between gap-3 ${theme === 'dark' ? 'border-slate-700' : 'border-slate-100'}`}>
               <div>
-                <h2 className="font-semibold text-slate-800">{myDeptName ? `${myDeptName} — Complaint Queue` : "Complaint Queue"}</h2>
-                <p className="text-xs text-slate-400 mt-0.5">{visibleComplaints.length} complaints</p>
+                <h2 className={`font-semibold ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>{myDeptName ? `${myDeptName} — Complaint Queue` : "Complaint Queue"}</h2>
+                <p className={`text-xs ${theme === 'dark' ? 'text-slate-400' : 'text-slate-400'} mt-0.5`}>{visibleComplaints.length} complaints</p>
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {["all","pending","verified","assigned","in_progress","completed","rejected"].map(s => (
                   <button key={s} onClick={() => setStatusFilter(s)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${statusFilter === s ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-500 hover:bg-slate-200"}`}>
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${statusFilter === s ? (theme === 'dark' ? 'bg-slate-700 text-white' : 'bg-slate-900 text-white') : (theme === 'dark' ? 'bg-slate-700 text-slate-400 hover:bg-slate-600' : 'bg-slate-100 text-slate-500 hover:bg-slate-200')}`}>
                     {s === "all" ? `All (${complaints.length})` : `${s.replace(/_/g," ")} (${complaints.filter(c=>c.status===s).length})`}
                   </button>
                 ))}
@@ -413,9 +420,9 @@ const DepartmentAdminDashboard = () => {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="bg-slate-50/70">
+                  <tr className={theme === 'dark' ? 'bg-slate-700/50' : 'bg-slate-50/70'}>
                     {["Select","ID","Issue","Submitted By","Location","Status","Date","Actions"].map(h => (
-                      <th key={h} className="px-5 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider whitespace-nowrap">{h}</th>
+                      <th key={h} className={`px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider whitespace-nowrap ${theme === 'dark' ? 'text-slate-400' : 'text-slate-400'}`}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -423,7 +430,7 @@ const DepartmentAdminDashboard = () => {
                   {visibleComplaints.length === 0 ? (
                     <tr>
                       <td colSpan={8} className="px-5 py-16 text-center">
-                        <p className="text-slate-300 text-sm">
+                        <p className={theme === 'dark' ? 'text-slate-500 text-sm' : 'text-slate-300 text-sm'}>
                           {myDeptName
                             ? `No ${statusFilter !== "all" ? `"${statusFilter}"` : ""} complaints in ${myDeptName} department`
                             : "No department assigned — ask Super Admin"}
@@ -432,7 +439,7 @@ const DepartmentAdminDashboard = () => {
                     </tr>
                   ) : visibleComplaints.map(c => (
                     <tr key={c._id}
-                      className={`border-t border-slate-50 transition-colors ${selectedComplaintId === c._id ? "bg-blue-50/70" : "hover:bg-slate-50/50"}`}>
+                      className={`border-t transition-colors ${selectedComplaintId === c._id ? (theme === 'dark' ? 'bg-blue-900/30' : 'bg-blue-50/70') : (theme === 'dark' ? 'border-slate-700 hover:bg-slate-700/50' : 'border-slate-50 hover:bg-slate-50/50')}`}>
                       <td className="px-5 py-3.5">
                         <input type="radio" name="complaint"
                           checked={selectedComplaintId === c._id}
@@ -440,7 +447,7 @@ const DepartmentAdminDashboard = () => {
                           className="w-4 h-4 accent-blue-600 cursor-pointer" />
                       </td>
                       <td className="px-5 py-3.5"><span className="font-mono text-xs text-slate-400">#{c._id?.slice(-6)}</span></td>
-                      <td className="px-5 py-3.5"><p className="text-sm font-medium text-slate-800 max-w-[180px] truncate">{c.issue || c.category || "—"}</p></td>
+                      <td className="px-5 py-3.5"><p className={`text-sm font-medium max-w-[180px] truncate ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>{c.issue || c.category || "—"}</p></td>
                       <td className="px-5 py-3.5 text-xs text-slate-500">{c.userId?.name || "—"}</td>
                       <td className="px-5 py-3.5 text-xs text-slate-400">{c.city || "—"}</td>
                       <td className="px-5 py-3.5"><StatusBadge status={c.status} /></td>
@@ -474,35 +481,35 @@ const DepartmentAdminDashboard = () => {
         {/* ── ASSIGN TAB ── */}
         {activeTab === "assign" && (
           <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-              <div className="px-6 py-4 border-b border-slate-100">
-                <h2 className="font-semibold text-slate-800">Select Complaint</h2>
-                <p className="text-xs text-slate-400 mt-0.5">Click a row to select, then assign a worker</p>
+            <div className={`rounded-2xl border shadow-sm overflow-hidden ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
+              <div className={`px-6 py-4 border-b ${theme === 'dark' ? 'border-slate-700' : 'border-slate-100'}`}>
+                <h2 className={`font-semibold ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>Select Complaint</h2>
+                <p className={`text-xs ${theme === 'dark' ? 'text-slate-400' : 'text-slate-400'} mt-0.5`}>Click a row to select, then assign a worker</p>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="bg-slate-50/70">
+                    <tr className={theme === 'dark' ? 'bg-slate-700/50' : 'bg-slate-50/70'}>
                       <th className="px-5 py-3 w-10" />
-                      <th className="px-5 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Complaint</th>
-                      <th className="px-5 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Status</th>
+                      <th className={`px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider ${theme === 'dark' ? 'text-slate-400' : 'text-slate-400'}`}>Complaint</th>
+                      <th className={`px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider ${theme === 'dark' ? 'text-slate-400' : 'text-slate-400'}`}>Status</th>
                     </tr>
                   </thead>
                   <tbody>
                     {complaints.length === 0 ? (
-                      <tr><td colSpan={3} className="px-5 py-12 text-center text-sm text-slate-300">No complaints</td></tr>
+                      <tr><td colSpan={3} className={`px-5 py-12 text-center text-sm ${theme === 'dark' ? 'text-slate-500' : 'text-slate-300'}`}>No complaints</td></tr>
                     ) : complaints.map(c => (
                       <tr key={c._id}
                         onClick={() => { setSelectedComplaintId(c._id); setAssignMsg(""); }}
-                        className={`border-t border-slate-50 cursor-pointer transition-colors ${selectedComplaintId === c._id ? "bg-blue-50" : "hover:bg-slate-50"}`}>
+                        className={`border-t cursor-pointer transition-colors ${selectedComplaintId === c._id ? (theme === 'dark' ? 'bg-blue-900/30' : 'bg-blue-50') : (theme === 'dark' ? 'border-slate-700 hover:bg-slate-700/50' : 'border-slate-50 hover:bg-slate-50')}`}>
                         <td className="px-5 py-3.5">
                           <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors ${selectedComplaintId === c._id ? "border-blue-600 bg-blue-600" : "border-slate-300"}`}>
                             {selectedComplaintId === c._id && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
                           </div>
                         </td>
                         <td className="px-5 py-3.5">
-                          <p className="text-sm font-medium text-slate-800">{c.issue || c.category}</p>
-                          <p className="text-xs text-slate-400 mt-0.5">#{c._id?.slice(-6)} · {c.city || "—"}</p>
+                          <p className={`text-sm font-medium ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>{c.issue || c.category}</p>
+                          <p className={`text-xs ${theme === 'dark' ? 'text-slate-400' : 'text-slate-400'} mt-0.5`}>#{c._id?.slice(-6)} · {c.city || "—"}</p>
                         </td>
                         <td className="px-5 py-3.5"><StatusBadge status={c.status} /></td>
                       </tr>
@@ -513,28 +520,28 @@ const DepartmentAdminDashboard = () => {
             </div>
 
             <div className="space-y-4">
-              <div className={`bg-white rounded-2xl border shadow-sm p-5 transition-colors ${selectedComplaint ? "border-blue-200 bg-blue-50/20" : "border-slate-100"}`}>
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Selected Complaint</p>
+              <div className={`rounded-2xl border shadow-sm p-5 transition-colors ${selectedComplaint ? "border-blue-200 bg-blue-50/20" : (theme === 'dark' ? 'border-slate-700 bg-slate-800' : 'border-slate-100')}`}>
+                <p className={`text-xs font-semibold uppercase tracking-wider mb-3 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-400'}`}>Selected Complaint</p>
                 {selectedComplaint ? (
                   <>
-                    <p className="font-semibold text-slate-800">{selectedComplaint.issue || selectedComplaint.category}</p>
-                    <p className="text-xs text-slate-400 mt-1">#{selectedComplaint._id?.slice(-6)} · {selectedComplaint.city || "—"}</p>
+                    <p className={`font-semibold ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>{selectedComplaint.issue || selectedComplaint.category}</p>
+                    <p className={`text-xs ${theme === 'dark' ? 'text-slate-400' : 'text-slate-400'} mt-1`}>#{selectedComplaint._id?.slice(-6)} · {selectedComplaint.city || "—"}</p>
                     <div className="mt-2"><StatusBadge status={selectedComplaint.status} /></div>
                   </>
-                ) : <p className="text-sm text-slate-300 italic">Click a row to select complaint</p>}
+                ) : <p className={`text-sm ${theme === 'dark' ? 'text-slate-500' : 'text-slate-300'} italic`}>Click a row to select complaint</p>}
               </div>
 
-              <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Workers ({workers.length})</p>
+              <div className={`rounded-2xl border shadow-sm p-5 ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
+                <p className={`text-xs font-semibold uppercase tracking-wider mb-3 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-400'}`}>Workers ({workers.length})</p>
                 {workers.length > 0 && (
                   <div className="space-y-1.5 mb-3 max-h-48 overflow-y-auto">
                     {workers.map(w => (
                       <div key={w._id} onClick={() => setSelectedWorkerId(w._id)}
-                        className={`flex items-center gap-3 p-2.5 rounded-xl cursor-pointer transition border ${selectedWorkerId === w._id ? "bg-blue-50 border-blue-200" : "border-transparent hover:bg-slate-50"}`}>
-                        <div className="w-7 h-7 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold flex items-center justify-center flex-shrink-0">
+                        className={`flex items-center gap-3 p-2.5 rounded-xl cursor-pointer transition border ${selectedWorkerId === w._id ? (theme === 'dark' ? 'bg-blue-900/30 border-blue-700' : 'bg-blue-50 border-blue-200') : (theme === 'dark' ? 'border-transparent hover:bg-slate-700' : 'border-transparent hover:bg-slate-50')}`}>
+                        <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${theme === 'dark' ? 'bg-emerald-900 text-emerald-300' : 'bg-emerald-100 text-emerald-700'} text-xs font-bold`}>
                           {w.name?.[0]?.toUpperCase() || "W"}
                         </div>
-                        <p className="text-sm font-medium text-slate-700 flex-1">{w.name || w.email}</p>
+                        <p className={`text-sm font-medium flex-1 ${theme === 'dark' ? 'text-white' : 'text-slate-700'}`}>{w.name || w.email}</p>
                         {selectedWorkerId === w._id && <span className="text-blue-500 text-xs font-semibold">✓</span>}
                       </div>
                     ))}
@@ -542,16 +549,16 @@ const DepartmentAdminDashboard = () => {
                 )}
                 <div className="space-y-2">
                   <button onClick={handleManualAssign} disabled={!selectedComplaintId || assigning}
-                    className="w-full py-2.5 rounded-xl bg-slate-900 text-white text-sm font-semibold hover:bg-slate-700 transition disabled:opacity-40 disabled:cursor-not-allowed">
+                    className={`w-full py-2.5 rounded-xl text-sm font-semibold transition disabled:opacity-40 disabled:cursor-not-allowed ${theme === 'dark' ? 'bg-slate-700 text-white hover:bg-slate-600' : 'bg-slate-900 text-white hover:bg-slate-700'}`}>
                     {assigning ? "Assigning…" : "Assign Selected Worker"}
                   </button>
                   <button onClick={handleAutoAssign} disabled={!selectedComplaintId || assigning}
-                    className="w-full py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-semibold hover:bg-slate-50 transition disabled:opacity-40 disabled:cursor-not-allowed">
+                    className={`w-full py-2.5 rounded-xl border text-sm font-semibold transition disabled:opacity-40 disabled:cursor-not-allowed ${theme === 'dark' ? 'border-slate-600 bg-slate-700 text-white hover:bg-slate-600' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'}`}>
                     ⚡ Auto Assign (Least Load)
                   </button>
                 </div>
                 {assignMsg && (
-                  <p className={`mt-3 text-sm font-medium rounded-xl px-3 py-2 ${assignMsg.startsWith("✅") ? "bg-emerald-50 text-emerald-700" : "bg-slate-50 text-slate-600"}`}>
+                  <p className={`mt-3 text-sm font-medium rounded-xl px-3 py-2 ${assignMsg.startsWith("✅") ? "bg-emerald-50 text-emerald-700" : (theme === 'dark' ? 'bg-slate-700 text-slate-300' : 'bg-slate-50 text-slate-600')}`}>
                     {assignMsg}
                   </p>
                 )}
@@ -562,11 +569,11 @@ const DepartmentAdminDashboard = () => {
 
         {/* ── PERMISSIONS TAB ── */}
         {activeTab === "permissions" && (
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm">
-            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+          <div className={`rounded-2xl border shadow-sm ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
+            <div className={`px-6 py-4 border-b flex items-center justify-between ${theme === 'dark' ? 'border-slate-700' : 'border-slate-100'}`}>
               <div>
-                <h2 className="font-semibold text-slate-800">Permission Requests</h2>
-                <p className="text-xs text-slate-400 mt-0.5">{permissions.length} requests</p>
+                <h2 className={`font-semibold ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>Permission Requests</h2>
+                <p className={`text-xs ${theme === 'dark' ? 'text-slate-400' : 'text-slate-400'} mt-0.5`}>{permissions.length} requests</p>
               </div>
               {permissions.length > 0 && <span className="bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-full">{permissions.length}</span>}
             </div>
@@ -574,15 +581,15 @@ const DepartmentAdminDashboard = () => {
               {permissions.length === 0 ? (
                 <div className="text-center py-12">
                   <p className="text-4xl mb-3">✅</p>
-                  <p className="text-sm text-slate-400">No outstanding permission requests</p>
+                  <p className={`text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-400'}`}>No outstanding permission requests</p>
                 </div>
               ) : (
                 <div className="space-y-3">
                   {permissions.map(p => (
-                    <div key={p._id} className="flex items-center justify-between p-4 rounded-xl border border-slate-100 bg-slate-50">
+                    <div key={p._id} className={`flex items-center justify-between p-4 rounded-xl border ${theme === 'dark' ? 'border-slate-700 bg-slate-700/50' : 'border-slate-100 bg-slate-50'}`}>
                       <div>
-                        <p className="font-semibold text-slate-800 text-sm">{p.assetId?.name || "Unknown asset"}</p>
-                        <p className="text-xs text-slate-400 mt-0.5">Requested by {p.requestBy?.name || "Unknown"}</p>
+                        <p className={`font-semibold text-sm ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>{p.assetId?.name || "Unknown asset"}</p>
+                        <p className={`text-xs ${theme === 'dark' ? 'text-slate-400' : 'text-slate-400'} mt-0.5`}>Requested by {p.requestBy?.name || "Unknown"}</p>
                       </div>
                       <span className={`px-2.5 py-1 rounded-full text-xs font-semibold border ${p.status === "approved" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : p.status === "rejected" ? "bg-red-50 text-red-600 border-red-200" : "bg-amber-50 text-amber-700 border-amber-200"}`}>
                         {p.status || "pending"}
