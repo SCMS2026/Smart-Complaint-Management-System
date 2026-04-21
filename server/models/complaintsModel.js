@@ -40,13 +40,19 @@ const complaintSchema = new mongoose.Schema({
     }
   ],
 
-  isFake: { type: Boolean, default: false },
+   isFake: { type: Boolean, default: false },
 
-  status: {
-    type: String,
-    enum: ["pending", "verified", "assigned", "in_progress", "completed", "rejected", "user_approval_pending", "approved_by_user", "rejected_by_user"],
-    default: "pending"
-  }
+   assignedTo: {
+     type: mongoose.Schema.Types.ObjectId,
+     ref: "User",
+     default: null
+   },
+
+   status: {
+     type: String,
+     enum: ["pending", "verified", "assigned", "in_progress", "completed", "rejected", "user_approval_pending", "approved_by_user", "rejected_by_user"],
+     default: "pending"
+   }
 
 }, { timestamps: true });
 

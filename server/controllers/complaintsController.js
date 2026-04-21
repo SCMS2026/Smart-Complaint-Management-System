@@ -93,7 +93,15 @@ const createComplaint = async (req, res) => {
           const Department = mongoose.model("Department");
           let dept = await Department.findOne({ name: { $regex: new RegExp(`^${asset.issue}$`, "i") } });
           if (!dept) {
-            dept = await Department.create({ name: asset.issue });
+            try {
+              dept = await Department.create({ name: asset.issue });
+            } catch (createError) {
+              if (createError.code === 11000) {
+                dept = await Department.findOne({ name: { $regex: new RegExp(`^${asset.issue}$`, "i") } });
+              } else {
+                throw createError;
+              }
+            }
           }
           if (dept) {
             department_id = dept._id;
@@ -117,7 +125,15 @@ const createComplaint = async (req, res) => {
           const Department = mongoose.model("Department");
           let dept = await Department.findOne({ name: { $regex: new RegExp(`^${asset.issue}$`, "i") } });
           if (!dept) {
-            dept = await Department.create({ name: asset.issue });
+            try {
+              dept = await Department.create({ name: asset.issue });
+            } catch (createError) {
+              if (createError.code === 11000) {
+                dept = await Department.findOne({ name: { $regex: new RegExp(`^${asset.issue}$`, "i") } });
+              } else {
+                throw createError;
+              }
+            }
           }
           if (dept) {
             department_id = dept._id;
@@ -143,7 +159,15 @@ const createComplaint = async (req, res) => {
             const Department = mongoose.model("Department");
             let dept = await Department.findOne({ name: { $regex: new RegExp(`^${asset.issue}$`, "i") } });
             if (!dept) {
-              dept = await Department.create({ name: asset.issue });
+              try {
+                dept = await Department.create({ name: asset.issue });
+              } catch (createError) {
+                if (createError.code === 11000) {
+                  dept = await Department.findOne({ name: { $regex: new RegExp(`^${asset.issue}$`, "i") } });
+                } else {
+                  throw createError;
+                }
+              }
             }
             if (dept) {
               department_id = dept._id;
@@ -156,16 +180,35 @@ const createComplaint = async (req, res) => {
     }
     // }
 
-    // 4. FALLBACK - No department found - require explicit assignment
+    // 4. FALLBACK - Direct department lookup from category
+    if (!department_id && category) {
+      const Department = mongoose.model("Department");
+      const dept = await Department.findOne({ name: { $regex: new RegExp(`^${category}$`, "i") } });
+      if (dept) {
+        department_id = dept._id;
+      }
+    }
+
+    // 5. FALLBACK - Direct department lookup from issue
+    if (!department_id && issue) {
+      const Department = mongoose.model("Department");
+      const dept = await Department.findOne({ name: { $regex: new RegExp(`^${issue}$`, "i") } });
+      if (dept) {
+        department_id = dept._id;
+      }
+    }
+
+    // 6. FINAL FALLBACK - No department found
     if (!department_id) {
       return res.status(400).json({
         message: "Unable to determine department. Please select a valid asset with department.",
       });
     }
 
+    let imageBase64 = null;
+
     if (req.file) {
       const filePath = path.join(__dirname, "..", req.file.path);
-      console.log()
 
       const fileBuffer = fs.readFileSync(filePath);
       const base64 = fileBuffer.toString("base64");

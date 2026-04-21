@@ -256,7 +256,7 @@ const Navbar = () => {
               {/* Profile Button */}
               <button
                 onClick={() => setOpen(!open)}
-                className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-black/5 transition"
+                className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-black/5 transition cursor-pointer"
               >
                 <img
                   src={
@@ -273,14 +273,14 @@ const Navbar = () => {
 
               {/* Profile Dropdown */}
               <div
-                className={`absolute right-0 mt-3 w-56 rounded-2xl shadow-xl border p-2 transition-all duration-300 cursor-pointer ${open
+                className={`absolute right-0 mt-3 w-56 rounded-2xl shadow-xl border p-2 transition-all duration-300 ${open
                   ? "opacity-100 translate-y-0 visible"
                   : "opacity-0 -translate-y-3 invisible"
                   }`}
                 style={{
                   backgroundColor: 'var(--bg-primary)',
                   borderColor: 'var(--border-color)',
-                  color: 'var(--text-main)'
+                  color: 'var(--text-main)',
                 }}
               >
                 {/* compute dashboard path based on role */}
@@ -319,7 +319,7 @@ const Navbar = () => {
 
                 <button
                   onClick={logout}
-                  className="w-full text-left px-4 py-2.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition text-red-500"
+                  className="w-full text-left px-4 py-2.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition text-red-500 cursor-pointer"
                 >
                   Logout
                 </button>

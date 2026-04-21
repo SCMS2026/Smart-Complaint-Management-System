@@ -205,14 +205,14 @@ const SuperAdminDashboard = () => {
             <nav className={`hidden md:flex items-center gap-1 rounded-xl p-1 ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-100'}`}>
               {TABS.map(t => (
                 <button key={t.id} onClick={() => setActiveTab(t.id)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${activeTab === t.id ? (theme === 'dark' ? 'bg-slate-600 text-white shadow-sm' : 'bg-white text-slate-800 shadow-sm') : (theme === 'dark' ? 'text-slate-400 hover:text-slate-200' : 'text-slate-500 hover:text-slate-700')}`}>
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${activeTab === t.id ? (theme === 'dark' ? 'bg-slate-600 text-white shadow-sm' : 'bg-white text-slate-800 shadow-sm') : (theme === 'dark' ? 'text-slate-400 hover:text-slate-200' : 'text-slate-500 hover:text-slate-700')}`}>
                   {t.label}
                 </button>
               ))}
             </nav>
-            <button onClick={toggleTheme} className={`p-2 rounded-lg transition-colors ${theme === 'dark' ? 'bg-slate-700 hover:bg-slate-600' : 'bg-slate-100 hover:bg-slate-200'}`} title="Toggle theme">
+            {/* <button onClick={toggleTheme} className={`p-2 rounded-lg transition-colors ${theme === 'dark' ? 'bg-slate-700 hover:bg-slate-600' : 'bg-slate-100 hover:bg-slate-200'}`} title="Toggle theme">
               {theme === 'dark' ? '☀️' : '🌙'}
-            </button>
+            </button> */}
             <span className={`text-xs font-semibold px-3 py-1.5 rounded-full ${theme === 'dark' ? 'bg-violet-900/50 text-violet-300 border border-violet-700' : 'bg-violet-50 text-violet-600 border border-violet-100'}`}>SUPER ADMIN</span>
           </div>
         </div>

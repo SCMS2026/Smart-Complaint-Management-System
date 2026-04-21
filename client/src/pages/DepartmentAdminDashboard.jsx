@@ -244,9 +244,9 @@ const DepartmentAdminDashboard = () => {
               <div>
                 <div className="flex items-center gap-3 mb-2">
                   <p className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-400 mb-0">Department Admin</p>
-                  <button onClick={toggleTheme} className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors" title="Toggle theme">
+                  {/* <button onClick={toggleTheme} className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors" title="Toggle theme">
                     {theme === 'dark' ? '☀️' : '🌙'}
-                  </button>
+                  </button> */}
                 </div>
                 <h1 className="text-2xl sm:text-3xl font-bold">
                   {myDeptName ? `${myDeptName} Department` : "Department Dashboard"}
