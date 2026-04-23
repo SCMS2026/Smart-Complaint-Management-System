@@ -48,12 +48,56 @@ const complaintSchema = new mongoose.Schema({
      default: null
    },
 
-   status: {
-     type: String,
-     enum: ["pending", "verified", "assigned", "in_progress", "completed", "rejected", "user_approval_pending", "approved_by_user", "rejected_by_user"],
-     default: "pending"
-   }
+    status: {
+      type: String,
+      enum: ["pending", "verified", "assigned", "in_progress", "completed", "rejected", "user_approval_pending", "approved_by_user", "rejected_by_user"],
+      default: "pending"
+    },
 
-}, { timestamps: true });
+    // Priority system
+    priority: {
+      type: String,
+      enum: ["low", "medium", "high", "critical"],
+      default: "medium"
+    },
+
+    // SLA tracking
+    slaDeadline: {
+      type: Date
+    },
+    slaStatus: {
+      type: String,
+      enum: ["on_track", "at_risk", "breached"],
+      default: "on_track"
+    },
+
+    // Auto-escalation
+    escalated: {
+      type: Boolean,
+      default: false
+    },
+    escalatedAt: {
+      type: Date
+    },
+    escalationCount: {
+      type: Number,
+      default: 0
+    }
+
+  }, { timestamps: true });
+
+// Indexes for performance
+complaintSchema.index({ userId: 1 });
+complaintSchema.index({ department_id: 1 });
+complaintSchema.index({ status: 1 });
+complaintSchema.index({ priority: 1 });
+complaintSchema.index({ createdAt: -1 });
+complaintSchema.index({ assignedTo: 1 });
+complaintSchema.index({ "userId": 1, "status": 1 });
+complaintSchema.index({ "department_id": 1, "status": 1 });
+complaintSchema.index({ "slaDeadline": 1 });
+complaintSchema.index({ "createdAt": 1, "status": 1 });
+
+module.exports = mongoose.model("Complaint", complaintSchema);
 
 module.exports = mongoose.model("Complaint", complaintSchema);

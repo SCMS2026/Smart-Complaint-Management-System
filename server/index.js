@@ -10,19 +10,54 @@ const dotenv = require("dotenv");
 const jwt = require("jsonwebtoken");
 const { OAuth2Client } = require("google-auth-library");
 
+// Security middlewares
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const compression = require('compression');
+
 dotenv.config();
 const app = express();
 
-console.log('Server starting with GOOGLE_CLIENT_ID present:', !!process.env.GOOGLE_CLIENT_ID);
-console.log('Server starting with GOOGLE_CALLBACK_URL:', process.env.GOOGLE_CALLBACK_URL);
-const googleAuth = require('./auth');
-app.use(express.json({ limit: '50mb' }));
+// Security middleware (order matters)
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      imgSrc: ["'self'", "data:", "https:"],
+      scriptSrc: ["'self'"],
+    },
+  },
+  crossOriginEmbedderPolicy: false
+}));
+app.use(compression());
 
-app.use(express.urlencoded({ limit: '50mb', extended: true }));
+// Rate limiting - stricter on auth routes
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10, // limit each IP to 10 requests per windowMs
+  message: 'Too many login attempts, please try again after 15 minutes',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100, // limit each IP to 100 requests per windowMs
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+app.use('/auth/login', authLimiter);
+app.use('/auth/register', authLimiter);
+app.use('/auth/google', authLimiter);
+app.use(generalLimiter);
+
 // CORS configuration for credentials
 const isDev = process.env.NODE_ENV === 'development';
 const corsOptions = {
-  origin: true,
+  origin: isDev ? ['http://localhost:5174', 'http://localhost:3000'] : process.env.CLIENT_URL ? [process.env.CLIENT_URL] : false,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
@@ -32,7 +67,7 @@ app.use(cors(corsOptions));
 
 app.use(morgan('dev'));
 
-// ✅ FIX: Increased limit to 10mb for base64 image uploads
+// Body parsing with limits
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
@@ -41,9 +76,12 @@ const complaintRouter = require('./router/complaintRoutes');
 const permissionRouter = require('./router/permissionRoutes');
 const departmentRouter = require('./router/departmentRoutes');
 const workerTaskRouter = require('./router/workerTaskRoutes');
+const notificationRouter = require('./router/notificationRoutes');
+
+const assetsRouter = require('./router/assetsRoutes');
+const slaMonitor = require('./services/slaMonitoring');
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-const assetsRouter = require('./router/assetsRoutes');
 
 // Session Configuration
 app.use(
@@ -93,6 +131,17 @@ app.post("/auth/google", async (req, res) => {
       { expiresIn: "7d" }
     );
 
+    // Refresh token
+    const refreshToken = jwt.sign(
+      { id: user._id, type: 'refresh' },
+      process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET,
+      { expiresIn: "30d" }
+    );
+
+    user.refreshToken = refreshToken;
+    user.refreshTokenExpiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    await user.save();
+
     res.json({
       user: {
         id: user._id,
@@ -102,6 +151,7 @@ app.post("/auth/google", async (req, res) => {
         profileImage: user.profileImage,
       },
       token: appToken,
+      refreshToken,
     });
   } catch (error) {
     console.error("Google login error", error.message);
@@ -119,6 +169,7 @@ app.use('/permissions', permissionRouter);
 app.use('/assets', assetsRouter);
 app.use('/departments', departmentRouter);
 app.use('/worker-tasks', workerTaskRouter);
+app.use('/notifications', notificationRouter);
 
 if (!isDev) {
   app.use(express.static(path.join(__dirname, '../client/dist')));
@@ -138,4 +189,7 @@ app.listen(PORT, () => {
   console.log(`Server is up and running on port ${PORT}`);
   console.log(`Environment: ${isDev ? 'DEVELOPMENT' : 'PRODUCTION'}`);
   connectDB();
+
+  // Start background services
+  slaMonitor.start();
 });

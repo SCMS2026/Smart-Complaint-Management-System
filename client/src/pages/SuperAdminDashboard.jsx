@@ -6,6 +6,21 @@ import { fetchUsers, createUser, setUserRole, getToken } from "../services/auth"
 import { fetchComplaints } from "../services/complaints";
 import { fetchWorkerTasks } from "../services/workerTask";
 import { useTheme } from "../context/ThemeContext";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  LineChart,
+  Line
+} from "recharts";
 
 /* ── helpers ── */
 const initials = (name = "") => name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase() || "?";
@@ -29,6 +44,22 @@ const ROLE_COLORS = {
   analyzer: "bg-amber-100 text-amber-700",
   contractor: "bg-orange-100 text-orange-700",
   user: "bg-slate-100 text-slate-600",
+};
+
+const COLORS = ['#2563EB', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#06B6D4', '#84CC16'];
+
+// Fetch analytics
+const fetchAnalytics = async () => {
+  try {
+    const token = getToken();
+    const res = await fetch(`${API_URL}/complaints/analytics`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!res.ok) throw new Error('Failed to fetch analytics');
+    return { success: true, analytics: await res.json() };
+  } catch (error) {
+    return { success: false, message: error.message };
+  }
 };
 
 const STATUS_CONFIG = {
@@ -89,10 +120,14 @@ const SuperAdminDashboard = () => {
   const [users, setUsers] = useState([]);
   const [complaints, setComplaints] = useState([]);
   const [workerTasks, setWorkerTasks] = useState([]);
+  const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [activeTab, setActiveTab] = useState("overview");
+
+  // Get current user for role checks
+  const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
 
   // Modals
   const [showDeptForm, setShowDeptForm] = useState(false);
@@ -100,7 +135,8 @@ const SuperAdminDashboard = () => {
   const [deptForm, setDeptForm] = useState({ name: "", description: "" });
   const [showUserForm, setShowUserForm] = useState(false);
   const [userForm, setUserForm] = useState({ name: "", email: "", password: "", role: "", department_id: "" });
-  const [deleteConfirm, setDeleteConfirm] = useState(null); // { type: 'user'|'dept', id, name }
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [selectedUsers, setSelectedUsers] = useState([]);
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("user") || "null");
@@ -110,11 +146,12 @@ const SuperAdminDashboard = () => {
 
   const loadAll = async () => {
     setLoading(true);
-    const [d, u, c, w] = await Promise.all([fetchDepartments(), fetchUsers(), fetchComplaints(), fetchWorkerTasks()]);
+    const [d, u, c, w, a] = await Promise.all([fetchDepartments(), fetchUsers(), fetchComplaints(), fetchWorkerTasks(), fetchAnalytics()]);
     if (d.success) setDepartments(d.departments || []);
     if (u.success) setUsers(u.users || []);
     if (c.success) setComplaints(c.complaints || []);
     if (w.success) setWorkerTasks(w.workerTasks || []);
+    if (a.success) setAnalytics(a.analytics || null);
     setLoading(false);
   };
 
@@ -160,6 +197,42 @@ const SuperAdminDashboard = () => {
     const r = await deleteUser(deleteConfirm.id);
     if (r.success) { setUsers(users.filter(u => u._id !== deleteConfirm.id)); setDeleteConfirm(null); showSuccess("User deleted."); }
     else showError(r.message);
+  };
+
+  const handleToggleStatus = async (userId, currentStatus) => {
+    const token = getToken();
+    const res = await fetch(`${API_AUTH}/admin/users/${userId}/toggle-status`, {
+      method: "PATCH",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) {
+      setUsers(users.map(u => u._id === userId ? { ...u, status: u.status === 'active' ? 'inactive' : 'active' } : u));
+      showSuccess(`User ${data.user.status === 'active' ? 'unblocked' : 'blocked'}`);
+    } else {
+      showError(data.message || 'Failed to toggle status');
+    }
+  };
+
+  const handleBulkDeleteUsers = async () => {
+    if (!window.confirm(`Delete ${selectedUsers.length} selected users? This cannot be undone.`)) return;
+    const token = getToken();
+    const res = await fetch(`${API_AUTH}/admin/users/bulk-delete`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ userIds: selectedUsers }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) {
+      setUsers(users.filter(u => !selectedUsers.includes(u._id)));
+      setSelectedUsers([]);
+      showSuccess(`${data.deletedCount} users deleted`);
+    } else {
+      showError(data.message || 'Bulk delete failed');
+    }
   };
 
   if (loading) return (
@@ -259,49 +332,82 @@ const SuperAdminDashboard = () => {
               ))}
             </div>
 
+            {/* Charts Grid */}
             <div className="grid md:grid-cols-2 gap-6">
-              {/* Quick stats */}
+              {/* Status Breakdown Pie Chart */}
               <div className={`rounded-2xl border shadow-sm p-6 ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
-                <h3 className={`font-semibold mb-4 text-sm uppercase tracking-wider ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>Quick Breakdown</h3>
-                <div className="space-y-3">
-                  {[
-                    { label: "Pending Complaints", value: stats.pending, color: "bg-amber-400" },
-                    { label: "Department Admins", value: stats.deptAdmins, color: "bg-blue-400" },
-                    { label: "Workers", value: stats.workers, color: "bg-emerald-400" },
-                    { label: "Departments Active", value: stats.departments, color: "bg-violet-400" },
-                  ].map(r => (
-                    <div key={r.label} className={`flex items-center justify-between py-2 ${theme === 'dark' ? 'border-b border-slate-700 last:border-0' : 'border-b border-slate-50 last:border-0'}`}>
-                      <div className="flex items-center gap-2">
-                        <span className={`w-2 h-2 rounded-full ${r.color}`} />
-                        <span className={`text-sm ${theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>{r.label}</span>
-                      </div>
-                      <span className={`text-sm font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>{r.value}</span>
-                    </div>
-                  ))}
-                </div>
+                <h3 className={`font-semibold mb-4 text-sm uppercase tracking-wider ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>Status Breakdown</h3>
+                {analytics?.statusBreakdown && analytics.statusBreakdown.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={250}>
+                    <PieChart>
+                      <Pie
+                        data={analytics.statusBreakdown}
+                        dataKey="count"
+                        nameKey="_id"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={80}
+                        label={({ name, percent }) => `${name.replace(/_/g, ' ')} ${(percent * 100).toFixed(0)}%`}
+                      >
+                        {analytics.statusBreakdown.map((entry, idx) => (
+                          <Cell key={idx} fill={COLORS[idx % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="h-40 flex items-center justify-center text-slate-400">No data available</div>
+                )}
               </div>
 
-              {/* Recent complaints */}
+              {/* Daily Trend Line Chart */}
               <div className={`rounded-2xl border shadow-sm p-6 ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
-                <h3 className={`font-semibold mb-4 text-sm uppercase tracking-wider ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>Recent Complaints</h3>
-                <div className="space-y-2">
-                  {complaints.slice(0, 5).map(c => (
-                    <div key={c._id} className={`flex items-center justify-between py-2 ${theme === 'dark' ? 'border-b border-slate-700 last:border-0' : 'border-b border-slate-50 last:border-0'}`}>
-                      <div>
-                        <p className={`text-sm font-medium truncate max-w-[180px] ${theme === 'dark' ? 'text-white' : 'text-slate-700'}`}>{c.issue || "—"}</p>
-                        <p className={`text-xs ${theme === 'dark' ? 'text-slate-400' : 'text-slate-400'}`}>{c.department_id?.name || "No dept"}</p>
-                      </div>
-                      <StatusBadge status={c.status} />
-                    </div>
-                  ))}
-                  {complaints.length === 0 && <p className={`text-sm ${theme === 'dark' ? 'text-slate-500' : 'text-slate-300'} text-center py-4`}>No complaints yet</p>}
-                </div>
+                <h3 className={`font-semibold mb-4 text-sm uppercase tracking-wider ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>Daily Complaint Trend</h3>
+                {analytics?.dailyTrend && analytics.dailyTrend.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={250}>
+                    <LineChart data={analytics.dailyTrend}>
+                      <CartesianGrid strokeDasharray="3 3" stroke={theme === 'dark' ? '#475569' : '#E2E8F0'} />
+                      <XAxis dataKey="_id" tick={{ fontSize: 11 }} stroke={theme === 'dark' ? '#94A3B8' : '#64748B'} />
+                      <YAxis tick={{ fontSize: 11 }} stroke={theme === 'dark' ? '#94A3B8' : '#64748B'} />
+                      <Tooltip />
+                      <Line type="monotone" dataKey="count" stroke="#2563EB" strokeWidth={2} dot={{ fill: '#2563EB', r: 4 }} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="h-40 flex items-center justify-center text-slate-400">No data available</div>
+                )}
               </div>
             </div>
-          </div>
-        )}
 
-        {/* ── DEPARTMENTS TAB ── */}
+            {/* Department Performance Bar Chart (admin+ only) */}
+            {(currentUser?.role === 'super_admin' || currentUser?.role === 'admin') && analytics?.departmentBreakdown && analytics.departmentBreakdown.length > 0 && (
+              <div className={`rounded-2xl border shadow-sm p-6 mt-6 ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
+                <h3 className={`font-semibold mb-4 text-sm uppercase tracking-wider ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>Department Performance</h3>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={analytics.departmentBreakdown.map(d => ({
+                    name: d._id.departmentName || 'Unassigned',
+                    total: d.total,
+                    pending: d.pending,
+                    inProgress: d.inProgress,
+                    completed: d.completed
+                  }))}>
+                    <CartesianGrid strokeDasharray="3 3" stroke={theme === 'dark' ? '#475569' : '#E2E8F0'} />
+                    <XAxis dataKey="name" tick={{ fontSize: 11 }} stroke={theme === 'dark' ? '#94A3B8' : '#64748B'} />
+                    <YAxis tick={{ fontSize: 11 }} stroke={theme === 'dark' ? '#94A3B8' : '#64748B'} />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="completed" fill="#10B981" name="Completed" />
+                    <Bar dataKey="inProgress" fill="#8B5CF6" name="In Progress" />
+                    <Bar dataKey="pending" fill="#F59E0B" name="Pending" />
+                  </BarChart>
+                </ResponsiveContainer>
+               </div>
+             )}
+           </div>
+         )}
+
+         {/* ── DEPARTMENTS TAB ── */}
         {activeTab === "departments" && (
           <div>
             <div className="flex items-center justify-between mb-6">
@@ -381,30 +487,68 @@ const SuperAdminDashboard = () => {
                 <h1 className="text-2xl font-bold text-slate-900">User Management</h1>
                 <p className="text-sm text-slate-400 mt-0.5">{users.length} users registered</p>
               </div>
-              <button onClick={() => setShowUserForm(true)}
-                className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl transition shadow-sm">
-                + Add User
-              </button>
+              <div className="flex gap-2">
+                <button onClick={() => setShowUserForm(true)}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl transition shadow-sm">
+                  + Add User
+                </button>
+                {selectedUsers.length > 0 && (
+                  <button onClick={handleBulkDeleteUsers}
+                    className="flex items-center gap-2 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-xl transition shadow-sm">
+                    🗑 Delete Selected ({selectedUsers.length})
+                  </button>
+                )}
+              </div>
             </div>
 
             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-slate-100 bg-slate-50/70">
+                    <th className="px-4 py-3.5 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider w-12">
+                      <input
+                        type="checkbox"
+                        checked={selectedUsers.length === users.length && users.length > 0}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedUsers(users.map(u => u._id));
+                          } else {
+                            setSelectedUsers([]);
+                          }
+                        }}
+                        className="w-4 h-4 rounded border-slate-300"
+                      />
+                    </th>
                     <th className="px-6 py-3.5 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">User</th>
                     <th className="px-6 py-3.5 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Email</th>
                     <th className="px-6 py-3.5 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Role</th>
+                    <th className="px-6 py-3.5 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Status</th>
                     <th className="px-6 py-3.5 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Department</th>
                     <th className="px-6 py-3.5 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {users.length === 0 ? (
-                    <tr><td colSpan={5} className="px-6 py-12 text-center text-sm text-slate-300">No users yet</td></tr>
+                    <tr><td colSpan={7} className="px-6 py-12 text-center text-sm text-slate-300">No users yet</td></tr>
                   ) : users.map(user => {
                     const deptId = user.department && typeof user.department === "object" ? user.department._id : user.department || "";
+                    const isSelected = selectedUsers.includes(user._id);
                     return (
-                      <tr key={user._id} className="border-t border-slate-50 hover:bg-slate-50/50 transition-colors">
+                      <tr key={user._id} className={`border-t border-slate-50 hover:bg-slate-50/50 transition-colors ${isSelected ? 'bg-blue-50/30' : ''}`}>
+                        <td className="px-4 py-4">
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedUsers([...selectedUsers, user._id]);
+                              } else {
+                                setSelectedUsers(selectedUsers.filter(id => id !== user._id));
+                              }
+                            }}
+                            className="w-4 h-4 rounded border-slate-300"
+                          />
+                        </td>
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
                             {user.profileImage ? (
@@ -427,26 +571,43 @@ const SuperAdminDashboard = () => {
                           <select
                             className="text-xs border border-slate-200 rounded-lg px-2 py-1.5 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300"
                             value={user.role}
-                            onChange={e => handleRoleChange(user._id, e.target.value, deptId)}>
+                            onChange={e => handleRoleChange(user._id, e.target.value, deptId)}
+                            disabled={user._id === currentUser?._id}
+                          >
                             {["user", "department_admin", "worker", "contractor", "analyzer", "super_admin"].map(r => (
                               <option key={r} value={r}>{r.replace(/_/g, " ")}</option>
                             ))}
                           </select>
                         </td>
                         <td className="px-6 py-4">
+                          <button
+                            onClick={() => handleToggleStatus(user._id, user.status)}
+                            className={`text-xs px-2 py-1 rounded-full font-medium transition ${user.status === 'active'
+                                ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
+                                : 'bg-red-100 text-red-700 hover:bg-red-200'
+                              }`}
+                            disabled={user._id === currentUser?._id}
+                          >
+                            {user.status === 'active' ? 'Active' : 'Blocked'}
+                          </button>
+                        </td>
+                        <td className="px-6 py-4">
                           <select
                             className="text-xs border border-slate-200 rounded-lg px-2 py-1.5 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300"
                             value={deptId}
-                            onChange={e => handleRoleChange(user._id, user.role, e.target.value)}>
+                            onChange={e => handleRoleChange(user._id, user.role, e.target.value)}
+                          >
                             <option value="">None</option>
                             {departments.map(d => <option key={d._id} value={d._id}>{d.name}</option>)}
                           </select>
                         </td>
                         <td className="px-6 py-4">
-                          <button onClick={() => setDeleteConfirm({ type: "user", id: user._id, name: user.name })}
-                            className="px-3 py-1.5 rounded-lg text-xs font-semibold text-red-500 hover:bg-red-50 transition">
-                            Delete
-                          </button>
+                          <div className="flex items-center gap-2">
+                            <button onClick={() => setDeleteConfirm({ type: "user", id: user._id, name: user.name })}
+                              className="px-3 py-1.5 rounded-lg text-xs font-semibold text-red-500 hover:bg-red-50 transition">
+                              Delete
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );

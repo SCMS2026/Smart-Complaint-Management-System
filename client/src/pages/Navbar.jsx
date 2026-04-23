@@ -1,11 +1,15 @@
 import { useEffect, useState } from "react";
 import { getMe, logout } from "../services/auth";
+import { getUnreadCount, markAsRead, markAllAsRead } from "../services/notifications";
 import { useTheme } from "../context/ThemeContext";
 
 const Navbar = () => {
   const [user, setUser] = useState(null);
   const [open, setOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
   const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
@@ -26,6 +30,31 @@ const Navbar = () => {
       else setUser(data);
     });
   }, []);
+
+  // Fetch unread count
+  useEffect(() => {
+    if (!user) return;
+    const fetchUnread = async () => {
+      const { unreadCount: count } = await getUnreadCount();
+      setUnreadCount(count?.unreadCount || 0);
+    };
+    fetchUnread();
+    // Poll every 30 seconds
+    const interval = setInterval(fetchUnread, 30000);
+    return () => clearInterval(interval);
+  }, [user]);
+
+  // When notification dropdown opens, load recent notifications
+  useEffect(() => {
+    if (notifOpen) {
+      loadNotifications();
+    }
+  }, [notifOpen]);
+
+  const loadNotifications = async () => {
+    const data = await getNotifications(1, 10, false);
+    setNotifications(data.notifications || []);
+  };
 
   // Close mobile menu on route change
   useEffect(() => {
@@ -203,7 +232,116 @@ const Navbar = () => {
             </svg>
           </button>
 
-          {/* ================= THEME TOGGLE ================= */}
+          {/* ================= NOTIFICATIONS ================= */}
+          {user && (
+            <div className="relative">
+              <button
+                onClick={() => setNotifOpen(!notifOpen)}
+                className="relative p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition cursor-pointer"
+                aria-label="Toggle notifications"
+              >
+                <svg className="w-5 h-5" style={{ color: 'var(--text-main)' }} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold min-w-[18px] h-[18px] flex items-center justify-center rounded-full px-1">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
+              </button>
+
+              {/* Notification Dropdown */}
+              {notifOpen && (
+                <div className="absolute right-0 mt-3 w-80 max-h-96 overflow-y-auto rounded-2xl shadow-xl border p-0 z-50 transition-all duration-300"
+                  style={{
+                    backgroundColor: 'var(--bg-primary)',
+                    borderColor: 'var(--border-color)'
+                  }}
+                >
+                  <div className="p-4 border-b flex items-center justify-between" style={{ borderColor: 'var(--border-color)' }}>
+                    <h3 className="font-semibold text-sm" style={{ color: 'var(--text-main)' }}>Notifications</h3>
+                    <div className="flex gap-2">
+                      {unreadCount > 0 && (
+                        <button
+                          onClick={async () => {
+                            await markAllAsRead();
+                            setUnreadCount(0);
+                            setNotifications(notifications.map(n => ({ ...n, read: true })));
+                          }}
+                          className="text-xs text-blue-600 hover:underline"
+                        >
+                          Mark all read
+                        </button>
+                      )}
+                      <button
+                        onClick={() => setNotifOpen(false)}
+                        className="p-1 rounded hover:bg-black/5 dark:hover:bg-white/10"
+                        style={{ color: 'var(--text-main)' }}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="max-h-80 overflow-y-auto">
+                    {notifications.length === 0 ? (
+                      <div className="p-6 text-center text-sm" style={{ color: 'var(--text-secondary)' }}>
+                        No notifications yet
+                      </div>
+                    ) : (
+                      notifications.map(notif => (
+                        <div
+                          key={notif._id}
+                          className={`p-3 border-b transition cursor-pointer hover:bg-black/5 dark:hover:bg-white/10 ${!notif.read ? 'bg-blue-50/50 dark:bg-blue-900/10' : ''}`}
+                          style={{ borderColor: 'var(--border-color)' }}
+                          onClick={async () => {
+                            if (!notif.read) {
+                              await markAsRead(notif._id);
+                              setUnreadCount(prev => Math.max(0, prev - 1));
+                            }
+                            window.location.href = notif.actionUrl || '/';
+                            setNotifOpen(false);
+                          }}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                              {notif.sender?.name?.charAt(0) || 'S'}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium truncate" style={{ color: 'var(--text-main)' }}>
+                                {notif.title}
+                              </p>
+                              <p className="text-xs mt-0.5 line-clamp-2" style={{ color: 'var(--text-secondary)' }}>
+                                {notif.message}
+                              </p>
+                              <p className="text-[10px] mt-1" style={{ color: 'var(--text-muted)' }}>
+                                {new Date(notif.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              </p>
+                            </div>
+                            {!notif.read && (
+                              <span className="w-2 h-2 rounded-full bg-blue-500 mt-2 flex-shrink-0"></span>
+                            )}
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+
+                  {notifications.length > 5 && (
+                    <div className="p-3 border-t text-center">
+                      <a
+                        href="/notifications"
+                        className="text-xs text-blue-600 hover:underline"
+                        style={{ color: 'var(--text-main)' }}
+                      >
+                        View all notifications
+                      </a>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
           <button
             type="button"
             onClick={toggleTheme}

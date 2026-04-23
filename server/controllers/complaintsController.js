@@ -1,10 +1,46 @@
-const fs = require("fs");
-const path = require("path");
 const Complaint = require("../models/complaintsModel");
 const Asset = require("../models/assetsModels");
 const User = require("../models/authModels");
 const WorkerTask = require("../models/workerTaskModel");
+const Department = require("../models/departmentModel");
 const mongoose = require("mongoose");
+const { notify, getUnreadCount } = require("../services/notificationService");
+const path = require("path");
+const fs = require("fs");
+
+// Cloudinary setup (optional)
+const cloudinary = require('cloudinary').v2;
+const isCloudinaryConfigured = process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY;
+
+if (isCloudinaryConfigured) {
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+  });
+}
+
+// Upload image to Cloudinary
+const uploadToCloudinary = async (filePath) => {
+  if (!isCloudinaryConfigured) return null;
+
+  try {
+    const result = await new Promise((resolve, reject) => {
+      cloudinary.uploader.upload(
+        filePath,
+        { folder: 'complaint_images' },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      );
+    });
+    return result.secure_url;
+  } catch (error) {
+    console.error('Cloudinary upload error:', error);
+    return null;
+  }
+};
 
 // Keyword mapping for NLP-like fallback classification
 const keywordMap = {
@@ -31,17 +67,32 @@ const createComplaint = async (req, res) => {
       issue,
       location,
       city,
-      District,
-      Taluka,
-      village,
-      pincode,
-      description,
-      image,
-    } = req.body;
+       District,
+       Taluka,
+       village,
+       pincode,
+       description,
+       image,
+       priority // optional from frontend
+     } = req.body;
 
-    const userId = req.user?.id;
-    console.log("req file:", req.file);
-    console.log("Create complaint request by user:", userId, "with data:", req.body);
+     const userId = req.user?.id;
+     console.log("req file:", req.file);
+     console.log("Create complaint request by user:", userId, "with data:", req.body);
+
+      // Priority: use provided priority or compute from keywords
+      let priorityValue = priority || "medium";
+      if (!priority) {
+        const issueLower = (issue || '').toLowerCase();
+        const highPriorityKeywords = ['urgent', 'emergency', 'accident', 'fire', 'flood', 'gas', 'leak', 'danger', 'safety', 'health', 'hospital', 'ambulance'];
+        const lowPriorityKeywords = ['minor', 'small', 'cleanliness', 'cosmetic'];
+
+        if (highPriorityKeywords.some(k => issueLower.includes(k))) {
+          priorityValue = "high";
+        } else if (lowPriorityKeywords.some(k => issueLower.includes(k))) {
+          priorityValue = "low";
+        }
+      }
     // Validation
     if (
       !issue ||
@@ -205,20 +256,47 @@ const createComplaint = async (req, res) => {
       });
     }
 
-    let imageBase64 = null;
+    let imageUrl = null;
 
+    // Handle image upload
     if (req.file) {
       const filePath = path.join(__dirname, "..", req.file.path);
 
-      const fileBuffer = fs.readFileSync(filePath);
-      const base64 = fileBuffer.toString("base64");
-
-      const mimeType = req.file.mimetype;
-
-      imageBase64 = `data:${mimeType};base64,${base64}`;
+      if (isCloudinaryConfigured) {
+        // Upload to Cloudinary
+        imageUrl = await uploadToCloudinary(filePath);
+        // Clean up local file after Cloudinary upload
+        try { fs.unlinkSync(filePath); } catch (e) {}
+      } else {
+        // Fallback: Convert to base64 (existing method)
+        const fileBuffer = fs.readFileSync(filePath);
+        const base64 = fileBuffer.toString("base64");
+        const mimeType = req.file.mimetype;
+        imageUrl = `data:${mimeType};base64,${base64}`;
+        // Don't delete local file in base64 mode; it's stored as needed
+      }
     }
 
     // Create complaint
+    // Calculate SLA deadline based on priority and department
+    let slaDays = 3; // default
+    if (department_id) {
+      const dept = await Department.findById(department_id).select('settings');
+      if (dept?.settings?.priorityThreshold !== undefined) {
+        slaDays = dept.settings.priorityThreshold;
+      }
+    }
+
+    const priorityMultiplier = {
+      low: 1.5,
+      medium: 1.0,
+      high: 0.7,
+      critical: 0.5
+    };
+    const finalSlaDays = Math.ceil(slaDays * (priorityMultiplier[priorityValue] || 1));
+    const slaDeadline = new Date();
+    slaDeadline.setDate(slaDeadline.getDate() + finalSlaDays);
+
     const complaint = new Complaint({
       userId,
       department_id,
@@ -232,8 +310,11 @@ const createComplaint = async (req, res) => {
       village,
       pincode,
       description,
-      image: imageBase64 || null,
+      image: imageUrl || null,
       status: "pending",
+      priority: priorityValue,
+      slaDeadline,
+      slaStatus: "on_track"
     });
     console.log("Creating complaint with data:", complaint);
     await complaint.save();
@@ -242,7 +323,39 @@ const createComplaint = async (req, res) => {
     const populatedComplaint = await Complaint.findById(complaint._id)
       .populate("userId", "name email")
       .populate("assetId", "name category")
-      .populate("department_id", "name");
+      .populate("department_id", "name admin");
+
+    // 🔔 NOTIFICATION: Notify department admin about new complaint
+    if (populatedComplaint.department_id && populatedComplaint.department_id.admin) {
+      await notify({
+        recipientId: populatedComplaint.department_id.admin,
+        senderId: userId,
+        type: "complaint_created",
+        title: "New Complaint Received",
+        message: `A new complaint "${issue}" has been submitted from ${location}.`,
+        data: {
+          complaintId: complaint._id,
+          issue,
+          location,
+          department: populatedComplaint.department_id.name,
+          actionUrl: `/complaint/${complaint._id}`,
+          priority: 'normal'
+        }
+      });
+    }
+
+    // Notify user of successful submission
+    await notify({
+      recipientId: userId,
+      senderId: userId,
+      type: "complaint_created",
+      title: "Complaint Submitted Successfully",
+      message: `Your complaint "${issue}" has been registered with ID #${complaint._id}`,
+      data: {
+        complaintId: complaint._id,
+        actionUrl: `/complaint/${complaint._id}`
+      }
+    });
 
     res.status(201).json({
       message: "✅ Complaint created successfully",
@@ -258,12 +371,29 @@ const createComplaint = async (req, res) => {
   }
 };
 
-// Get Complaints - FIXED
+// Get Complaints - FIXED with search & filters
 const getComplaints = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
+
+    // Filters from query
+    const {
+      search,
+      status,
+      city,
+      district,
+      taluka,
+      village,
+      department,
+      priority,
+      fromDate,
+      toDate,
+      assignedTo,
+      sortBy = 'createdAt',
+      sortOrder = 'desc'
+    } = req.query;
 
     let filter = {};
     let populateFields = [
@@ -272,19 +402,15 @@ const getComplaints = async (req, res) => {
       { path: "department_id", select: "name" }
     ];
 
-// Role-based filtering
+    // Role-based filtering
     if (req.user.role === "user") {
       filter.userId = req.user.id;
     } else if (req.user.role === "department_admin") {
-      // Fetch department from database and filter
       const user = await User.findById(req.user.id).select('department');
       if (user?.department) {
-        // Convert to ObjectId for proper comparison
-        const deptObjId = new mongoose.Types.ObjectId(user.department);
-        filter.department_id = deptObjId;
+        filter.department_id = new mongoose.Types.ObjectId(user.department);
       }
     } else if (req.user.role === "worker") {
-      // Workers see only assigned complaints
       const workerUser = await User.findById(req.user.id).select('department');
       const workerDeptId = workerUser?.department || req.user.department;
       filter.$or = [
@@ -293,9 +419,64 @@ const getComplaints = async (req, res) => {
       ];
     }
 
+    // Text search (issue, description, location)
+    if (search) {
+      const regex = new RegExp(search, 'i');
+      filter.$or = [
+        { issue: regex },
+        { description: regex },
+        { location: regex },
+        { city: regex }
+      ];
+      // Remove $or if it's already there from role filter
+      if (filter.$or && filter.department_id) {
+        // Merge with existing department filter
+        filter.$and = [{ ...filter }, { $or: filter.$or }];
+        delete filter.department_id;
+        delete filter.$or;
+      }
+    }
+
+    // Status filter (supports array: ?status=pending&status=assigned)
+    if (status) {
+      const statuses = Array.isArray(status) ? status : [status];
+      filter.status = { $in: statuses };
+    }
+
+    // Department filter
+    if (department) {
+      filter.department_id = new mongoose.Types.ObjectId(department);
+    }
+
+    // Location filters
+    if (city) filter.city = new RegExp(city, 'i');
+    if (district) filter.District = new RegExp(district, 'i');
+    if (taluka) filter.Taluka = new RegExp(taluka, 'i');
+    if (village) filter.village = new RegExp(village, 'i');
+
+    // Assigned worker filter
+    if (assignedTo) {
+      filter.assignedTo = new mongoose.Types.ObjectId(assignedTo);
+    }
+
+    // Date range
+    if (fromDate || toDate) {
+      filter.createdAt = {};
+      if (fromDate) filter.createdAt.$gte = new Date(fromDate);
+      if (toDate) {
+        const endOfDay = new Date(toDate);
+        endOfDay.setHours(23, 59, 59, 999);
+        filter.createdAt.$lte = endOfDay;
+      }
+    }
+
+    // Sorting
+    const sortOptions = {};
+    sortOptions[sortBy] = sortOrder === 'desc' ? -1 : 1;
+
     const complaints = await Complaint.find(filter)
       .populate(populateFields)
-      .sort({ createdAt: -1 })
+      .sort(sortOptions)
       .skip(skip)
       .limit(limit);
 
@@ -303,11 +484,16 @@ const getComplaints = async (req, res) => {
 
     res.status(200).json({
       complaints,
-      pagination: { total, page, limit, pages: Math.ceil(total / limit) }
+      pagination: {
+        total,
+        page,
+        limit,
+        pages: Math.ceil(total / limit)
+      }
     });
   } catch (error) {
     console.error("Get complaints error:", error);
-    res.status(500).json({ message: "Error fetching complaints" });
+    res.status(500).json({ message: "Error fetching complaints", error: error.message });
   }
 };
 
@@ -440,6 +626,8 @@ const updateComplaintStatus = async (req, res) => {
       newStatus = "user_approval_pending";
     }
 
+    const previousStatus = complaint.status;
+
     const updateData = {
       status: newStatus,
       updatedAt: new Date(),
@@ -452,10 +640,72 @@ const updateComplaintStatus = async (req, res) => {
       updateData,
       { new: true, runValidators: true }
     )
-      .populate("userId", "name")
+      .populate("userId", "name email")
       .populate("assetId", "name")
-      .populate("department_id", "name")
-      .populate("assignedTo", "name");
+      .populate("department_id", "name admin")
+      .populate("assignedTo", "name email");
+
+    // ── NOTIFICATION TRIGGERS ──
+    const senderId = req.user.id;
+    const senderName = req.user.name || req.user.email;
+    const complaintRef = `${complaint.issue} (#${complaint._id.toString().slice(-6)})`;
+
+    // 1. Notify complaint owner about status change
+    if (req.user.id !== complaint.userId._id && previousStatus !== newStatus) {
+      await notify({
+        recipientId: complaint.userId._id,
+        senderId,
+        type: "status_updated",
+        title: "Complaint Status Updated",
+        message: `Your complaint "${complaint.issue}" status changed from "${previousStatus}" to "${newStatus}".`,
+        data: {
+          complaintId: complaintId,
+          oldStatus: previousStatus,
+          newStatus,
+          updatedBy: senderName,
+          actionUrl: `/complaint/${complaintId}`,
+          comment: req.body.comment || null
+        },
+        sendEmail: true
+      });
+    }
+
+    // 2. If assigned to worker, notify worker
+    if (updatedComplaint.assignedTo && updatedComplaint.assignedTo._id.toString() !== req.user.id) {
+      await notify({
+        recipientId: updatedComplaint.assignedTo._id,
+        senderId,
+        type: "complaint_assigned",
+        title: "New Complaint Assignment",
+        message: `You have been assigned to complaint: "${complaint.issue}"`,
+        data: {
+          complaintId: complaintId,
+          department: updatedComplaint.department_id?.name,
+          priority: updatedComplaint.priority || 'normal',
+          actionUrl: `/complaint/${complaintId}`
+        }
+      });
+    }
+
+    // 3. If status is user_approval_pending, notify user
+    if (newStatus === "user_approval_pending") {
+      const baseUrl = process.env.CLIENT_URL || 'http://localhost:5174';
+      await notify({
+        recipientId: complaint.userId._id,
+        senderId: updatedComplaint.assignedTo?._id || req.user.id,
+        type: "user_approval_required",
+        title: "Please Confirm Resolution",
+        message: `Your complaint "${complaint.issue}" has been marked as complete. Please review and approve.`,
+        data: {
+          complaintId: complaintId,
+          issue: complaint.issue,
+          resolvedBy: updatedComplaint.assignedTo?.name || 'Admin',
+          actionUrl: `${baseUrl}/complaint/${complaintId}`,
+          approveUrl: `${baseUrl}/complaint/${complaintId}/approve`,
+          rejectUrl: `${baseUrl}/complaint/${complaintId}/reject`
+        }
+      });
+    }
 
     res.status(200).json({
       message: "Status updated successfully",
@@ -497,6 +747,20 @@ const userApproveComplaint = async (req, res) => {
       complaint.updatedAt = new Date();
       await complaint.save();
 
+      // 🔔 Notify worker/admin that work was approved
+      await notify({
+        recipientId: complaint.assignedTo || complaint.department_id.admin,
+        senderId: req.user.id,
+        type: "complaint_approved",
+        title: "Work Approved by User",
+        message: `Your work on complaint "${complaint.issue}" has been approved by the user.`,
+        data: {
+          complaintId: complaintId,
+          issue: complaint.issue,
+          actionUrl: `/complaint/${complaintId}`
+        }
+      });
+
       const populatedComplaint = await Complaint.findById(complaintId)
         .populate("userId", "name")
         .populate("assetId", "name");
@@ -510,6 +774,21 @@ const userApproveComplaint = async (req, res) => {
       complaint.rejectionReason = rejectionReason || 'Work not satisfactory';
       complaint.updatedAt = new Date();
       await complaint.save();
+
+      // 🔔 Notify worker/admin that work was rejected
+      await notify({
+        recipientId: complaint.assignedTo || complaint.department_id.admin,
+        senderId: req.user.id,
+        type: "complaint_rejected",
+        title: "Work Rejected by User",
+        message: `Your work on complaint "${complaint.issue}" was rejected. Reason: ${rejectionReason || 'Not satisfactory'}`,
+        data: {
+          complaintId: complaintId,
+          issue: complaint.issue,
+          rejectionReason: rejectionReason,
+          actionUrl: `/complaint/${complaintId}`
+        }
+      });
 
       const updatedComplaint = await Complaint.findByIdAndUpdate(
         complaintId,
@@ -620,6 +899,39 @@ const addComment = async (req, res) => {
       return res.status(404).json({ message: "Complaint not found" });
     }
 
+    // 🔔 Notify complaint owner about new comment (unless they commented)
+    if (complaint.userId._id.toString() !== userId) {
+      await notify({
+        recipientId: complaint.userId._id,
+        senderId: userId,
+        type: "new_comment",
+        title: "New Comment on Your Complaint",
+        message: `${req.user.name || 'Someone'} commented: "${text.trim().substring(0, 50)}${text.length > 50 ? '...' : ''}"`,
+        data: {
+          complaintId: complaintId,
+          comment: text.trim(),
+          actionUrl: `/complaint/${complaintId}`
+        },
+        sendEmail: false
+      });
+    }
+
+    // Also notify assigned worker if not the commenter
+    if (complaint.assignedTo && complaint.assignedTo._id.toString() !== userId && complaint.assignedTo._id.toString() !== complaint.userId._id.toString()) {
+      await notify({
+        recipientId: complaint.assignedTo._id,
+        senderId: userId,
+        type: "new_comment",
+        title: "New Comment on Assigned Complaint",
+        message: `New comment on "${complaint.issue}": "${text.trim().substring(0, 50)}${text.length > 50 ? '...' : ''}"`,
+        data: {
+          complaintId: complaintId,
+          actionUrl: `/complaint/${complaintId}`
+        },
+        sendEmail: false
+      });
+    }
+
     res.status(200).json({ message: "Comment added successfully", complaint });
   } catch (error) {
     console.error("Add comment error:", error);
@@ -663,6 +975,29 @@ const markAsFake = async (req, res) => {
   }
 };
 
+// Bulk Delete Complaints — Admin only
+const bulkDeleteComplaints = async (req, res) => {
+  try {
+    const { complaintIds } = req.body;
+
+    if (!Array.isArray(complaintIds) || complaintIds.length === 0) {
+      return res.status(400).json({ message: "No complaint IDs provided" });
+    }
+
+    const result = await Complaint.deleteMany({
+      _id: { $in: complaintIds }
+    });
+
+    res.json({
+      message: `${result.deletedCount} complaint(s) deleted successfully`,
+      deletedCount: result.deletedCount
+    });
+  } catch (error) {
+    console.error('Bulk delete complaints error:', error);
+    res.status(500).json({ message: 'Error deleting complaints', error: error.message });
+  }
+};
+
 module.exports = {
   createComplaint,
   getComplaints,
@@ -673,4 +1008,5 @@ module.exports = {
   getComplaintById,
   addComment,
   markAsFake,
+  bulkDeleteComplaints
 };

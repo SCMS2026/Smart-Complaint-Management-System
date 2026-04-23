@@ -15,15 +15,30 @@ const handleResponse = async (res) => {
   return res.json();
 };
 
-export const fetchComplaints = async () => {
+export const fetchComplaints = async (filters = {}) => {
   try {
-    const res = await fetch(API, {
+    // Build query string from filters object
+    const params = new URLSearchParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== '' && value !== null) {
+        if (Array.isArray(value)) {
+          value.forEach(v => params.append(key, v));
+        } else {
+          params.append(key, value);
+        }
+      }
+    });
+
+    const queryString = params.toString();
+    const url = queryString ? `${API}?${queryString}` : API;
+
+    const res = await fetch(url, {
       method: "GET",
       headers: { "Content-Type": "application/json", ...getAuthHeader() },
       credentials: "include",
     });
     const data = await handleResponse(res);
-    return { success: true, complaints: data.complaints };
+    return { success: true, complaints: data.complaints, pagination: data.pagination };
   } catch (err) {
     return { success: false, message: err.message };
   }

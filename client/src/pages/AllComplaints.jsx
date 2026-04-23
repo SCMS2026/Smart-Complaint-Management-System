@@ -1,11 +1,12 @@
 import { useEffect, useState, useRef } from "react";
+import React from "react";
 import {
   fetchComplaints,
   createComplaintRequest,
   userApproveComplaintRequest,
 } from "../services/complaints";
 import { fetchAssets } from "../services/assets";
-import { getCurrentUser } from "../services/auth";
+import { getCurrentUser, getToken } from "../services/auth";
 
 const lightTheme = {
   bg: "#F1F5F9",
@@ -106,6 +107,13 @@ const STATUS_MAP = {
   },
 };
 
+const PRIORITY_MAP = {
+  low: { bg: "#E0F2FE", color: "#0284C7", label: "Low", icon: "↓" },
+  medium: { bg: "#FEF3C7", color: "#D97706", label: "Medium", icon: "―" },
+  high: { bg: "#FEE2E2", color: "#DC2626", label: "High", icon: "↑" },
+  critical: { bg: "#FCE7F3", color: "#DB2777", label: "Critical", icon: "!" }
+};
+
 const StatusBadge = ({ status, theme }) => {
   const s = STATUS_MAP[status] || STATUS_MAP.pending;
   const isDark = theme === "dark";
@@ -126,8 +134,31 @@ const StatusBadge = ({ status, theme }) => {
   );
 };
 
+const PriorityBadge = ({ priority }) => {
+  const p = PRIORITY_MAP[priority] || PRIORITY_MAP.medium;
+  return (
+    <span
+      style={{
+        background: p.bg,
+        color: p.color,
+        padding: "2px 8px",
+        borderRadius: 12,
+        fontSize: 10,
+        fontWeight: 700,
+        whiteSpace: "nowrap",
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 4,
+      }}
+    >
+      <span style={{ fontSize: 8 }}>{p.icon}</span>
+      {p.label}
+    </span>
+  );
+};
 
-const ComplaintCard = ({ c, theme, onApprove, onReject, approvalLoading }) => {
+
+const ComplaintCard = ({ c, theme, onApprove, onReject, approvalLoading, isSelected, onSelect }) => {
   const t = theme === "dark" ? darkTheme : lightTheme;
   const isApprovalPending = c.status === 'user_approval_pending';
   return (
@@ -139,7 +170,7 @@ const ComplaintCard = ({ c, theme, onApprove, onReject, approvalLoading }) => {
       overflow: "hidden",
       transition: "transform .15s, box-shadow .15s",
       borderTop: isApprovalPending ? "3px solid #F59E0B" : "3px solid #3B82F6",
-      borderTop: "3px solid #3B82F6",
+      position: 'relative',
     }}
     onMouseEnter={(e) => {
       e.currentTarget.style.transform = "translateY(-3px)";
@@ -150,6 +181,17 @@ const ComplaintCard = ({ c, theme, onApprove, onReject, approvalLoading }) => {
       e.currentTarget.style.boxShadow = t.cardShadow;
     }}
   >
+    {/* Selection checkbox top-right */}
+    <div style={{ position: 'absolute', top: 10, right: 10, zIndex: 10 }}>
+      <input
+        type="checkbox"
+        checked={isSelected}
+        onChange={() => onSelect(c._id)}
+        style={{ width: 18, height: 18, cursor: 'pointer' }}
+        onClick={(e) => e.stopPropagation()}
+      />
+    </div>
+
     {c.image && (
       <img
         src={c.image}
@@ -207,6 +249,16 @@ const ComplaintCard = ({ c, theme, onApprove, onReject, approvalLoading }) => {
           {c.description}
         </p>
       )}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4 }}>
+        {c.priority && (
+          <PriorityBadge priority={c.priority} />
+        )}
+        {c.slaDeadline && (
+          <span style={{ fontSize: 11, color: t.textSecondary }}>
+            📅 SLA: {new Date(c.slaDeadline).toLocaleDateString()}
+          </span>
+        )}
+      </div>
       <div
         style={{
           display: "flex",
@@ -323,18 +375,25 @@ const EMPTY = {
   description: "",
   name: "",
   phone: "",
+  priority: "medium"
 };
 
 const AllComplaints = () => {
   const [assets, setAssets] = useState([]);
   const [complaints, setComplaints] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [submitSuccess, setSuccess] = useState(false);
-  const [submitError, setSubErr] = useState("");
-  const [errors, setErrors] = useState({});
-  const [search, setSearch] = useState("");
-  const [filterStatus, setFilter] = useState("all");
+   const [loading, setLoading] = useState(true);
+   const [submitting, setSubmitting] = useState(false);
+   const [submitSuccess, setSuccess] = useState(false);
+   const [submitError, setSubErr] = useState("");
+   const [errors, setErrors] = useState({});
+   const [search, setSearch] = useState("");
+   const [filterStatus, setFilterStatus] = useState("all");
+   const [filterCity, setFilterCity] = useState("");
+   const [filterDistrict, setFilterDistrict] = useState("");
+   const [filterDepartment, setFilterDepartment] = useState("");
+   const [page, setPage] = useState(1);
+   const [totalPages, setTotalPages] = useState(1);
+   const limit = 10;
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(EMPTY);
   const [imagePreview, setPreview] = useState(null);
@@ -346,6 +405,7 @@ const AllComplaints = () => {
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectingComplaintId, setRejectingComplaintId] = useState(null);
   const [rejectionReason, setRejectionReason] = useState("");
+  const [selectedComplaints, setSelectedComplaints] = useState([]);
   const fileRef = useRef();
 
   useEffect(() => {
@@ -358,15 +418,33 @@ const AllComplaints = () => {
   const t = theme === "dark" ? darkTheme : lightTheme;
 
   
+  const reloadComplaints = async () => {
+    const filters = {};
+    if (search) filters.search = search;
+    if (filterStatus && filterStatus !== 'all') filters.status = filterStatus;
+    if (filterCity) filters.city = filterCity;
+    if (filterDistrict) filters.district = filterDistrict;
+    if (filterDepartment) filters.department = filterDepartment;
+    filters.page = page;
+    filters.limit = limit;
+
+    const res = await fetchComplaints(filters);
+    if (res.success) {
+      setComplaints(res.complaints || []);
+      if (res.pagination) {
+        setTotalPages(res.pagination.pages);
+      }
+    }
+  };
+
+  // Initial load
   useEffect(() => {
     (async () => {
-      const [assetsRes, complaintsRes, user] = await Promise.all([
+      const [assetsRes, user] = await Promise.all([
         fetchAssets(),
-        fetchComplaints(),
         getCurrentUser(),
       ]);
       if (assetsRes.success) setAssets(assetsRes.assets || []);
-      if (complaintsRes.success) setComplaints(complaintsRes.complaints || []);
       if (user) {
         setForm((f) => ({
           ...f,
@@ -374,14 +452,25 @@ const AllComplaints = () => {
           phone: user.phone || "",
         }));
       }
+      reloadComplaints();
       setLoading(false);
     })();
   }, []);
 
-  const reloadComplaints = async () => {
-    const res = await fetchComplaints();
-    if (res.success) setComplaints(res.complaints || []);
-  };
+  // Reload when filters change
+  useEffect(() => {
+    if (!loading) {
+      setPage(1);
+      reloadComplaints();
+    }
+  }, [search, filterStatus, filterCity, filterDistrict, filterDepartment]);
+
+  // Reload when page changes
+  useEffect(() => {
+    if (!loading) {
+      reloadComplaints();
+    }
+  }, [page]);
 
   const handleApprove = async (complaintId) => {
     setApprovalLoading(true);
@@ -420,6 +509,33 @@ const AllComplaints = () => {
     setRejectingComplaintId(complaintId);
     setShowRejectModal(true);
     setRejectionReason("");
+  };
+
+  const handleBulkDelete = async () => {
+    if (!window.confirm(`Delete ${selectedComplaints.length} selected complaints? This cannot be undone.`)) return;
+    setApprovalLoading(true);
+    try {
+      const token = getToken();
+      const res = await fetch(`${API}/bulk`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ complaintIds: selectedComplaints })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setSuccess('Bulk delete successful');
+        reloadComplaints();
+        setSelectedComplaints([]);
+      } else {
+        setSubErr(data.message || 'Bulk delete failed');
+      }
+    } catch (err) {
+      setSubErr('Failed to bulk delete');
+    }
+    setApprovalLoading(false);
   };
 
   const selectedAsset = assets.find(
@@ -500,6 +616,9 @@ const AllComplaints = () => {
     formData.append("village", form.village);
     formData.append("pincode", form.pincode);
     formData.append("description", form.description);
+    if (form.priority) {
+      formData.append("priority", form.priority);
+    }
 
     if (imageFile) {
       formData.append("image", imageFile);
@@ -530,18 +649,9 @@ const AllComplaints = () => {
     });
   };
 
-  
-  const filtered = complaints.filter((c) => {
-    const okStatus = filterStatus === "all" || c.status === filterStatus;
-    const q = search.toLowerCase();
-    const okSearch =
-      !q ||
-      (c.category || "").toLowerCase().includes(q) ||
-      (c.issue || "").toLowerCase().includes(q) ||
-      (c.city || "").toLowerCase().includes(q) ||
-      (c.description || "").toLowerCase().includes(q);
-    return okStatus && okSearch;
-  });
+  // Get unique cities from complaints for filter dropdown
+  const uniqueCities = [...new Set(complaints.map(c => c.city).filter(Boolean))];
+  const uniqueDistricts = [...new Set(complaints.map(c => c.District).filter(Boolean))];
 
   const DROP = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394A3B8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E")`;
 
@@ -584,78 +694,89 @@ const AllComplaints = () => {
         paddingBottom: 48,
       }}
     >
-      <div
-        style={{
-          background: t.headerBg,
-          color: "#fff",
-          padding: "26px 32px",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          boxShadow: t.headerShadow,
-        }}
-      >
-        <div>
-          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800 }}>
-            📋 Complaints
-          </h1>
-          <p style={{ margin: "4px 0 0", opacity: 0.8, fontSize: 13 }}>
-            {complaints.length} total complaint
-            {complaints.length !== 1 ? "s" : ""}
-          </p>
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800 }}>
+              📋 Complaints
+            </h1>
+            <p style={{ margin: "4px 0 0", opacity: 0.8, fontSize: 13 }}>
+              {complaints.length} total complaint
+              {complaints.length !== 1 ? "s" : ""}
+              {selectedComplaints.length > 0 && ` • ${selectedComplaints.length} selected`}
+            </p>
+          </div>
+          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+            {/* Bulk Delete Button */}
+            {selectedComplaints.length > 0 && (
+              <button
+                onClick={handleBulkDelete}
+                disabled={approvalLoading}
+                style={{
+                  background: approvalLoading ? "#FCA5A5" : "#EF4444",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: 10,
+                  padding: "10px 16px",
+                  fontWeight: 700,
+                  fontSize: 14,
+                  cursor: approvalLoading ? "not-allowed" : "pointer",
+                  boxShadow: "0 4px 12px rgba(239,68,68,.3)",
+                }}
+              >
+                🗑 Delete Selected ({selectedComplaints.length})
+              </button>
+            )}
+            <button
+              onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+              style={{
+                background: "rgba(255,255,255,0.15)",
+                color: "#fff",
+                border: "1px solid rgba(255,255,255,0.3)",
+                borderRadius: 10,
+                padding: "10px 16px",
+                fontWeight: 700,
+                fontSize: 18,
+                cursor: "pointer",
+                transition: "transform .15s, background .2s",
+                minWidth: 44,
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = "scale(1.04)";
+                e.currentTarget.style.background = "rgba(255,255,255,0.25)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "";
+                e.currentTarget.style.background = "rgba(255,255,255,0.15)";
+              }}
+            >
+              {theme === "light" ? "🌙" : "☀️"}
+            </button>
+            <button
+              onClick={() => {
+                setShowForm((v) => !v);
+                setErrors({});
+                setSubErr("");
+              }}
+              style={{
+                background: "#fff",
+                color: "#2563EB",
+                border: "none",
+                borderRadius: 10,
+                padding: "10px 22px",
+                fontWeight: 700,
+                fontSize: 14,
+                cursor: "pointer",
+                transition: "transform .15s",
+              }}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.transform = "scale(1.04)")
+              }
+              onMouseLeave={(e) => (e.currentTarget.style.transform = "")}
+            >
+              {showForm ? "✕ Close" : "+ New Complaint"}
+            </button>
+          </div>
         </div>
-        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-          <button
-            onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-            style={{
-              background: "rgba(255,255,255,0.15)",
-              color: "#fff",
-              border: "1px solid rgba(255,255,255,0.3)",
-              borderRadius: 10,
-              padding: "10px 16px",
-              fontWeight: 700,
-              fontSize: 18,
-              cursor: "pointer",
-              transition: "transform .15s, background .2s",
-              minWidth: 44,
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = "scale(1.04)";
-              e.currentTarget.style.background = "rgba(255,255,255,0.25)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = "";
-              e.currentTarget.style.background = "rgba(255,255,255,0.15)";
-            }}
-          >
-            {theme === "light" ? "🌙" : "☀️"}
-          </button>
-          <button
-            onClick={() => {
-              setShowForm((v) => !v);
-              setErrors({});
-              setSubErr("");
-            }}
-            style={{
-              background: "#fff",
-              color: "#2563EB",
-              border: "none",
-              borderRadius: 10,
-              padding: "10px 22px",
-              fontWeight: 700,
-              fontSize: 14,
-              cursor: "pointer",
-              transition: "transform .15s",
-            }}
-            onMouseEnter={(e) =>
-              (e.currentTarget.style.transform = "scale(1.04)")
-            }
-            onMouseLeave={(e) => (e.currentTarget.style.transform = "")}
-          >
-            {showForm ? "✕ Close" : "+ New Complaint"}
-          </button>
-        </div>
-      </div>
 
       <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 20px" }}>
         {submitSuccess && (
@@ -754,34 +875,60 @@ const AllComplaints = () => {
                 </select>
               </Field>
 
-              <Field label="Issue" required error={errors.category} theme={theme}>
-                <select
-                  style={{
-                    ...inp(errors.category, theme),
-                    appearance: "none",
-                    backgroundImage: DROP,
-                    backgroundRepeat: "no-repeat",
-                    backgroundPosition: "right 10px center",
-                    backgroundSize: 18,
-                    paddingRight: 34,
-                    color: !form.assetId ? t.inputPlaceholder : t.inputText,
-                  }}
-                  value={form.category}
-                  disabled={!form.assetId}
-                  onChange={(e) => setField("category", e.target.value)}
-                >
-                  <option value="">
-                    {!form.assetId
-                      ? "— First select Department —"
-                      : "— Select Issue —"}
-                  </option>
-                  {categories.map((c, i) => (
-                    <option key={i} value={c}>
-                      {c}
-                    </option>
-                  ))}
-                </select>
-              </Field>
+               <Field label="Issue" required error={errors.category} theme={theme}>
+                 <select
+                   style={{
+                     ...inp(errors.category, theme),
+                     appearance: "none",
+                     backgroundImage: DROP,
+                     backgroundRepeat: "no-repeat",
+                     backgroundPosition: "right 10px center",
+                     backgroundSize: 18,
+                     paddingRight: 34,
+                     color: !form.assetId ? t.inputPlaceholder : t.inputText,
+                   }}
+                   value={form.category}
+                   disabled={!form.assetId}
+                   onChange={(e) => setField("category", e.target.value)}
+                 >
+                   <option value="">
+                     {!form.assetId
+                       ? "— First select Department —"
+                       : "— Select Issue —"}
+                   </option>
+                   {categories.map((c, i) => (
+                     <option key={i} value={c}>
+                       {c}
+                     </option>
+                   ))}
+                 </select>
+               </Field>
+
+               <Field label="Priority" error={null} theme={theme}>
+                 <div style={{ display: "flex", gap: 8 }}>
+                   {["low", "medium", "high", "critical"].map((p) => (
+                     <button
+                       key={p}
+                       type="button"
+                       onClick={() => setField("priority", p)}
+                       style={{
+                         flex: 1,
+                         padding: "8px 12px",
+                         borderRadius: 8,
+                         border: form.priority === p ? `2px solid #2563EB` : `1.5px solid ${t.border}`,
+                         background: form.priority === p ? "#2563EB" : t.inputBg,
+                         color: form.priority === p ? "#fff" : t.textSecondary,
+                         fontWeight: 600,
+                         fontSize: 12,
+                         cursor: "pointer",
+                         transition: "all .2s",
+                       }}
+                     >
+                       {p.charAt(0).toUpperCase() + p.slice(1)}
+                     </button>
+                   ))}
+                 </div>
+               </Field>
 
               <Field
                 label="Location / Address"
@@ -1017,9 +1164,8 @@ const AllComplaints = () => {
             alignItems: "center",
           }}
         >
-          <div
-            style={{ position: "relative", flex: "1 1 220px", maxWidth: 320 }}
-          >
+          {/* Search */}
+          <div style={{ position: "relative", flex: "1 1 220px", maxWidth: 320 }}>
             <span
               style={{
                 position: "absolute",
@@ -1035,11 +1181,49 @@ const AllComplaints = () => {
             </span>
             <input
               style={{ ...inp(false, theme), paddingLeft: 34 }}
-              placeholder="Search complaints..."
+              placeholder="Search issue, city, category..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
+
+          {/* City Filter */}
+          <select
+            style={{ ...inp(false, theme), maxWidth: 150, paddingRight: 34, appearance: "none", backgroundImage: DROP, backgroundRepeat: "no-repeat", backgroundPosition: "right 10px center", backgroundSize: 18 }}
+            value={filterCity}
+            onChange={(e) => setFilterCity(e.target.value)}
+          >
+            <option value="">All Cities</option>
+            {uniqueCities.map(city => (
+              <option key={city} value={city}>{city}</option>
+            ))}
+          </select>
+
+          {/* District Filter */}
+          <select
+            style={{ ...inp(false, theme), maxWidth: 150, paddingRight: 34, appearance: "none", backgroundImage: DROP, backgroundRepeat: "no-repeat", backgroundPosition: "right 10px center", backgroundSize: 18 }}
+            value={filterDistrict}
+            onChange={(e) => setFilterDistrict(e.target.value)}
+          >
+            <option value="">All Districts</option>
+            {uniqueDistricts.map(district => (
+              <option key={district} value={district}>{district}</option>
+            ))}
+          </select>
+
+          {/* Department Filter */}
+          <select
+            style={{ ...inp(false, theme), maxWidth: 160, paddingRight: 34, appearance: "none", backgroundImage: DROP, backgroundRepeat: "no-repeat", backgroundPosition: "right 10px center", backgroundSize: 18 }}
+            value={filterDepartment}
+            onChange={(e) => setFilterDepartment(e.target.value)}
+          >
+            <option value="">All Departments</option>
+            {assets.map(a => (
+              <option key={a._id} value={a._id}>{a.issue}</option>
+            ))}
+          </select>
+
+          {/* Status Filters */}
           {[
             "all",
             "pending",
@@ -1051,7 +1235,7 @@ const AllComplaints = () => {
           ].map((s) => (
             <button
               key={s}
-              onClick={() => setFilter(s)}
+              onClick={() => setFilterStatus(s)}
               style={{
                 border:
                   filterStatus === s
@@ -1072,6 +1256,8 @@ const AllComplaints = () => {
                 : s.replace("_", " ").replace(/\b\w/g, (l) => l.toUpperCase())}
             </button>
           ))}
+
+          {/* Results count */}
           <span
             style={{
               fontSize: 13,
@@ -1080,51 +1266,140 @@ const AllComplaints = () => {
               marginLeft: "auto",
             }}
           >
-            {filtered.length} result{filtered.length !== 1 ? "s" : ""}
+            {complaints.length} result{complaints.length !== 1 ? "s" : ""}
           </span>
         </div>
 
-        {filtered.length === 0 ? (
-          <div
-            style={{
-              textAlign: "center",
-              padding: "60px 20px",
-              color: t.textSecondary,
-            }}
-          >
-            <div style={{ fontSize: 48, marginBottom: 12 }}>📭</div>
-            <p style={{ fontSize: 16, fontWeight: 600, margin: 0, color: t.text }}>
-              {complaints.length === 0
-                ? "No complaints found"
-                : "No matching complaints"}
-            </p>
-            <p style={{ fontSize: 13, marginTop: 6, color: t.textSecondary }}>
-              {complaints.length === 0
-                ? 'Click the "+ New Complaint" button above'
-                : "Try a different search or filter"}
-            </p>
-          </div>
-        ) : (
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
-              gap: 16,
-              marginTop: 20,
-            }}
-          >
-            {filtered.map((c) => (
-              <ComplaintCard 
-                key={c._id} 
-                c={c} 
-                theme={theme} 
+         {complaints.length === 0 ? (
+           <div
+             style={{
+               textAlign: "center",
+               padding: "60px 20px",
+               color: t.textSecondary,
+             }}
+           >
+             <div style={{ fontSize: 48, marginBottom: 12 }}>📭</div>
+             <p style={{ fontSize: 16, fontWeight: 600, margin: 0, color: t.text }}>
+               {complaints.length === 0
+                 ? "No complaints found"
+                 : "No matching complaints"}
+             </p>
+             <p style={{ fontSize: 13, marginTop: 6, color: t.textSecondary }}>
+               {complaints.length === 0
+                 ? 'Click the "+ New Complaint" button above'
+                 : "Try a different search or filter"}
+             </p>
+           </div>
+         ) : (
+           <>
+             <div
+               style={{
+                 display: "grid",
+                 gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
+                 gap: 16,
+                 marginTop: 20,
+               }}
+             >
+            {complaints.map((c) => (
+              <ComplaintCard
+                key={c._id}
+                c={c}
+                theme={theme}
                 onApprove={handleApprove}
                 onReject={openRejectModal}
                 approvalLoading={approvalLoading}
+                isSelected={selectedComplaints.includes(c._id)}
+                onSelect={(id) => {
+                  if (selectedComplaints.includes(id)) {
+                    setSelectedComplaints(selectedComplaints.filter(cid => cid !== id));
+                  } else {
+                    setSelectedComplaints([...selectedComplaints, id]);
+                  }
+                }}
               />
             ))}
-          </div>
-        )}
+             </div>
+
+             {/* Pagination Controls */}
+             {totalPages > 1 && (
+               <div
+                 style={{
+                   display: "flex",
+                   justifyContent: "center",
+                   alignItems: "center",
+                   gap: 12,
+                   marginTop: 32,
+                   padding: "16px 0",
+                 }}
+               >
+                 <button
+                   onClick={() => setPage(p => Math.max(1, p - 1))}
+                   disabled={page === 1}
+                   style={{
+                     padding: "8px 16px",
+                     border: `1.5px solid ${t.border}`,
+                     background: page === 1 ? t.border : t.cardBg,
+                     color: page === 1 ? t.textSecondary : t.text,
+                     borderRadius: 8,
+                     cursor: page === 1 ? "not-allowed" : "pointer",
+                     fontWeight: 600,
+                     fontSize: 13,
+                   }}
+                 >
+                   ◀ Previous
+                 </button>
+
+                 <div style={{ display: "flex", gap: 4 }}>
+                   {Array.from({ length: totalPages }, (_, i) => i + 1)
+                     .filter(p => p === 1 || p === totalPages || (p >= page - 1 && p <= page + 1))
+                     .map((p, idx, arr) => (
+                       <React.Fragment key={p}>
+                         {idx > 0 && arr[idx - 1] !== p - 1 && (
+                           <span style={{ color: t.textSecondary }}>...</span>
+                         )}
+                         <button
+                           onClick={() => setPage(p)}
+                           style={{
+                             width: 36,
+                             height: 36,
+                             display: "flex",
+                             alignItems: "center",
+                             justifyContent: "center",
+                             border: page === p ? `2px solid #2563EB` : `1.5px solid ${t.border}`,
+                             background: page === p ? "#2563EB" : t.cardBg,
+                             color: page === p ? "#fff" : t.text,
+                             borderRadius: 8,
+                             cursor: "pointer",
+                             fontWeight: 600,
+                             fontSize: 13,
+                           }}
+                         >
+                           {p}
+                         </button>
+                       </React.Fragment>
+                     ))}
+                 </div>
+
+                 <button
+                   onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                   disabled={page === totalPages}
+                   style={{
+                     padding: "8px 16px",
+                     border: `1.5px solid ${t.border}`,
+                     background: page === totalPages ? t.border : t.cardBg,
+                     color: page === totalPages ? t.textSecondary : t.text,
+                     borderRadius: 8,
+                     cursor: page === totalPages ? "not-allowed" : "pointer",
+                     fontWeight: 600,
+                     fontSize: 13,
+                   }}
+                 >
+                   Next ▶
+                 </button>
+               </div>
+             )}
+           </>
+         )}
       </div>
 
       {showRejectModal && (

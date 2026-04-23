@@ -4,13 +4,42 @@ const jwt = require('jsonwebtoken');
 const authController = require('../controllers/authController');
 const authMiddleware = require('../middleware/authMiddleware');
 const allowRoles = require('../middleware/roleMiddleware');
+const { body, validationResult } = require('express-validator');
+
+// Validation middleware helper
+const validate = (validations) => {
+  return async (req, res, next) => {
+    await Promise.all(validations.map(validation => validation.run(req)));
+    const errors = validationResult(req);
+    if (errors.isEmpty()) {
+      return next();
+    }
+    return res.status(400).json({
+      message: 'Validation failed',
+      errors: errors.array()
+    });
+  };
+};
 
 const getClientUrl = () => {
   return process.env.CLIENT_URL || 'http://localhost:3000';
 };
 
-router.post('/register', authController.register);
-router.post('/login', authController.login);
+// Validation rules
+const registerRules = [
+  body('name').trim().notEmpty().withMessage('Name is required'),
+  body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
+  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+  body('role').optional().isIn(['user', 'department_admin', 'worker', 'admin', 'super_admin', 'contractor', 'analyzer']),
+];
+
+const loginRules = [
+  body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
+  body('password').notEmpty().withMessage('Password is required'),
+];
+
+router.post('/register', registerRules, validate(registerRules), authController.register);
+router.post('/login', loginRules, validate(loginRules), authController.login);
 router.get(
   '/google',
   (req, res, next) => {
@@ -95,11 +124,28 @@ router.put('/admin/users/:id/department',
   authController.setUserDepartment
 );
 
+// Toggle user status
+router.patch('/admin/users/:id/toggle-status',
+  authMiddleware,
+  allowRoles('admin','super_admin'),
+  authController.toggleUserStatus
+);
+
+// Bulk delete users
+router.post('/admin/users/bulk-delete',
+  authMiddleware,
+  allowRoles('admin','super_admin'),
+  authController.bulkDeleteUsers
+);
+
 // Delete User — Super Admin only
 router.delete('/admin/users/:id',
   authMiddleware,
   allowRoles('admin','super_admin'),
   authController.deleteUser
 );
+
+// Refresh Token endpoint
+router.post('/refresh', authController.refreshToken);
 
 module.exports = router;

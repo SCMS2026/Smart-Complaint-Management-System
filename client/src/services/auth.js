@@ -12,6 +12,71 @@ export const getToken = () => {
   return token;
 };
 
+// Get refresh token
+export const getRefreshToken = () => {
+  return localStorage.getItem("refresh_token");
+};
+
+// Auto-refresh token if expired (check JWT expiry)
+const isTokenExpired = (token) => {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload.exp * 1000 < Date.now();
+  } catch {
+    return true;
+  }
+};
+
+// Refresh access token
+export const refreshAccessToken = async () => {
+  const refreshToken = getRefreshToken();
+  if (!refreshToken) return null;
+
+  try {
+    const res = await fetch(`${API}/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      localStorage.setItem("user_token", data.token);
+      localStorage.setItem("refresh_token", data.refreshToken);
+      return data.token;
+    }
+    return null;
+  } catch (error) {
+    console.error('Token refresh failed:', error);
+    return null;
+  }
+};
+
+// Fetch wrapper with auto-refresh
+export const fetchWithAuth = async (url, options = {}) => {
+  let token = getToken();
+
+  // Add auth header if token exists
+  if (token) {
+    options.headers = {
+      ...options.headers,
+      Authorization: `Bearer ${token}`,
+    };
+  }
+
+  let res = await fetch(url, options);
+
+  // If token expired, try refresh
+  if (res.status === 401 && token && isTokenExpired(token)) {
+    const newToken = await refreshAccessToken();
+    if (newToken) {
+      options.headers.Authorization = `Bearer ${newToken}`;
+      res = await fetch(url, options);
+    }
+  }
+
+  return res;
+};
+
 // Decode JWT token to inspect its claims (for debugging)
 export const getTokenPayload = () => {
   const token = getToken();
@@ -76,6 +141,7 @@ export const loginUser = async (data) => {
     // Store token and user data on successful login
     if (result.token) {
       localStorage.setItem("user_token", result.token);
+      localStorage.setItem("refresh_token", result.refreshToken);
       localStorage.setItem("user", JSON.stringify(result.user));
     }
 
@@ -83,6 +149,7 @@ export const loginUser = async (data) => {
       success: true,
       message: result.message || "Login successful",
       token: result.token,
+      refreshToken: result.refreshToken,
       user: result.user,
     };
   } catch (error) {
@@ -118,6 +185,7 @@ export const registerUser = async (data) => {
 
     if (result.token) {
       localStorage.setItem("user_token", result.token);
+      localStorage.setItem("refresh_token", result.refreshToken);
       localStorage.setItem("user", JSON.stringify(result.user));
     }
     
@@ -125,6 +193,7 @@ export const registerUser = async (data) => {
       success: true,
       message: result.message || "Registration successful",
       token: result.token,
+      refreshToken: result.refreshToken,
       user: result.user,
     };
   } catch (error) {
@@ -175,8 +244,20 @@ export const isAuthenticated = () => {
   return !!localStorage.getItem("user_token");
 };
 
-export const logout = () => {
+export const logout = async () => {
+  // Call server logout to clear refresh token
+  try {
+    const token = getToken();
+    await fetch(`${API}/logout`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      credentials: 'include',
+    });
+  } catch (e) {
+    // Continue anyway
+  }
   localStorage.removeItem("user_token");
+  localStorage.removeItem("refresh_token");
   localStorage.removeItem("user");
   window.location.reload();
 };
@@ -308,9 +389,10 @@ export const googleSignIn = async (idToken) => {
     }
     if (result.token) {
       localStorage.setItem("user_token", result.token);
+      localStorage.setItem("refresh_token", result.refreshToken);
       localStorage.setItem("user", JSON.stringify(result.user));
     }
-    return { success: true, token: result.token, user: result.user };
+    return { success: true, token: result.token, refreshToken: result.refreshToken, user: result.user };
   } catch (error) {
     return { success: false, message: error.message || "An error occurred during Google login" };
   }

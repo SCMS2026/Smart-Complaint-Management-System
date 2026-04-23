@@ -3,12 +3,42 @@ const complaintsController = require('../controllers/complaintsController');
 const authMiddleware = require('../middleware/authMiddleware');
 const allowRoles = require('../middleware/roleMiddleware');
 const upload = require('../middleware/uploadMiddleware');
+const { body, validationResult } = require('express-validator');
+
+// Validation middleware
+const validate = (validations) => {
+  return async (req, res, next) => {
+    await Promise.all(validations.map(validation => validation.run(req)));
+    const errors = validationResult(req);
+    if (errors.isEmpty()) {
+      return next();
+    }
+    return res.status(400).json({
+      message: 'Validation failed',
+      errors: errors.array()
+    });
+  };
+};
+
+const createComplaintValidation = [
+  body('issue').trim().notEmpty().withMessage('Issue is required'),
+  body('description').trim().notEmpty().withMessage('Description is required'),
+  body('location').trim().notEmpty().withMessage('Location is required'),
+  body('city').trim().notEmpty().withMessage('City is required'),
+  body('District').trim().notEmpty().withMessage('District is required'),
+  body('Taluka').trim().notEmpty().withMessage('Taluka is required'),
+  body('village').trim().notEmpty().withMessage('Village is required'),
+  body('pincode').trim().matches(/^\d{6}$/).withMessage('Valid 6-digit pincode is required'),
+  body('priority').optional().isIn(['low', 'medium', 'high', 'critical']),
+];
 
 // ✅ CREATE COMPLAINT (with image upload)
 router.post(
   '/',
   authMiddleware,
   upload.single("image"), // 👈 multer add
+  createComplaintValidation,
+  validate(createComplaintValidation),
   complaintsController.createComplaint
 );
 
@@ -59,6 +89,14 @@ router.delete(
   authMiddleware,
   allowRoles('admin'),
   complaintsController.deleteComplaint
+);
+
+// BULK DELETE
+router.delete(
+  '/bulk',
+  authMiddleware,
+  allowRoles('admin'),
+  complaintsController.bulkDeleteComplaints
 );
 
 module.exports = router;

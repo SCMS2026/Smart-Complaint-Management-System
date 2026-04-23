@@ -42,8 +42,21 @@ const userSchema = new mongoose.Schema({
     type: String,
     enum: ["active", "inactive"],
     default: "active"
+  },
+
+  // Refresh token (store hashed version for security)
+  refreshToken: {
+    type: String,
+  },
+  refreshTokenExpiry: {
+    type: Date
   }
 
 }, { timestamps: true });
+
+// Additional indexes (email unique already indexed, role/department/status for queries)
+userSchema.index({ role: 1 });
+userSchema.index({ department: 1 });
+userSchema.index({ status: 1 });
 
 module.exports = mongoose.model("User", userSchema);
