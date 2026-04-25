@@ -380,6 +380,45 @@ const SuperAdminDashboard = () => {
               </div>
             </div>
 
+            {/* Category & Location Breakdown Charts */}
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Category Breakdown Bar Chart */}
+              <div className={`rounded-2xl border shadow-sm p-6 ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
+                <h3 className={`font-semibold mb-4 text-sm uppercase tracking-wider ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>Complaints by Category</h3>
+                {analytics?.categoryBreakdown && analytics.categoryBreakdown.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={250}>
+                    <BarChart data={analytics.categoryBreakdown} layout="vertical">
+                      <CartesianGrid strokeDasharray="3 3" stroke={theme === 'dark' ? '#475569' : '#E2E8F0'} horizontal={false} />
+                      <XAxis type="number" tick={{ fontSize: 11 }} stroke={theme === 'dark' ? '#94A3B8' : '#64748B'} />
+                      <YAxis dataKey="_id" type="category" tick={{ fontSize: 11 }} stroke={theme === 'dark' ? '#94A3B8' : '#64748B'} width={80} />
+                      <Tooltip />
+                      <Bar dataKey="count" fill="#10B981" radius={[0, 4, 4, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="h-40 flex items-center justify-center text-slate-400">No data available</div>
+                )}
+              </div>
+
+              {/* Location Breakdown Bar Chart */}
+              <div className={`rounded-2xl border shadow-sm p-6 ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
+                <h3 className={`font-semibold mb-4 text-sm uppercase tracking-wider ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>Complaints by Location</h3>
+                {analytics?.locationBreakdown && analytics.locationBreakdown.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={250}>
+                    <BarChart data={analytics.locationBreakdown} layout="vertical">
+                      <CartesianGrid strokeDasharray="3 3" stroke={theme === 'dark' ? '#475569' : '#E2E8F0'} horizontal={false} />
+                      <XAxis type="number" tick={{ fontSize: 11 }} stroke={theme === 'dark' ? '#94A3B8' : '#64748B'} />
+                      <YAxis dataKey="_id.city" type="category" tick={{ fontSize: 11 }} stroke={theme === 'dark' ? '#94A3B8' : '#64748B'} width={90} />
+                      <Tooltip formatter={(value, name, props) => [value, 'Count']} labelFormatter={(label) => `${label.city}${label.district ? ', ' + label.district : ''}`} />
+                      <Bar dataKey="count" fill="#F59E0B" radius={[0, 4, 4, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="h-40 flex items-center justify-center text-slate-400">No data available</div>
+                )}
+              </div>
+            </div>
+
             {/* Department Performance Bar Chart (admin+ only) */}
             {(currentUser?.role === 'super_admin' || currentUser?.role === 'admin') && analytics?.departmentBreakdown && analytics.departmentBreakdown.length > 0 && (
               <div className={`rounded-2xl border shadow-sm p-6 mt-6 ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>

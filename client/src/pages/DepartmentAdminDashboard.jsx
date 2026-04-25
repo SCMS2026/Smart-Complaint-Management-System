@@ -2,11 +2,42 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { fetchComplaints, updateComplaintStatusRequest } from "../services/complaints";
 import { fetchPermissions } from "../services/permissions";
-import { fetchUsers, getTokenPayload, getCurrentUser } from "../services/auth";
+import { fetchUsers, getTokenPayload, getCurrentUser, getToken } from "../services/auth";
 import { fetchDepartments, fetchDepartmentDashboard } from "../services/department";
+import API_URL from "../services/apiConfig";
 import { createWorkerTask, autoAssignWorker } from "../services/workerTask";
 import ComplaintDetail from "./ComplaintDetail";
 import { useTheme } from "../context/ThemeContext";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  LineChart,
+  Line
+} from "recharts";
+
+const COLORS = ["#3B82F6", "#F59E0B", "#10B981", "#8B5CF6", "#F97316", "#EF4444", "#06B6D4", "#84CC16"];
+
+const fetchAnalytics = async () => {
+  try {
+    const token = getToken();
+    const res = await fetch(`${API_URL}/complaints/analytics`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!res.ok) throw new Error("Failed to fetch analytics");
+    return { success: true, analytics: await res.json() };
+  } catch (error) {
+    return { success: false, message: error.message };
+  }
+};
 
 const STATUS_CONFIG = {
   pending:               { bg: "bg-amber-50",   text: "text-amber-700",   dot: "bg-amber-400",   border: "border-amber-200",   label: "Pending" },
@@ -40,6 +71,8 @@ const DepartmentAdminDashboard = () => {
   const [error, setError]             = useState("");
   const [success, setSuccess]         = useState("");
 
+  const [analytics, setAnalytics] = useState(null);
+
   const [myDeptId, setMyDeptId]     = useState(null);
   const [myDeptName, setMyDeptName] = useState("");
   const [deptDashboard, setDeptDashboard] = useState(null);
@@ -58,15 +91,6 @@ const DepartmentAdminDashboard = () => {
     loadAll();
   }, [nav]);
 
-  const filterByMyDept = (all, deptId) => {
-    if (!deptId) return [];
-    return all.filter(c => {
-      const cd = c.department_id;
-      if (!cd) return false;
-      return String(typeof cd === "object" ? (cd._id || cd) : cd) === String(deptId);
-    });
-  };
-
   const loadAll = async () => {
     setLoading(true);
     try {
@@ -77,19 +101,19 @@ const DepartmentAdminDashboard = () => {
       let deptName = "";
 
       // ✅ STEP 2: Departments list fetch — name resolve karo
-      const [deptsRes, compRes, permRes, usersRes, dashRes] = await Promise.all([
+      const [deptsRes, compRes, permRes, usersRes, dashRes, analyticsRes] = await Promise.all([
         fetchDepartments(),
         fetchComplaints(),
         fetchPermissions(),
         fetchUsers(),
-        deptId ? fetchDepartmentDashboard(deptId) : Promise.resolve({ success: false })
+        deptId ? fetchDepartmentDashboard(deptId) : Promise.resolve({ success: false }),
+        fetchAnalytics()
       ]);
 
       if (deptsRes.success && deptId) {
         const found = (deptsRes.departments || []).find(d => String(d._id) === String(deptId));
         if (found) deptName = found.name;
       }
-      console.log("Complaints fetched:", compRes.complaints?.length);
       // ✅ FALLBACK: If JWT had no department, try localStorage user data first
       if (!deptId) {
         const storedUser = JSON.parse(localStorage.getItem("user") || "null");
@@ -121,7 +145,7 @@ const DepartmentAdminDashboard = () => {
         }
       }
 
-      // ✅ FALLBACK 2: If deptId found but name still missing, check departments list again
+      // ✅ FALLBACK 4: If deptId found but name still missing, check departments list again
       if (deptId && !deptName && deptsRes.success) {
         const found = (deptsRes.departments || []).find(d => String(d._id) === String(deptId));
         if (found) deptName = found.name;
@@ -137,6 +161,7 @@ const DepartmentAdminDashboard = () => {
       if (permRes.success)  setPermissions(permRes.permissions || []);
       if (usersRes.success) setWorkers((usersRes.users || []).filter(u => u.role === "worker"));
       if (dashRes.success)  setDeptDashboard(dashRes);
+      if (analyticsRes.success) setAnalytics(analyticsRes.analytics || null);
 
     } catch (err) {
       setError(err.message || "Failed to load dashboard");
@@ -343,6 +368,128 @@ const DepartmentAdminDashboard = () => {
               </div>
             </div>
 
+            {/* Charts */}
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Status Breakdown Pie Chart */}
+              <div className={`rounded-2xl border shadow-sm p-6 ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
+                <h3 className={`font-semibold mb-4 text-sm uppercase tracking-wider ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>Status Breakdown</h3>
+                {deptDashboard?.statusBreakdown && deptDashboard.statusBreakdown.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={250}>
+                    <PieChart>
+                      <Pie
+                        data={deptDashboard.statusBreakdown}
+                        dataKey="count"
+                        nameKey="_id"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={80}
+                        label={({ name, percent }) => `${(name || "").replace(/_/g, " ")} ${(percent * 100).toFixed(0)}%`}
+                      >
+                        {deptDashboard.statusBreakdown.map((entry, idx) => (
+                          <Cell key={idx} fill={COLORS[idx % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="h-40 flex items-center justify-center text-slate-400">No data available</div>
+                )}
+              </div>
+
+              {/* Daily Trend Line Chart */}
+              <div className={`rounded-2xl border shadow-sm p-6 ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
+                <h3 className={`font-semibold mb-4 text-sm uppercase tracking-wider ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>Daily Complaint Trend</h3>
+                {deptDashboard?.dailyTrend && deptDashboard.dailyTrend.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={250}>
+                    <LineChart data={deptDashboard.dailyTrend}>
+                      <CartesianGrid strokeDasharray="3 3" stroke={theme === "dark" ? "#475569" : "#E2E8F0"} />
+                      <XAxis dataKey="_id" tick={{ fontSize: 11 }} stroke={theme === "dark" ? "#94A3B8" : "#64748B"} />
+                      <YAxis tick={{ fontSize: 11 }} stroke={theme === "dark" ? "#94A3B8" : "#64748B"} />
+                      <Tooltip />
+                      <Line type="monotone" dataKey="count" stroke="#2563EB" strokeWidth={2} dot={{ fill: "#2563EB", r: 4 }} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="h-40 flex items-center justify-center text-slate-400">No data available</div>
+                )}
+              </div>
+            </div>
+
+            {/* Charts Row 1: Status + Daily Trend */}
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className={`rounded-2xl border shadow-sm p-6 ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
+                <h3 className={`font-semibold mb-4 text-sm uppercase tracking-wider ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>Status Breakdown</h3>
+                {analytics?.statusBreakdown && analytics.statusBreakdown.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={250}>
+                    <PieChart>
+                      <Pie data={analytics.statusBreakdown} dataKey="count" nameKey="_id" cx="50%" cy="50%" outerRadius={80}
+                        label={({ name, percent }) => `${(name || "").replace(/_/g, " ")} ${(percent * 100).toFixed(0)}%`}>
+                        {analytics.statusBreakdown.map((entry, idx) => (
+                          <Cell key={idx} fill={COLORS[idx % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="h-40 flex items-center justify-center text-slate-400">No data available</div>
+                )}
+              </div>
+              <div className={`rounded-2xl border shadow-sm p-6 ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
+                <h3 className={`font-semibold mb-4 text-sm uppercase tracking-wider ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>Daily Complaint Trend</h3>
+                {analytics?.dailyTrend && analytics.dailyTrend.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={250}>
+                    <LineChart data={analytics.dailyTrend}>
+                      <CartesianGrid strokeDasharray="3 3" stroke={theme === 'dark' ? '#475569' : '#E2E8F0'} />
+                      <XAxis dataKey="_id" tick={{ fontSize: 11 }} stroke={theme === 'dark' ? '#94A3B8' : '#64748B'} />
+                      <YAxis tick={{ fontSize: 11 }} stroke={theme === 'dark' ? '#94A3B8' : '#64748B'} />
+                      <Tooltip />
+                      <Line type="monotone" dataKey="count" stroke="#2563EB" strokeWidth={2} dot={{ fill: '#2563EB', r: 4 }} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="h-40 flex items-center justify-center text-slate-400">No data available</div>
+                )}
+              </div>
+            </div>
+
+            {/* Charts Row 2: Category + Location */}
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className={`rounded-2xl border shadow-sm p-6 ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
+                <h3 className={`font-semibold mb-4 text-sm uppercase tracking-wider ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>Complaints by Category</h3>
+                {analytics?.categoryBreakdown && analytics.categoryBreakdown.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={250}>
+                    <BarChart data={analytics.categoryBreakdown} layout="vertical">
+                      <CartesianGrid strokeDasharray="3 3" stroke={theme === 'dark' ? '#475569' : '#E2E8F0'} horizontal={false} />
+                      <XAxis type="number" tick={{ fontSize: 11 }} stroke={theme === 'dark' ? '#94A3B8' : '#64748B'} />
+                      <YAxis dataKey="_id" type="category" tick={{ fontSize: 11 }} stroke={theme === 'dark' ? '#94A3B8' : '#64748B'} width={80} />
+                      <Tooltip />
+                      <Bar dataKey="count" fill="#10B981" radius={[0, 4, 4, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="h-40 flex items-center justify-center text-slate-400">No data available</div>
+                )}
+              </div>
+              <div className={`rounded-2xl border shadow-sm p-6 ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
+                <h3 className={`font-semibold mb-4 text-sm uppercase tracking-wider ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>Complaints by Location</h3>
+                {analytics?.locationBreakdown && analytics.locationBreakdown.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={250}>
+                    <BarChart data={analytics.locationBreakdown} layout="vertical">
+                      <CartesianGrid strokeDasharray="3 3" stroke={theme === 'dark' ? '#475569' : '#E2E8F0'} horizontal={false} />
+                      <XAxis type="number" tick={{ fontSize: 11 }} stroke={theme === 'dark' ? '#94A3B8' : '#64748B'} />
+                      <YAxis dataKey="_id.city" type="category" tick={{ fontSize: 11 }} stroke={theme === 'dark' ? '#94A3B8' : '#64748B'} width={90} />
+                      <Tooltip formatter={(value) => [value, 'Count']} />
+                      <Bar dataKey="count" fill="#F59E0B" radius={[0, 4, 4, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="h-40 flex items-center justify-center text-slate-400">No data available</div>
+                )}
+              </div>
+            </div>
+
             {/* Performance Metrics */}
             <div className={`rounded-2xl border shadow-sm p-6 ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
               <h3 className={`text-lg font-semibold ${theme === 'dark' ? 'text-white' : 'text-slate-800'} mb-4`}>Performance Metrics</h3>
@@ -496,9 +643,9 @@ const DepartmentAdminDashboard = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {complaints.length === 0 ? (
-                      <tr><td colSpan={3} className={`px-5 py-12 text-center text-sm ${theme === 'dark' ? 'text-slate-500' : 'text-slate-300'}`}>No complaints</td></tr>
-                    ) : complaints.map(c => (
+                    {complaints.filter(c => !['completed', 'approved_by_user', 'rejected'].includes(c.status)).length === 0 ? (
+                      <tr><td colSpan={3} className={`px-5 py-12 text-center text-sm ${theme === 'dark' ? 'text-slate-500' : 'text-slate-300'}`}>No assignable complaints</td></tr>
+                    ) : complaints.filter(c => !['completed', 'approved_by_user', 'rejected'].includes(c.status)).map(c => (
                       <tr key={c._id}
                         onClick={() => { setSelectedComplaintId(c._id); setAssignMsg(""); }}
                         className={`border-t cursor-pointer transition-colors ${selectedComplaintId === c._id ? (theme === 'dark' ? 'bg-blue-900/30' : 'bg-blue-50') : (theme === 'dark' ? 'border-slate-700 hover:bg-slate-700/50' : 'border-slate-50 hover:bg-slate-50')}`}>

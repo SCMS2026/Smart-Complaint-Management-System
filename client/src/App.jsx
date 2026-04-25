@@ -13,7 +13,7 @@ import AllComplaints from "./pages/AllComplaints";
 import AdminDashboard from "./pages/AdminDashboard";
 import AnalyzerDashboard from "./pages/AnalyzerDashboard";
 import CompanyDashboard from "./pages/CompanyDashboard";
-import ContractorDashboard from "./pages/ContractorDashboard";
+import ContractorDashboard from "./pages/WorkerDashboard";
 import DepartmentAdminDashboard from "./pages/DepartmentAdminDashboard";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 
