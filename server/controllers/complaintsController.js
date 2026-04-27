@@ -419,15 +419,34 @@ const getComplaints = async (req, res) => {
       ];
     }
 
-    // Text search (issue, description, location)
+     // Text search (issue, description, location)
     if (search) {
       const regex = new RegExp(search, 'i');
-      filter.$or = [
+      
+      // Build search conditions for complaint fields
+      const complaintConditions = [
         { issue: regex },
         { description: regex },
         { location: regex },
         { city: regex }
       ];
+      
+      // Add user search conditions (search by user name or email)
+      // We'll handle this by finding matching user IDs first, then combining conditions
+      const userConditions = [];
+      
+      // Only add user search if we have a reasonable search term (at least 2 chars)
+      // This prevents expensive user collection searches on very short terms
+      if (search.trim().length >= 2) {
+        userConditions.push(
+          { 'userId.name': regex },
+          { 'userId.email': regex }
+        );
+      }
+      
+      // Combine all conditions with $or
+      filter.$or = [...complaintConditions, ...userConditions];
+      
       // Remove $or if it's already there from role filter
       if (filter.$or && filter.department_id) {
         // Merge with existing department filter

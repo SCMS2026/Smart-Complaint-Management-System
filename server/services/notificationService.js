@@ -168,7 +168,7 @@ const createNotification = async (recipientId, senderId, type, title, message, d
     await notification.save();
 
     // Populate for return
-    const populated = await notification
+    const populated = await Notification.findById(notification._id)
       .populate('sender', 'name profileImage')
       .populate('recipient', 'name email');
 
