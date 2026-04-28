@@ -106,7 +106,7 @@ const getWorkerTasks = async (req, res) => {
     try {
         const filter = {};
 
-        if (req.user && req.user.role === 'worker') {
+        if (req.user && (req.user.role === 'worker' || req.user.role === 'contractor')) {
             filter.worker_id = req.user.id;
         } else if (req.user && req.user.role === 'department_admin') {
             // Department admins see tasks for complaints in their department

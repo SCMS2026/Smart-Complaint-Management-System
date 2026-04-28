@@ -1,9 +1,8 @@
 import React, { useState } from "react";
 import { GoogleLogin } from "@react-oauth/google";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import API_URL from "../services/apiConfig";
-import { registerUser } from "../services/auth";
+import { registerUser, googleSignIn } from "../services/auth";
 import { useTheme } from "../context/ThemeContext";
 
 const Signup = () => {
@@ -79,17 +78,18 @@ const Signup = () => {
   };
 
   const handleSuccess = async (credentialResponse) => {
-    const res = await axios.post(`${API_URL}/auth/google`, {
-      token: credentialResponse.credential,
-    });
-
-    // Persist using the same keys as other auth flows
-    if (res.data?.token) localStorage.setItem("user_token", res.data.token);
-    if (res.data?.user) localStorage.setItem("user", JSON.stringify(res.data.user));
-    else if (res.data) localStorage.setItem("user", JSON.stringify(res.data));
-
-    console.log(res.data);
-    nav('/');
+    try {
+      const res = await googleSignIn(credentialResponse.credential);
+      if (res.success) {
+        nav('/');
+        window.location.reload();
+      } else {
+        setError(res.message || "Google login failed");
+      }
+    } catch (err) {
+      setError("Google login failed. Please try again.");
+      console.error("Google login error:", err);
+    }
   };
 
   return (

@@ -25,9 +25,26 @@ function AppContent() {
   // Check if user is logged in on mount
   useEffect(() => {
     const checkUser = async () => {
+      // 1. Load from localStorage instantly (no flicker)
+      const cached = localStorage.getItem("user");
+      if (cached) {
+        try { setUser(JSON.parse(cached)); } catch (e) {}
+      }
+      // 2. Verify token with server
+      const token = localStorage.getItem("user_token");
+      if (!token) { setLoading(false); return; }
+
       const userData = await getCurrentUser();
       if (userData) {
-        setUser(userData.user || userData);
+        const u = userData.user || userData;
+        setUser(u);
+        localStorage.setItem("user", JSON.stringify(u));
+      } else {
+        // Token invalid/expired - clear so user sees login
+        localStorage.removeItem("user_token");
+        localStorage.removeItem("refresh_token");
+        localStorage.removeItem("user");
+        setUser(null);
       }
       setLoading(false);
     };
@@ -69,4 +86,4 @@ function App() {
   );
 }
 
-export default App;
+export default App;           

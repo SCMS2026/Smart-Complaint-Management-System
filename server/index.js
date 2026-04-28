@@ -56,14 +56,33 @@ app.use(generalLimiter);
 
 // CORS configuration for credentials
 const isDev = process.env.NODE_ENV === 'development';
+
+// Build allowed origins list
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://localhost:3000',
+  'http://localhost:3001',
+];
+if (process.env.CLIENT_URL) allowedOrigins.push(process.env.CLIENT_URL);
+
 const corsOptions = {
-  origin: isDev ? ['http://localhost:5174', 'http://localhost:3000'] : process.env.CLIENT_URL ? [process.env.CLIENT_URL] : false,
+  origin: (origin, callback) => {
+    // Allow requests with no origin (Postman, curl, mobile apps)
+    if (!origin) return callback(null, true);
+    if (isDev || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error('Not allowed by CORS'));
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   optionsSuccessStatus: 200,
 };
 app.use(cors(corsOptions));
+// Handle preflight for all routes
+app.options('/{*path}', cors(corsOptions));
 
 app.use(morgan('dev'));
 

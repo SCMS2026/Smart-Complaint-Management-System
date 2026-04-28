@@ -12,17 +12,17 @@ const slaMonitor = {
 
   // Main check - runs every hour
   start() {
-    // Run every hour at minute 0
-    cron.schedule('0 * * * *', async () => {
-      console.log('⏰ Running SLA check...');
-      await this.checkAllComplaints();
-    });
-
-    // Also run every minute in development for testing
     if (process.env.NODE_ENV === 'development') {
+      // In development, run every minute INSTEAD of hourly (not in addition to)
       cron.schedule('* * * * *', async () => {
         console.log('⏰ [Dev] Running SLA check...');
-        this.checkAllComplaints();
+        await this.checkAllComplaints();
+      });
+    } else {
+      // Run every hour at minute 0 in production
+      cron.schedule('0 * * * *', async () => {
+        console.log('⏰ Running SLA check...');
+        await this.checkAllComplaints();
       });
     }
 
@@ -47,10 +47,11 @@ const slaMonitor = {
         await this.handleAtRisk(complaint);
       }
 
-      // Find breached complaints (past deadline)
+      // Find breached complaints (past deadline, not yet marked as breached)
       const breachedComplaints = await Complaint.find({
         status: { $in: ['pending', 'verified', 'assigned', 'in_progress'] },
-        slaDeadline: { $lte: now }
+        slaDeadline: { $lte: now },
+        slaStatus: { $ne: 'breached' }
       }).populate('userId').populate('department_id').populate('assignedTo');
 
       for (const complaint of breachedComplaints) {
