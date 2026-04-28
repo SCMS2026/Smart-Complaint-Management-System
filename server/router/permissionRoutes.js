@@ -3,17 +3,29 @@ const permissionController = require('../controllers/permissionsController');
 const authMiddleware = require('../middleware/authMiddleware');
 const allowRoles = require('../middleware/roleMiddleware');
 
-// contractor can create a permission request
+// Contractor can create a permission request
 router.post('/', authMiddleware, allowRoles('contractor'), permissionController.createPermission);
 
-// admin and department_admin can view permission requests
-router.get('/', authMiddleware, allowRoles('admin','department_admin','super_admin'), permissionController.getPermissions);
+// Contractor can view their own permission requests
+router.get('/my-requests', authMiddleware, allowRoles('contractor'), permissionController.getMyPermissions);
 
-// FIX 6: Super Admin / Admin can approve or reject permission requests
+// Get single permission by ID
+router.get('/:id', authMiddleware, permissionController.getPermissionById);
+
+// Admin, department_admin, super_admin can view all permission requests
+router.get('/', authMiddleware, allowRoles('admin', 'department_admin', 'super_admin'), permissionController.getPermissions);
+
+// Admin/Super Admin can approve or reject permission requests
 router.patch('/:permissionId/status',
   authMiddleware,
-  allowRoles('admin', 'super_admin'),
+  allowRoles('admin', 'super_admin', 'department_admin'),
   permissionController.updatePermissionStatus
+);
+
+// Complete permission (contractor or admin)
+router.post('/:permissionId/complete',
+  authMiddleware,
+  permissionController.completePermission
 );
 
 module.exports = router;

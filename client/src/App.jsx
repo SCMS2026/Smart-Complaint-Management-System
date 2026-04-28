@@ -16,6 +16,8 @@ import CompanyDashboard from "./pages/CompanyDashboard";
 import ContractorDashboard from "./pages/WorkerDashboard";
 import DepartmentAdminDashboard from "./pages/DepartmentAdminDashboard";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
+import PropertiesList from "./pages/PropertiesList";
+import PermissionRequests from "./pages/PermissionRequests";
 
 function AppContent() {
   const [user, setUser] = useState(null);
@@ -72,6 +74,8 @@ function AppContent() {
           <Route path="/super-admin" element={<SuperAdminDashboard />} />
           <Route path="/analyzer" element={<AnalyzerDashboard />} />
           <Route path="/contractor" element={<ContractorDashboard />} />
+          <Route path="/contractor/properties" element={<PropertiesList />} />
+          <Route path="/contractor/permissions" element={<PermissionRequests />} />
         </Routes>
       </main>
     </div>

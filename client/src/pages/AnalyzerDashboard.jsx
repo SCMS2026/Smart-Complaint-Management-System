@@ -2,7 +2,6 @@ import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { fetchComplaintAnalytics } from "../services/complaints";
 
-// ─── Color helpers ─────────────────────────────────────────────────────────
 const PRIORITY_COLOR = {
   critical: { bg: "#fee2e2", text: "#991b1b", bar: "#ef4444", dot: "#dc2626" },
   high:     { bg: "#ffedd5", text: "#9a3412", bar: "#f97316", dot: "#ea580c" },

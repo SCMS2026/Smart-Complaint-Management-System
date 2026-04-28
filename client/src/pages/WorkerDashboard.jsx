@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { fetchWorkerTasks, updateWorkerTaskStatus } from "../services/workerTask";
 
 // Convert image file to base64
@@ -60,12 +60,16 @@ const PhotoUpload = ({ label, existingUrl, onFileSelect, preview }) => {
 
 const ContractorDashboard = () => {
   const nav = useNavigate();
+  const location = useLocation();
   const [tasks, setTasks]     = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState("");
   const [success, setSuccess] = useState("");
 
-  // Per-task photo state: { [taskId]: { beforeFile, afterFile, beforePreview, afterPreview } }
+  // Active tab state
+  const [activeTab, setActiveTab] = useState("tasks");
+
+  // Per-task photo state
   const [photoState, setPhotoState] = useState({});
   // Per-task uploading state
   const [uploading, setUploading] = useState({});
@@ -78,7 +82,6 @@ const ContractorDashboard = () => {
       if (res.success) {
         setTasks(res.workerTasks || []);
       } else {
-        // Show the real error from the backend
         setError(res.message || "Failed to load tasks");
         console.error("fetchWorkerTasks failed:", res.message);
       }
@@ -89,14 +92,30 @@ const ContractorDashboard = () => {
     setLoading(false);
   };
 
+  // Determine active tab based on current route
+  useEffect(() => {
+    const path = location.pathname;
+    if (path.includes('properties')) {
+      setActiveTab('properties');
+    } else if (path.includes('permissions')) {
+      setActiveTab('permissions');
+    } else {
+      setActiveTab('tasks');
+    }
+  }, [location]);
+
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("user") || "null");
     if (!user || (user.role !== "contractor" && user.role !== "worker")) {
       nav("/");
       return;
     }
-    loadTasks();
-  }, [nav]);
+    
+    // Only load tasks if we're on the tasks tab
+    if (activeTab === 'tasks') {
+      loadTasks();
+    }
+  }, [activeTab, nav]);
 
   const showSuccess = (msg) => { setSuccess(msg); setTimeout(() => setSuccess(""), 3000); };
 
@@ -117,7 +136,6 @@ const ContractorDashboard = () => {
       const photos = photoState[task._id] || {};
       const payload = { status: newStatus };
 
-      // Convert selected photos to base64 before sending
       if (photos.beforeFile) {
         payload.before_photo = await toBase64(photos.beforeFile);
       }
@@ -146,6 +164,40 @@ const ContractorDashboard = () => {
 
   const statusCount = (status) => tasks.filter((t) => t.status === status).length;
 
+  // Tab Navigation Component
+  const TabNav = () => (
+    <div className="mb-6 bg-white rounded-2xl border border-slate-200 shadow-sm p-1.5 inline-flex gap-1">
+      {[
+        { id: 'tasks', label: 'My Tasks', icon: '📋' },
+        { id: 'properties', label: 'Properties', icon: '🏢' },
+        { id: 'permissions', label: 'Permissions', icon: '📄' }
+      ].map(tab => (
+        <button
+          key={tab.id}
+          onClick={() => nav(`/contractor/${tab.id === 'tasks' ? '' : tab.id}`)}
+          className={`px-5 py-2.5 rounded-xl font-semibold text-sm transition flex items-center gap-2 ${
+            activeTab === tab.id
+              ? 'bg-slate-900 text-white shadow-md'
+              : 'text-slate-600 hover:bg-slate-50 hover:text-slate-800'
+          }`}
+        >
+          <span>{tab.icon}</span>
+          <span>{tab.label}</span>
+        </button>
+      ))}
+    </div>
+  );
+
+  // If showing properties or permissions tab, render those pages
+  if (activeTab === 'properties') {
+    return <PropertiesList />;
+  }
+
+  if (activeTab === 'permissions') {
+    return <PermissionRequests />;
+  }
+
+  // Tasks Tab (original content)
   if (loading) return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center pt-20">
       <div className="text-center">
@@ -177,6 +229,11 @@ const ContractorDashboard = () => {
             <h1 className="text-2xl sm:text-3xl font-bold mt-1">My Tasks</h1>
             <p className="text-sm text-slate-400 mt-1">Start work, upload photos, and mark tasks complete.</p>
           </div>
+        </div>
+
+        {/* Tab Navigation */}
+        <div className="mb-6">
+          <TabNav />
         </div>
 
         {/* Stats */}

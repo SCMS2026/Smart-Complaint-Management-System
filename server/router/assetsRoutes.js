@@ -7,13 +7,25 @@ const multer = require('multer');
 // we'll store uploaded file in memory so we can parse directly
 const upload = multer({ storage: multer.memoryStorage() });
 
-// anyone authenticated can view list of assets
-router.get('/',  assetsController.getAssets);
+// Anyone authenticated can view list of assets
+router.get('/', assetsController.getAssets);
 
-// allow admin to add individual asset via JSON
+// Get filter options
+router.get('/filters', assetsController.getAssetFilters);
+
+// Get single asset by ID
+router.get('/:id', assetsController.getAssetById);
+
+// Admin can create individual asset via JSON
 router.post('/', authMiddleware, allowRoles('admin'), assetsController.createAsset);
 
-// admin can import assets via Excel file
+// Admin can update asset
+router.put('/:id', authMiddleware, allowRoles('admin'), assetsController.updateAsset);
+
+// Admin can delete asset
+router.delete('/:id', authMiddleware, allowRoles('admin'), assetsController.deleteAsset);
+
+// Admin can import assets via Excel file
 router.post(
   '/import',
   authMiddleware,
