@@ -81,8 +81,7 @@ const corsOptions = {
   optionsSuccessStatus: 200,
 };
 app.use(cors(corsOptions));
-// Handle preflight for all routes
-app.options('/{*path}', cors(corsOptions));
+// Handle preflight for all routes - removed problematic line that caused PathError
 
 app.use(morgan('dev'));
 
