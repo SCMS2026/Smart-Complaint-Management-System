@@ -18,6 +18,7 @@ import DepartmentAdminDashboard from "./pages/DepartmentAdminDashboard";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import PropertiesList from "./pages/PropertiesList";
 import PermissionRequests from "./pages/PermissionRequests";
+import ComplaintTracking from "./pages/ComplaintTracking";
 
 function AppContent() {
   const [user, setUser] = useState(null);
@@ -76,6 +77,7 @@ function AppContent() {
           <Route path="/contractor" element={<ContractorDashboard />} />
           <Route path="/contractor/properties" element={<PropertiesList />} />
           <Route path="/contractor/permissions" element={<PermissionRequests />} />
+          <Route path="/track" element={<ComplaintTracking />} />
         </Routes>
       </main>
     </div>
@@ -90,4 +92,4 @@ function App() {
   );
 }
 
-export default App;           
+export default App;

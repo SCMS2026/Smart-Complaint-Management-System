@@ -1017,6 +1017,168 @@ const bulkDeleteComplaints = async (req, res) => {
   }
 };
 
+// PUBLIC SEARCH — search by complainant name, issue, location (no auth)
+const searchComplaints = async (req, res) => {
+  try {
+    const { q } = req.query;
+
+    if (!q || q.trim().length < 2) {
+      return res.status(400).json({ message: "Search query must be at least 2 characters." });
+    }
+
+    const regex = new RegExp(q.trim(), "i");
+
+    // Find matching user IDs by name first
+    const matchingUsers = await User.find({ name: regex }).select("_id").limit(50);
+    const matchingUserIds = matchingUsers.map((u) => u._id);
+
+    const complaints = await Complaint.find({
+      $or: [
+        { issue: regex },
+        { description: regex },
+        { location: regex },
+        { city: regex },
+        { village: regex },
+        { District: regex },
+        { Taluka: regex },
+        { userId: { $in: matchingUserIds } },
+      ],
+    })
+      .populate("userId", "name")
+      .populate("department_id", "name")
+      .populate("assignedTo", "name")
+      .select("issue category status priority location city District Taluka village pincode department_id assignedTo userId createdAt updatedAt slaDeadline slaStatus escalated")
+      .sort({ createdAt: -1 })
+      .limit(20);
+
+    const STATUS_LABELS = {
+      pending: "Complaint Submitted",
+      verified: "Complaint Verified",
+      assigned: "Worker Assigned",
+      in_progress: "Work In Progress",
+      user_approval_pending: "Awaiting Your Approval",
+      completed: "Work Completed",
+      approved_by_user: "Closed",
+      rejected: "Rejected",
+      rejected_by_user: "Rejected by User",
+    };
+
+    const STATUS_ORDER = ["pending","verified","assigned","in_progress","user_approval_pending","completed","approved_by_user"];
+
+    const results = complaints.map((c) => {
+      const currentIndex = STATUS_ORDER.indexOf(c.status);
+      const timeline = STATUS_ORDER.map((s, i) => ({
+        status: s,
+        label: STATUS_LABELS[s],
+        done: i <= currentIndex,
+        active: s === c.status,
+      }));
+
+      return {
+        id: c._id,
+        issue: c.issue,
+        category: c.category,
+        status: c.status,
+        priority: c.priority,
+        complainantName: c.userId?.name || "Unknown",
+        location: `${c.village}, ${c.Taluka}, ${c.District}, ${c.city}`,
+        pincode: c.pincode,
+        department: c.department_id?.name || "Not Assigned",
+        assignedWorker: c.assignedTo?.name || "Not Assigned",
+        submittedAt: c.createdAt,
+        lastUpdated: c.updatedAt,
+        slaDeadline: c.slaDeadline,
+        slaStatus: c.slaStatus,
+        escalated: c.escalated,
+        timeline,
+      };
+    });
+
+    res.json({ results, total: results.length });
+  } catch (error) {
+    res.status(500).json({ message: "Search failed" });
+  }
+};
+
+// PUBLIC TRACKING — returns only safe, non-sensitive fields
+const trackComplaint = async (req, res) => {
+  try {
+    const { complaintId } = req.params;
+
+    if (!complaintId || !complaintId.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ message: "Invalid complaint ID format" });
+    }
+
+    const complaint = await Complaint.findById(complaintId)
+      .populate("department_id", "name")
+      .populate("assignedTo", "name")
+      .select("issue category status priority location city District Taluka village pincode department_id assignedTo createdAt updatedAt slaDeadline slaStatus escalated escalationCount isFake comments");
+
+    if (!complaint) {
+      return res.status(404).json({ message: "Complaint not found. Please check the ID." });
+    }
+
+    // Build timeline from status
+    const STATUS_ORDER = [
+      "pending", "verified", "assigned", "in_progress",
+      "user_approval_pending", "completed", "approved_by_user"
+    ];
+
+    const STATUS_LABELS = {
+      pending: "Complaint Submitted",
+      verified: "Complaint Verified",
+      assigned: "Worker Assigned",
+      in_progress: "Work In Progress",
+      user_approval_pending: "Awaiting Your Approval",
+      completed: "Work Completed",
+      approved_by_user: "Closed",
+      rejected: "Rejected",
+      rejected_by_user: "Rejected by User",
+    };
+
+    const currentStatusIndex = STATUS_ORDER.indexOf(complaint.status);
+
+    const timeline = STATUS_ORDER.map((s, i) => ({
+      status: s,
+      label: STATUS_LABELS[s],
+      done: i <= currentStatusIndex,
+      active: s === complaint.status,
+    }));
+
+    // Handle rejected edge cases
+    if (["rejected", "rejected_by_user"].includes(complaint.status)) {
+      timeline.push({
+        status: complaint.status,
+        label: STATUS_LABELS[complaint.status],
+        done: true,
+        active: true,
+      });
+    }
+
+    res.json({
+      id: complaint._id,
+      issue: complaint.issue,
+      category: complaint.category,
+      status: complaint.status,
+      priority: complaint.priority,
+      location: `${complaint.village}, ${complaint.Taluka}, ${complaint.District}, ${complaint.city}`,
+      pincode: complaint.pincode,
+      department: complaint.department_id?.name || "Not Assigned",
+      assignedWorker: complaint.assignedTo?.name || "Not Assigned",
+      submittedAt: complaint.createdAt,
+      lastUpdated: complaint.updatedAt,
+      slaDeadline: complaint.slaDeadline,
+      slaStatus: complaint.slaStatus,
+      escalated: complaint.escalated,
+      isFake: complaint.isFake,
+      commentsCount: complaint.comments?.length || 0,
+      timeline,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error tracking complaint" });
+  }
+};
+
 module.exports = {
   createComplaint,
   getComplaints,
@@ -1027,5 +1189,7 @@ module.exports = {
   getComplaintById,
   addComment,
   markAsFake,
-  bulkDeleteComplaints
+  bulkDeleteComplaints,
+  trackComplaint,
+  searchComplaints
 };

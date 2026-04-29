@@ -36,10 +36,11 @@ const loginValidation = [
 
 const register = async (req, res) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ message: "Validation failed", errors: errors.array() });
-    }
+    // Destructure + security: prevent privilege escalation via role
+    const { name, email, password, profileImage, department_id } = req.body;
+    const SAFE_ROLES = ['user', 'contractor', 'worker'];
+    const requestedRole = req.body.role || 'user';
+    const role = SAFE_ROLES.includes(requestedRole) ? requestedRole : 'user';
 
         const existingUser = await User.findOne({ email });
         if (existingUser)
@@ -162,7 +163,7 @@ const googleCallback = (req, res) => {
             `http://localhost:5174/google-success?token=${token}&user=${userStr}`
         );
     } catch (err) {
-        console.error("Google callback error:", err);
+        console.error("Google callback error");
         res.redirect(`http://localhost:5174/login?error=${encodeURIComponent(err.message)}`);
     }
 };
@@ -261,7 +262,7 @@ const verifyGoogleToken = async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Google Token Verification Error:', error);
+        console.error('Google Token Verification Error');
         res.status(401).json({
             message: 'Token verification failed',
             error: error.message
@@ -318,8 +319,7 @@ const getAllUsers = async (req, res) => {
 
 const setUserRole = async (req, res) => {
     const { role, department_id } = req.body;
-    console.log("setUserRole called:", req.params.id, "role:", role, "department_id:", department_id);
-
+    
     if (!["user", "admin", "super_admin", "department_admin", "worker", "contractor", "analyzer"].includes(role))
         return res.status(400).json({ message: "Invalid role" });
 
@@ -346,8 +346,7 @@ const setUserRole = async (req, res) => {
       // Convert string to ObjectId if needed
       const deptObjId = new mongoose.Types.ObjectId(department_id);
       updateData.department = deptObjId;
-      console.log("Setting user department to:", deptObjId);
-    } else if (role === 'department_admin' && !department_id) {
+          } else if (role === 'department_admin' && !department_id) {
       // department_id required for department_admin - don't allow without
       return res.status(400).json({ message: "Department is required for department admin" });
     } else if (role !== 'department_admin') {
@@ -547,7 +546,7 @@ const refreshToken = async (req, res) => {
     if (error.name === 'TokenExpiredError' || error.name === 'JsonWebTokenError') {
       return res.status(401).json({ message: 'Invalid or expired refresh token' });
     }
-    console.error('Refresh token error:', error);
+    console.error('Refresh token error');
     res.status(500).json({ message: 'Internal server error' });
   }
 };

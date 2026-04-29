@@ -182,3 +182,32 @@ export const userApproveComplaintRequest = async (id, action) => {
     return { success: false, message: err.message };
   }
 };
+// PUBLIC tracking — no auth needed
+export const trackComplaintById = async (complaintId) => {
+  try {
+    const res = await fetch(`${API}/track/${complaintId}`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Tracking failed");
+    return { success: true, data };
+  } catch (err) {
+    return { success: false, message: err.message };
+  }
+};
+
+// PUBLIC search by name / issue / location — no auth needed
+export const searchComplaintsPublic = async (query) => {
+  try {
+    const res = await fetch(`${API}/search/public?q=${encodeURIComponent(query)}`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Search failed");
+    return { success: true, results: data.results, total: data.total };
+  } catch (err) {
+    return { success: false, message: err.message };
+  }
+};

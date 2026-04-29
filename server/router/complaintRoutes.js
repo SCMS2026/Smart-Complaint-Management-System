@@ -99,4 +99,10 @@ router.delete(
   complaintsController.bulkDeleteComplaints
 );
 
+// PUBLIC TRACKING — no auth needed, only status + timeline (no sensitive data)
+router.get('/track/:complaintId', complaintsController.trackComplaint);
+
+// PUBLIC SEARCH — search by name / issue / location (no auth)
+router.get('/search/public', complaintsController.searchComplaints);
+
 module.exports = router;

@@ -1,63 +1,80 @@
-const express = require('express');
-const session = require('express-session');
-const path = require('path');
-const connectDB = require('./config/DB');
-const passport = require('passport');
-const cors = require('cors');
-const morgan = require('morgan');
+const express    = require('express');
+const session    = require('express-session');
+const path       = require('path');
+const connectDB  = require('./config/DB');
+const passport   = require('passport');
+const cors       = require('cors');
+const morgan     = require('morgan');
 require('./config/passport');
-const dotenv = require("dotenv");
-const jwt = require("jsonwebtoken");
-const { OAuth2Client } = require("google-auth-library");
+const dotenv     = require('dotenv');
+const jwt        = require('jsonwebtoken');
 
-// Security middlewares
-const helmet = require('helmet');
-const rateLimit = require('express-rate-limit');
-const compression = require('compression');
+// Security packages
+const helmet         = require('helmet');
+const rateLimit      = require('express-rate-limit');
+const compression    = require('compression');
+const xssClean       = require('xss-clean');
+const mongoSanitize  = require('express-mongo-sanitize');
+const hpp            = require('hpp');
 
 dotenv.config();
-const app = express();
 
-// Security middleware (order matters)
+// ── Startup: required env check ───────────────────────────────────────────────
+const REQUIRED_ENV = ['JWT_SECRET', 'MONGO_URI', 'SESSION_SECRET'];
+const missingEnv = REQUIRED_ENV.filter(k => !process.env[k]);
+if (missingEnv.length > 0) {
+  console.error('FATAL: Missing required environment variables:', missingEnv.join(', '));
+  process.exit(1);
+}
+if (process.env.JWT_SECRET.length < 32) {
+  console.warn('WARNING: JWT_SECRET too short. Use 32+ random characters.');
+}
+
+const app   = express();
+const isDev = process.env.NODE_ENV === 'development';
+
+// ── 1. Helmet — HTTP security headers ─────────────────────────────────────────
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-      fontSrc: ["'self'", "https://fonts.gstatic.com"],
-      imgSrc: ["'self'", "data:", "https:"],
-      scriptSrc: ["'self'"],
+      styleSrc:   ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc:    ["'self'", "https://fonts.gstatic.com"],
+      imgSrc:     ["'self'", "data:", "https:"],
+      scriptSrc:  ["'self'"],
     },
   },
-  crossOriginEmbedderPolicy: false
+  crossOriginEmbedderPolicy: false,
 }));
+
+// ── 2. Compression ────────────────────────────────────────────────────────────
 app.use(compression());
 
-// Rate limiting - stricter on auth routes
+// ── 3. Rate limiting ──────────────────────────────────────────────────────────
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10, // limit each IP to 10 requests per windowMs
-  message: 'Too many login attempts, please try again after 15 minutes',
+  windowMs: 15 * 60 * 1000,  // 15 minutes
+  max: 15,
+  message: { message: 'Too many attempts. Please try again in 15 minutes.' },
   standardHeaders: true,
   legacyHeaders: false,
+  skipSuccessfulRequests: false,
 });
 
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100, // limit each IP to 100 requests per windowMs
+  max: 200,
+  message: { message: 'Too many requests. Please slow down.' },
   standardHeaders: true,
   legacyHeaders: false,
 });
 
-app.use('/auth/login', authLimiter);
+// Apply rate limiters BEFORE routes
+app.use('/auth/login',    authLimiter);
 app.use('/auth/register', authLimiter);
-app.use('/auth/google', authLimiter);
+app.use('/auth/google',   authLimiter);
 app.use(generalLimiter);
 
-// CORS configuration for credentials
-const isDev = process.env.NODE_ENV === 'development';
-
-// Build allowed origins list
+// ── 4. CORS ───────────────────────────────────────────────────────────────────
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:5174',
@@ -68,11 +85,8 @@ if (process.env.CLIENT_URL) allowedOrigins.push(process.env.CLIENT_URL);
 
 const corsOptions = {
   origin: (origin, callback) => {
-    // Allow requests with no origin (Postman, curl, mobile apps)
-    if (!origin) return callback(null, true);
-    if (isDev || allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
+    if (!origin) return callback(null, true); // Postman / curl
+    if (isDev || allowedOrigins.includes(origin)) return callback(null, true);
     return callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
@@ -81,133 +95,116 @@ const corsOptions = {
   optionsSuccessStatus: 200,
 };
 app.use(cors(corsOptions));
-// Handle preflight for all routes - removed problematic line that caused PathError
+app.options('/{*path}', cors(corsOptions));
 
-app.use(morgan('dev'));
+// ── 5. Request logging (production-safe) ──────────────────────────────────────
+// 'dev' leaks query params and paths in colour — use 'combined' or skip in prod
+if (isDev) {
+  app.use(morgan('dev'));
+} else {
+  // Production: log only method, url, status, response-time — no body/tokens
+  app.use(morgan(':method :url :status :response-time ms'));
+}
 
-// Body parsing with limits
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+// ── 6. Body parsing (small limits to prevent DoS) ─────────────────────────────
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
-const authrouter = require('./router/authRoutes');
-const complaintRouter = require('./router/complaintRoutes');
+// ── 7. XSS protection — sanitise req.body / req.query / req.params ───────────
+app.use(xssClean());
+
+// ── 8. NoSQL injection protection — strip $ and . from input ─────────────────
+app.use(mongoSanitize({
+  replaceWith: '_',   // replace $ with _ instead of deleting (easier to debug)
+  onSanitizeError: (req, res) => {
+    res.status(400).json({ message: 'Invalid characters in request data' });
+  },
+}));
+
+// ── 9. HTTP Parameter Pollution protection ────────────────────────────────────
+app.use(hpp({
+  whitelist: ['status', 'priority', 'category', 'role'], // allow arrays for filters
+}));
+
+// ── 10. Session (use env secret, secure in production) ───────────────────────
+app.use(session({
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure:   !isDev,          // HTTPS only in production
+    httpOnly: true,            // JS cannot read cookie
+    sameSite: isDev ? 'lax' : 'strict',
+    maxAge:   7 * 24 * 60 * 60 * 1000,  // 7 days
+  },
+}));
+
+// ── Passport ──────────────────────────────────────────────────────────────────
+app.use(passport.initialize());
+app.use(passport.session());
+
+// ── Routers ───────────────────────────────────────────────────────────────────
+const authrouter       = require('./router/authRoutes');
+const complaintRouter  = require('./router/complaintRoutes');
 const permissionRouter = require('./router/permissionRoutes');
 const departmentRouter = require('./router/departmentRoutes');
 const workerTaskRouter = require('./router/workerTaskRoutes');
 const notificationRouter = require('./router/notificationRoutes');
+const assetsRouter     = require('./router/assetsRoutes');
+const slaMonitor       = require('./services/slaMonitoring');
 
-const assetsRouter = require('./router/assetsRoutes');
-const slaMonitor = require('./services/slaMonitoring');
-
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-
-// Session Configuration
-app.use(
-  session({
-    secret: "secret",
-    resave: false,
-    saveUninitialized: true
-  })
-);
-
-app.post("/auth/google", async (req, res) => {
-  const { token } = req.body;
-
-  try {
-    const ticket = await client.verifyIdToken({
-      idToken: token,
-      audience: process.env.GOOGLE_CLIENT_ID,
-    });
-
-    const payload = ticket.getPayload();
-    console.log("Google ID token payload", payload);
-
-    const User = require("./models/authModels");
-    const { email, name, picture, sub: googleId } = payload;
-
-    let user = await User.findOne({ email });
-    if (!user) {
-      user = new User({
-        name,
-        email,
-        googleId,
-        profileImage: picture,
-        isVerified: true,
-      });
-      await user.save();
-      console.log("Created new user from google login", email);
-    } else if (!user.googleId) {
-      user.googleId = googleId;
-      user.profileImage = picture;
-      await user.save();
-      console.log("Associated googleId with existing user", email);
-    }
-
-    const appToken = jwt.sign(
-      { id: user._id, email: user.email, role: user.role, department: user.department },
-      process.env.JWT_SECRET,
-      { expiresIn: "7d" }
-    );
-
-    // Refresh token
-    const refreshToken = jwt.sign(
-      { id: user._id, type: 'refresh' },
-      process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET,
-      { expiresIn: "30d" }
-    );
-
-    user.refreshToken = refreshToken;
-    user.refreshTokenExpiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-    await user.save();
-
-    res.json({
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        profileImage: user.profileImage,
-      },
-      token: appToken,
-      refreshToken,
-    });
-  } catch (error) {
-    console.error("Google login error", error.message);
-    res.status(400).json({ message: "Invalid token" });
-  }
-});
-
-app.use(passport.initialize());
-app.use(passport.session());
-
-// mount API routers
-app.use('/auth', authrouter);
-app.use('/complaints', complaintRouter);
-app.use('/permissions', permissionRouter);
-app.use('/assets', assetsRouter);
-app.use('/departments', departmentRouter);
+app.use('/auth',         authrouter);
+app.use('/complaints',   complaintRouter);
+app.use('/permissions',  permissionRouter);
+app.use('/assets',       assetsRouter);
+app.use('/departments',  departmentRouter);
 app.use('/worker-tasks', workerTaskRouter);
-app.use('/notifications', notificationRouter);
+app.use('/notifications',notificationRouter);
 
-if (!isDev) {
-  app.use(express.static(path.join(__dirname, '../client/dist')));
+// ── Debug routes: ONLY in development ────────────────────────────────────────
+if (isDev) {
+  const debugRouter = require('./router/debug');
+  app.use('/debug', debugRouter);
 }
 
-const debugRouter = require('./router/debug');
-app.use('/debug', debugRouter);
-
+// ── Static files (production build) ──────────────────────────────────────────
 if (!isDev) {
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+  app.use(express.static(path.join(__dirname, '../client/dist')));
+  app.get('/{*path}', (req, res) => {
+    res.sendFile(path.join(__dirname, '../client/dist', 'index.html'));
   });
 }
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server is up and running on port ${PORT}`);
-  console.log(`Environment: ${isDev ? 'DEVELOPMENT' : 'PRODUCTION'}`);
-  connectDB();
+// ── 404 handler ───────────────────────────────────────────────────────────────
+app.use((req, res) => {
+  res.status(404).json({ message: 'Route not found' });
+});
 
-  // Start background services
-  slaMonitor.start();
+// ── Global error handler (prevents stack traces leaking to client) ────────────
+app.use((err, req, res, next) => {
+  // CORS errors
+  if (err.message === 'Not allowed by CORS') {
+    return res.status(403).json({ message: 'CORS: origin not allowed' });
+  }
+  // Log full error server-side only
+  console.error(`[${new Date().toISOString()}] ${req.method} ${req.path} ERROR:`, err.message);
+  if (isDev) console.error(err.stack);
+
+  // Never expose stack traces or internal messages to client
+  const statusCode = err.status || err.statusCode || 500;
+  res.status(statusCode).json({
+    message: isDev ? err.message : 'Internal server error',
+  });
+});
+
+// ── DB + Server ───────────────────────────────────────────────────────────────
+const PORT = process.env.PORT || 5000;
+connectDB().then(() => {
+  app.listen(PORT, () => {
+    console.log(`✅ Server running on port ${PORT} [${isDev ? 'development' : 'production'}]`);
+    slaMonitor.start();
+  });
+}).catch(err => {
+  console.error('❌ DB connection failed:', err.message);
+  process.exit(1);
 });

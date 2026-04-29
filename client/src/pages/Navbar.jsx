@@ -122,7 +122,7 @@ const Navbar = () => {
               >
                 <div className="p-4 space-y-3">
 
-                  <a className="block p-3 rounded-xl hover:bg-black/5 dark:hover:bg-white/10 transition">
+                  <a href="/track" className="block p-3 rounded-xl hover:bg-black/5 dark:hover:bg-white/10 transition">
                     <p className="font-semibold" style={{ color: 'var(--text-main)' }}>
                       Complaint Tracking
                     </p>
@@ -474,7 +474,7 @@ const Navbar = () => {
             {/* SERVICES */}
             <div className="space-y-2">
               <div className="font-medium px-3 py-2" style={{ color: 'var(--text-main)' }}>Services</div>
-              <a href="#" className="block px-3 py-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition cursor-pointer" style={{ color: 'var(--text-main)' }} onClick={() => setMobileMenuOpen(false)}>
+              <a href="/track" className="block px-3 py-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition cursor-pointer" style={{ color: 'var(--text-main)' }} onClick={() => setMobileMenuOpen(false)}>
                 Complaint Tracking
               </a>
               <a href="#" className="block px-3 py-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition cursor-pointer" style={{ color: 'var(--text-main)' }} onClick={() => setMobileMenuOpen(false)}>
