@@ -1,18 +1,18 @@
-const express    = require('express');
-const session    = require('express-session');
-const path       = require('path');
-const connectDB  = require('./config/DB');
-const passport   = require('passport');
-const cors       = require('cors');
-const morgan     = require('morgan');
+const express = require('express');
+const session = require('express-session');
+const path = require('path');
+const connectDB = require('./config/DB');
+const passport = require('passport');
+const cors = require('cors');
+const morgan = require('morgan');
 require('./config/passport');
-const dotenv     = require('dotenv');
+const dotenv = require('dotenv');
 
 // Security
-const helmet      = require('helmet');
-const rateLimit   = require('express-rate-limit');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 const compression = require('compression');
-const hpp         = require('hpp');
+const hpp = require('hpp');
 
 dotenv.config();
 
@@ -24,12 +24,21 @@ if (missingEnv.length) {
   process.exit(1);
 }
 
-const app   = express();
+const app = express();
 const isDev = process.env.NODE_ENV === 'development';
+
+// ── CORS (must be first, before any route handling) ─────────────
+// In development, allow any origin; in production, restrict to CLIENT_URL
+app.use(cors({
+  origin: isDev ? true : (process.env.CLIENT_URL || 'http://localhost:3000'),
+  credentials: true,
+  optionsSuccessStatus: 200, // For legacy browser support
+}));
 
 // ── HELMET ────────────────────────────────
 app.use(helmet({
-  crossOriginEmbedderPolicy: false
+  crossOriginEmbedderPolicy: false,
+  crossOriginOpenerPolicy: false, // Allow cross-origin popups (needed for OAuth)
 }));
 
 // ── COMPRESSION ───────────────────────────
@@ -37,26 +46,22 @@ app.use(compression());
 
 // ── RATE LIMIT ────────────────────────────
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
+  windowMs: 60 * 60 * 1000,
   max: 15,
-  message: { message: 'Too many login attempts. Try again later.' }
+  message: { message: 'Too many login attempts. Try again later.' },
+  skip: (req) => req.method === 'OPTIONS',
 });
 
 const generalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
+  windowMs: 60 * 60 * 1000,
   max: 200,
-  message: { message: 'Too many requests. Slow down.' }
+  message: { message: 'Too many requests. Slow down.' },
+  skip: (req) => req.method === 'OPTIONS', // Don't rate limit preflight
 });
 
 app.use('/auth/login', authLimiter);
 app.use('/auth/register', authLimiter);
 app.use(generalLimiter);
-
-// ── CORS (single clean setup) ─────────────
-app.use(cors({
-  origin: true,
-  credentials: true
-}));
 
 // ── LOGGER ────────────────────────────────
 app.use(morgan(isDev ? 'dev' : 'combined'));
@@ -135,7 +140,7 @@ app.use((req, res) => {
 // ── ERROR HANDLER ─────────────────────────
 app.use((err, req, res, next) => {
   console.error(`[${new Date().toISOString()}] ${req.method} ${req.path}`, err.message);
-  
+
   res.status(err.status || 500).json({
     message: isDev ? err.message : 'Internal server error'
   });

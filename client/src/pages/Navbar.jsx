@@ -122,25 +122,34 @@ const Navbar = () => {
               >
                 <div className="p-4 space-y-3">
 
-                  <a href="/track" className="block p-3 rounded-xl hover:bg-black/5 dark:hover:bg-white/10 transition">
-                    <p className="font-semibold" style={{ color: 'var(--text-main)' }}>
-                      Complaint Tracking
-                    </p>
-                    <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                      Track complaints in real-time
-                    </span>
-                  </a>
+                   <a href="/track" className="block p-3 rounded-xl hover:bg-black/5 dark:hover:bg-white/10 transition">
+                     <p className="font-semibold" style={{ color: 'var(--text-main)' }}>
+                       Complaint Tracking
+                     </p>
+                     <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                       Track complaints in real-time
+                     </span>
+                   </a>
 
-                  <a href="/analytics" className="block p-3 rounded-xl hover:bg-black/5 dark:hover:bg-white/10 transition">
-                    <p className="font-semibold" style={{ color: 'var(--text-main)' }}>
-                      Analytics
-                    </p>
-                    <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                      Smart insights & reports
-                    </span>
-                  </a>
+                   <a href="/analytics" className="block p-3 rounded-xl hover:bg-black/5 dark:hover:bg-white/10 transition">
+                     <p className="font-semibold" style={{ color: 'var(--text-main)' }}>
+                       Analytics
+                     </p>
+                     <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                       Smart insights & reports
+                     </span>
+                   </a>
 
-                </div>
+                   <a href="/contact" className="block p-3 rounded-xl hover:bg-black/5 dark:hover:bg-white/10 transition">
+                     <p className="font-semibold" style={{ color: 'var(--text-main)' }}>
+                       Contact Us
+                     </p>
+                     <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                       Get in touch with our team
+                     </span>
+                   </a>
+
+                 </div>
               </div>
             </div>
 
@@ -161,10 +170,10 @@ const Navbar = () => {
             )}
 
             <a
-              href="#"
+              href="/complaint"
               className="px-4 py-2 rounded-lg hover:bg-black/5 transition cursor-pointer"
             >
-              Contact
+              Complaints
             </a>
 
             {user && user.role === 'admin' && (
@@ -472,15 +481,18 @@ const Navbar = () => {
         <div className="md:hidden border-t" style={{ backgroundColor: 'var(--nav-bg)', borderColor: 'var(--border-color)' }}>
           <div className="px-6 py-4 space-y-2">
             {/* SERVICES */}
-            <div className="space-y-2">
-              <div className="font-medium px-3 py-2" style={{ color: 'var(--text-main)' }}>Services</div>
-              <a href="/track" className="block px-3 py-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition cursor-pointer" style={{ color: 'var(--text-main)' }} onClick={() => setMobileMenuOpen(false)}>
-                Complaint Tracking
-              </a>
-              <a href="/analytics" className="block px-3 py-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition cursor-pointer" style={{ color: 'var(--text-main)' }} onClick={() => setMobileMenuOpen(false)}>
-                Analytics
-              </a>
-            </div>
+             <div className="space-y-2">
+               <div className="font-medium px-3 py-2" style={{ color: 'var(--text-main)' }}>Services</div>
+               <a href="/track" className="block px-3 py-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition cursor-pointer" style={{ color: 'var(--text-main)' }} onClick={() => setMobileMenuOpen(false)}>
+                 Complaint Tracking
+               </a>
+               <a href="/analytics" className="block px-3 py-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition cursor-pointer" style={{ color: 'var(--text-main)' }} onClick={() => setMobileMenuOpen(false)}>
+                 Analytics
+               </a>
+               <a href="/contact" className="block px-3 py-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition cursor-pointer" style={{ color: 'var(--text-main)' }} onClick={() => setMobileMenuOpen(false)}>
+                 Contact Us
+               </a>
+             </div>
 
             <div className="border-t" style={{ borderColor: 'var(--border-color)' }}></div>
 
@@ -488,17 +500,17 @@ const Navbar = () => {
               Resources
             </a>
 
-            {user && (
-              <a href="/company" className="block px-3 py-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition cursor-pointer" style={{ color: 'var(--text-main)' }} onClick={() => setMobileMenuOpen(false)}>
-                Company
-              </a>
-            )}
+             {user && (
+               <a href="/company" className="block px-3 py-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition cursor-pointer" style={{ color: 'var(--text-main)' }} onClick={() => setMobileMenuOpen(false)}>
+                 Company
+               </a>
+             )}
 
-            <a href="#" className="block px-3 py-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition cursor-pointer" style={{ color: 'var(--text-main)' }} onClick={() => setMobileMenuOpen(false)}>
-              Contact
-            </a>
+             <a href="/complaint" className="block px-3 py-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition cursor-pointer" style={{ color: 'var(--text-main)' }} onClick={() => setMobileMenuOpen(false)}>
+               Complaints
+             </a>
 
-            {user && user.role === 'admin' && (
+             {user && user.role === 'admin' && (
               <a href="/admin" className="block px-3 py-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition cursor-pointer" style={{ color: 'var(--text-main)' }} onClick={() => setMobileMenuOpen(false)}>
                 Admin
               </a>

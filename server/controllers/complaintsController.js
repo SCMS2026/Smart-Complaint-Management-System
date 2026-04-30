@@ -402,22 +402,18 @@ const getComplaints = async (req, res) => {
       { path: "department_id", select: "name" }
     ];
 
-    // Role-based filtering
-    if (req.user.role === "user") {
-      filter.userId = req.user.id;
-    } else if (req.user.role === "department_admin") {
-      const user = await User.findById(req.user.id).select('department');
-      if (user?.department) {
-        filter.department_id = new mongoose.Types.ObjectId(user.department);
-      }
-    } else if (req.user.role === "worker") {
-      const workerUser = await User.findById(req.user.id).select('department');
-      const workerDeptId = workerUser?.department || req.user.department;
-      filter.$or = [
-        { department_id: workerDeptId },
-        { assignedTo: req.user.id }
-      ];
-    }
+     // Role-based filtering
+     if (req.user.role === "user") {
+       filter.userId = req.user.id;
+     } else if (req.user.role === "department_admin") {
+       const user = await User.findById(req.user.id).select('department');
+       if (user?.department) {
+         filter.department_id = new mongoose.Types.ObjectId(user.department);
+       }
+     } else if (req.user.role === "worker") {
+       // Workers can ONLY see complaints assigned to them (not entire department)
+       filter.assignedTo = req.user.id;
+     }
 
      // Text search (issue, description, location)
     if (search) {

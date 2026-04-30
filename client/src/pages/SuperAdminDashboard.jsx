@@ -70,6 +70,7 @@ const STATUS_CONFIG = {
   rejected: { bg: "bg-red-50", text: "text-red-600", dot: "bg-red-400", border: "border-red-200" },
   user_approval_pending: { bg: "bg-orange-50", text: "text-orange-700", dot: "bg-orange-400", border: "border-orange-200" },
   approved_by_user: { bg: "bg-teal-50", text: "text-teal-700", dot: "bg-teal-500", border: "border-teal-200" },
+  rejected_by_user: { bg: "bg-rose-50", text: "text-rose-700", dot: "bg-rose-400", border: "border-rose-200" },
 };
 
 const StatusBadge = ({ status }) => {
@@ -144,16 +145,22 @@ const SuperAdminDashboard = () => {
     loadAll();
   }, [nav]);
 
-  const loadAll = async () => {
-    setLoading(true);
-    const [d, u, c, w, a] = await Promise.all([fetchDepartments(), fetchUsers(), fetchComplaints(), fetchWorkerTasks(), fetchAnalytics()]);
-    if (d.success) setDepartments(d.departments || []);
-    if (u.success) setUsers(u.users || []);
-    if (c.success) setComplaints(c.complaints || []);
-    if (w.success) setWorkerTasks(w.workerTasks || []);
-    if (a.success) setAnalytics(a.analytics || null);
-    setLoading(false);
-  };
+   const loadAll = async () => {
+     setLoading(true);
+     const [d, u, c, w, a] = await Promise.all([
+       fetchDepartments(),
+       fetchUsers(),
+       fetchComplaints({ limit: 1000 }), // Fetch up to 1000 complaints for super admin
+       fetchWorkerTasks(),
+       fetchAnalytics()
+     ]);
+     if (d.success) setDepartments(d.departments || []);
+     if (u.success) setUsers(u.users || []);
+     if (c.success) setComplaints(c.complaints || []);
+     if (w.success) setWorkerTasks(w.workerTasks || []);
+     if (a.success) setAnalytics(a.analytics || null);
+     setLoading(false);
+   };
 
   const showSuccess = (msg) => { setSuccess(msg); setTimeout(() => setSuccess(""), 3000); };
   const showError = (msg) => { setError(msg); setTimeout(() => setError(""), 5000); };
@@ -661,17 +668,17 @@ const SuperAdminDashboard = () => {
         {activeTab === "complaints" && (
           <div>
             <div className="flex items-center justify-between mb-6">
-              <div>
-                <h1 className="text-2xl font-bold text-slate-900">All Complaints</h1>
-                <p className="text-sm text-slate-400 mt-0.5">{complaints.length} total complaints system-wide</p>
-              </div>
-              <div className="flex gap-2">
-                {["pending", "verified", "in_progress", "completed"].map(s => (
-                  <span key={s} className="text-xs px-2 py-1 rounded-full bg-slate-100 text-slate-500 font-medium">
+               <div>
+                 <h1 className="text-2xl font-bold text-slate-900">All Complaints</h1>
+                 <p className="text-sm text-slate-400 mt-0.5">{complaints.length} total complaints system-wide</p>
+               </div>
+               <div className="flex gap-2 flex-wrap">
+                 {["pending", "verified", "assigned", "in_progress", "completed", "user_approval_pending", "approved_by_user", "rejected", "rejected_by_user"].map(s => (
+                   <span key={s} className="text-xs px-2 py-1 rounded-full bg-slate-100 text-slate-500 font-medium">
                     {s.replace(/_/g, " ")}: {complaints.filter(c => c.status === s).length}
                   </span>
                 ))}
-              </div>
+               </div>
             </div>
 
             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
