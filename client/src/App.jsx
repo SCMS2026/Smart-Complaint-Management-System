@@ -19,6 +19,8 @@ import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import PropertiesList from "./pages/PropertiesList";
 import PermissionRequests from "./pages/PermissionRequests";
 import ComplaintTracking from "./pages/ComplaintTracking";
+import Analytics from "./pages/Analytics";
+import Resources from "./pages/Resources";
 
 function AppContent() {
   const [user, setUser] = useState(null);
@@ -78,6 +80,8 @@ function AppContent() {
           <Route path="/contractor/properties" element={<PropertiesList />} />
           <Route path="/contractor/permissions" element={<PermissionRequests />} />
           <Route path="/track" element={<ComplaintTracking />} />
+          <Route path="/analytics" element={<Analytics />} />
+          <Route path="/resources" element={<Resources />} />
         </Routes>
       </main>
     </div>

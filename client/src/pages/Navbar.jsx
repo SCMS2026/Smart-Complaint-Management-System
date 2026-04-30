@@ -131,7 +131,7 @@ const Navbar = () => {
                     </span>
                   </a>
 
-                  <a className="block p-3 rounded-xl hover:bg-black/5 dark:hover:bg-white/10 transition">
+                  <a href="/analytics" className="block p-3 rounded-xl hover:bg-black/5 dark:hover:bg-white/10 transition">
                     <p className="font-semibold" style={{ color: 'var(--text-main)' }}>
                       Analytics
                     </p>
@@ -145,7 +145,7 @@ const Navbar = () => {
             </div>
 
             <a
-              href="#"
+              href="/resources"
               className="px-4 py-2 rounded-lg hover:bg-black/5 transition cursor-pointer"
             >
               Resources
@@ -477,14 +477,14 @@ const Navbar = () => {
               <a href="/track" className="block px-3 py-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition cursor-pointer" style={{ color: 'var(--text-main)' }} onClick={() => setMobileMenuOpen(false)}>
                 Complaint Tracking
               </a>
-              <a href="#" className="block px-3 py-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition cursor-pointer" style={{ color: 'var(--text-main)' }} onClick={() => setMobileMenuOpen(false)}>
+              <a href="/analytics" className="block px-3 py-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition cursor-pointer" style={{ color: 'var(--text-main)' }} onClick={() => setMobileMenuOpen(false)}>
                 Analytics
               </a>
             </div>
 
             <div className="border-t" style={{ borderColor: 'var(--border-color)' }}></div>
 
-            <a href="#" className="block px-3 py-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition cursor-pointer" style={{ color: 'var(--text-main)' }} onClick={() => setMobileMenuOpen(false)}>
+            <a href="/resources" className="block px-3 py-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition cursor-pointer" style={{ color: 'var(--text-main)' }} onClick={() => setMobileMenuOpen(false)}>
               Resources
             </a>
 

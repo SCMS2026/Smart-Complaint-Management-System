@@ -90,52 +90,29 @@ const register = async (req, res) => {
 };
 
 const login = async (req, res) => {
-    try {
-        const { email, password } = req.body;
+  try {
+    const { email, password } = req.body
 
-        if (!email || !password)
-            return res.status(400).json({ message: "Email & Password required" });
-
-        const user = await User.findOne({ email });
-        if (!user)
-            return res.status(401).json({ message: "Invalid credentials" });
-
-        if (!user.password) {
-            return res.status(401).json({ message: "This account was created using Google. Please login with Google." });
-        }
-
-  const match = await bcrypt.compare(password, user.password);
-  if (!match)
-    return res.status(401).json({ message: "Invalid credentials" });
-
-  const token = jwt.sign(
-    { id: user._id, role: user.role, department: user.department },
-    process.env.JWT_SECRET,
-    { expiresIn: "7d" }
-  );
-
-  // Generate and store refresh token
-  const refreshToken = jwt.sign(
-    { id: user._id, type: 'refresh' },
-    process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET,
-    { expiresIn: "30d" }
-  );
-
-  user.refreshToken = refreshToken;
-  user.refreshTokenExpiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-  await user.save();
-
-  res.json({
-    message: "Login successful",
-    token,
-    refreshToken,
-    user
-  });
-
-    } catch (err) {
-        res.status(500).json({ message: "Login error", error: err.message });
+    if (!email || !password) {
+      return res.status(400).json({ message: "Email and password required" })
     }
-};
+
+    const user = await User.findOne({ email })
+    if (!user) {
+      return res.status(401).json({ message: "Invalid credentials" })
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password)
+    if (!isMatch) {
+      return res.status(401).json({ message: "Invalid credentials" })
+    }
+
+    res.json({ message: "Login success" })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ message: "Server error" })
+  }
+}
 
 const googleCallback = (req, res) => {
     try {

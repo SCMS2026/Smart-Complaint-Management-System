@@ -516,7 +516,7 @@ const getComplaints = async (req, res) => {
   }
 };
 
-// Get Complaint Analytics - FIXED
+// Get Complaint Analytics - FULL with SLA, Priority, Resolution, Escalation
 const getComplaintAnalytics = async (req, res) => {
   try {
     const user = req.user;
@@ -526,41 +526,57 @@ const getComplaintAnalytics = async (req, res) => {
       matchFilter.department_id = new mongoose.Types.ObjectId(user.department);
     }
 
+    const now = new Date();
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
+    const twelveWeeksAgo = new Date(Date.now() - 84 * 24 * 60 * 60 * 1000);
+
     const [
       totalComplaints,
       statusBreakdown,
       categoryBreakdown,
       locationBreakdown,
       dailyTrend,
-      departmentBreakdown
+      departmentBreakdown,
+      priorityBreakdown,
+      slaBreakdown,
+      weeklyTrend,
+      talukaBreakdown,
+      resolutionTimeStats,
+      escalationStats,
+      priorityVsResolution,
+      recentCount,
+      resolvedCount,
     ] = await Promise.all([
-      // Total complaints
+
+      // 1. Total complaints
       Complaint.countDocuments(matchFilter),
 
-      // Status breakdown
+      // 2. Status breakdown
       Complaint.aggregate([
         { $match: matchFilter },
         { $group: { _id: "$status", count: { $sum: 1 } } },
         { $sort: { count: -1 } }
       ]),
 
-      // Category breakdown
+      // 3. Category breakdown
       Complaint.aggregate([
         { $match: matchFilter },
         { $group: { _id: "$category", count: { $sum: 1 } } },
         { $sort: { count: -1 } }
       ]),
 
-      // Location breakdown
+      // 4. Location breakdown
       Complaint.aggregate([
         { $match: matchFilter },
         { $group: { _id: { city: "$city", district: "$District" }, count: { $sum: 1 } } },
-        { $sort: { count: -1 } }
+        { $sort: { count: -1 } },
+        { $limit: 30 }
       ]),
 
-      // Daily trend (last 30 days)
+      // 5. Daily trend (last 90 days)
       Complaint.aggregate([
-        { $match: { ...matchFilter, createdAt: { $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) } } },
+        { $match: { ...matchFilter, createdAt: { $gte: ninetyDaysAgo } } },
         {
           $group: {
             _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
@@ -570,33 +586,190 @@ const getComplaintAnalytics = async (req, res) => {
         { $sort: { _id: 1 } }
       ]),
 
-      // Department breakdown (for super admins only)
-      user.role === 'super_admin' || user.role === 'admin' ?
-        Complaint.aggregate([
-          {
-            $lookup: {
-              from: 'departments',
-              localField: 'department_id',
-              foreignField: '_id',
-              as: 'department'
+      // 6. Department breakdown
+      (user.role === 'super_admin' || user.role === 'admin' || user.role === 'analyzer')
+        ? Complaint.aggregate([
+            { $match: matchFilter },
+            {
+              $lookup: {
+                from: 'departments',
+                localField: 'department_id',
+                foreignField: '_id',
+                as: 'department'
+              }
+            },
+            { $unwind: { path: '$department', preserveNullAndEmptyArrays: true } },
+            {
+              $group: {
+                _id: {
+                  departmentId: '$department_id',
+                  departmentName: { $ifNull: ['$department.name', 'Unassigned'] }
+                },
+                total: { $sum: 1 },
+                pending: { $sum: { $cond: [{ $eq: ['$status', 'pending'] }, 1, 0] } },
+                inProgress: { $sum: { $cond: [{ $in: ['$status', ['assigned', 'in_progress']] }, 1, 0] } },
+                completed: { $sum: { $cond: [{ $eq: ['$status', 'completed'] }, 1, 0] } },
+                breached: { $sum: { $cond: [{ $eq: ['$slaStatus', 'breached'] }, 1, 0] } }
+              }
+            },
+            { $sort: { total: -1 } }
+          ])
+        : Promise.resolve([]),
+
+      // 7. Priority breakdown
+      Complaint.aggregate([
+        { $match: matchFilter },
+        { $group: { _id: "$priority", count: { $sum: 1 } } },
+        { $sort: { count: -1 } }
+      ]),
+
+      // 8. SLA breakdown — compute live from slaDeadline if slaStatus missing
+      Complaint.aggregate([
+        { $match: matchFilter },
+        {
+          $addFields: {
+            computedSlaStatus: {
+              $cond: {
+                if: { $and: [{ $ifNull: ["$slaStatus", false] }, { $ne: ["$slaStatus", null] }] },
+                then: "$slaStatus",
+                else: {
+                  $cond: {
+                    if: { $gt: [now, "$slaDeadline"] },
+                    then: "breached",
+                    else: {
+                      $cond: {
+                        if: {
+                          $gt: [
+                            now,
+                            { $subtract: ["$slaDeadline", 24 * 60 * 60 * 1000] }
+                          ]
+                        },
+                        then: "at_risk",
+                        else: "on_track"
+                      }
+                    }
+                  }
+                }
+              }
             }
-          },
-          { $unwind: { path: '$department', preserveNullAndEmptyArrays: true } },
-          {
-            $group: {
-              _id: {
-                departmentId: '$department_id',
-                departmentName: { $ifNull: ['$department.name', 'Unassigned'] }
-              },
-              total: { $sum: 1 },
-              pending: { $sum: { $cond: [{ $eq: ['$status', 'pending'] }, 1, 0] } },
-              inProgress: { $sum: { $cond: [{ $in: ['$status', ['assigned', 'in_progress']] }, 1, 0] } },
-              completed: { $sum: { $cond: [{ $eq: ['$status', 'completed'] }, 1, 0] } }
+          }
+        },
+        { $group: { _id: "$computedSlaStatus", count: { $sum: 1 } } },
+        { $sort: { _id: 1 } }
+      ]),
+
+      // 9. Weekly trend (last 12 weeks)
+      Complaint.aggregate([
+        { $match: { ...matchFilter, createdAt: { $gte: twelveWeeksAgo } } },
+        {
+          $group: {
+            _id: {
+              year: { $year: "$createdAt" },
+              week: { $isoWeek: "$createdAt" }
+            },
+            count: { $sum: 1 }
+          }
+        },
+        { $sort: { "_id.year": 1, "_id.week": 1 } }
+      ]),
+
+      // 10. Taluka breakdown
+      Complaint.aggregate([
+        { $match: matchFilter },
+        { $group: { _id: { taluka: "$Taluka", district: "$District" }, count: { $sum: 1 } } },
+        { $sort: { count: -1 } },
+        { $limit: 20 }
+      ]),
+
+      // 11. Resolution time by department (with name lookup)
+      Complaint.aggregate([
+        {
+          $match: {
+            ...matchFilter,
+            status: { $in: ['completed', 'approved_by_user'] },
+            updatedAt: { $exists: true }
+          }
+        },
+        {
+          $lookup: {
+            from: 'departments',
+            localField: 'department_id',
+            foreignField: '_id',
+            as: 'department'
+          }
+        },
+        { $unwind: { path: '$department', preserveNullAndEmptyArrays: true } },
+        {
+          $group: {
+            _id: { $ifNull: ['$department.name', 'Unassigned'] },
+            avgResolutionHours: {
+              $avg: {
+                $divide: [
+                  { $subtract: ["$updatedAt", "$createdAt"] },
+                  1000 * 60 * 60
+                ]
+              }
+            },
+            totalResolved: { $sum: 1 }
+          }
+        },
+        { $sort: { avgResolutionHours: 1 } },
+        { $limit: 15 }
+      ]),
+
+      // 12. Escalation stats
+      Complaint.aggregate([
+        { $match: matchFilter },
+        {
+          $group: {
+            _id: null,
+            totalEscalated: { $sum: { $cond: ["$escalated", 1, 0] } },
+            avgEscalationCount: { $avg: "$escalationCount" },
+            maxEscalations: { $max: "$escalationCount" }
+          }
+        }
+      ]),
+
+      // 13. Priority vs Resolution matrix
+      Complaint.aggregate([
+        { $match: matchFilter },
+        {
+          $group: {
+            _id: "$priority",
+            total: { $sum: 1 },
+            resolved: {
+              $sum: {
+                $cond: [{ $in: ['$status', ['completed', 'approved_by_user']] }, 1, 0]
+              }
+            },
+            breached: {
+              $sum: { $cond: [{ $eq: ['$slaStatus', 'breached'] }, 1, 0] }
             }
-          },
-          { $sort: { total: -1 } }
-        ]) : Promise.resolve([])
+          }
+        },
+        { $sort: { total: -1 } }
+      ]),
+
+      // 14. Recent count (last 7 days)
+      Complaint.countDocuments({ ...matchFilter, createdAt: { $gte: sevenDaysAgo } }),
+
+      // 15. Resolved count
+      Complaint.countDocuments({ ...matchFilter, status: { $in: ['completed', 'approved_by_user'] } }),
     ]);
+
+    // Compute KPIs
+    const totalResolved = resolvedCount;
+    const resolutionRate = totalComplaints > 0 ? Math.round((totalResolved / totalComplaints) * 100) : 0;
+
+    const slaBreachedItem = slaBreakdown.find(x => x._id === 'breached');
+    const slaBreachedCount = slaBreachedItem?.count || 0;
+    const slaOnTrackItem = slaBreakdown.find(x => x._id === 'on_track');
+    const slaOnTrack = slaOnTrackItem?.count || 0;
+    const slaCompliance = totalComplaints > 0
+      ? Math.round(((totalComplaints - slaBreachedCount) / totalComplaints) * 100)
+      : 100;
+
+    const escalation = escalationStats[0] || { totalEscalated: 0, avgEscalationCount: 0, maxEscalations: 0 };
 
     res.status(200).json({
       totalComplaints,
@@ -604,7 +777,31 @@ const getComplaintAnalytics = async (req, res) => {
       categoryBreakdown,
       locationBreakdown,
       dailyTrend,
-      departmentBreakdown
+      departmentBreakdown,
+      priorityBreakdown,
+      slaBreakdown,
+      weeklyTrend,
+      talukaBreakdown,
+      resolutionTimeStats,
+      escalationStats: escalation,
+      priorityVsResolution,
+      analytics: {
+        kpis: {
+          resolutionRate,
+          resolvedCount: totalResolved,
+          slaCompliance,
+          slaBreachedCount,
+          recentCount,
+        }
+      },
+      // Also expose kpis at top level for backward compatibility
+      kpis: {
+        resolutionRate,
+        resolvedCount: totalResolved,
+        slaCompliance,
+        slaBreachedCount,
+        recentCount,
+      }
     });
   } catch (error) {
     console.error("Analytics error:", error);
