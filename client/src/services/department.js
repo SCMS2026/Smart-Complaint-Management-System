@@ -1,6 +1,5 @@
 import API_URL from './apiConfig.js';
 import { getToken } from "./auth";
-import axios from "axios";
 const API = `${API_URL}/departments`;
 const getAuthHeader = () => {
   const token = getToken();

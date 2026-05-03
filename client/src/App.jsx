@@ -1,4 +1,4 @@
-import React,{ useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Navbar from "./pages/Navbar";
 import { Routes, Route } from "react-router-dom";
 import { ThemeProvider, useTheme } from "./context/ThemeContext";
@@ -25,7 +25,6 @@ import Resources from "./pages/Resources";
 function AppContent() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const { theme } = useTheme();
 
   // Check if user is logged in on mount
   useEffect(() => {
@@ -33,7 +32,7 @@ function AppContent() {
       // 1. Load from localStorage instantly (no flicker)
       const cached = localStorage.getItem("user");
       if (cached) {
-        try { setUser(JSON.parse(cached)); } catch (e) {}
+        try { setUser(JSON.parse(cached)); } catch {}
       }
       // 2. Verify token with server
       const token = localStorage.getItem("user_token");
@@ -63,7 +62,7 @@ function AppContent() {
   return (
     <div className="min-h-screen">
       <Navbar user={user} />
-      <main className="container">
+      <main className="">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />

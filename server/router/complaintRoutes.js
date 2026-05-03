@@ -49,7 +49,7 @@ router.get('/', authMiddleware, complaintsController.getComplaints);
 router.get(
   '/analytics',
   authMiddleware,
-  allowRoles('admin','super_admin','analyzer'),
+  allowRoles('admin','super_admin','analyzer','department_admin'),
   complaintsController.getComplaintAnalytics
 );
 
@@ -83,20 +83,20 @@ router.patch(
   complaintsController.userApproveComplaint
 );
 
+// BULK DELETE — must be BEFORE /:complaintId to avoid being caught as a param
+router.delete(
+  '/bulk',
+  authMiddleware,
+  allowRoles('admin'),
+  complaintsController.bulkDeleteComplaints
+);
+
 // DELETE
 router.delete(
   '/:complaintId',
   authMiddleware,
   allowRoles('admin'),
   complaintsController.deleteComplaint
-);
-
-// BULK DELETE
-router.delete(
-  '/bulk',
-  authMiddleware,
-  allowRoles('admin'),
-  complaintsController.bulkDeleteComplaints
 );
 
 // PUBLIC TRACKING — no auth needed, only status + timeline (no sensitive data)

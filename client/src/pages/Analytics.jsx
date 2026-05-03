@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { fetchComplaintAnalytics } from "../services/complaints";
+import PropTypes from "prop-types";
 
 // ─── Color maps ────────────────────────────────────────────────────────────
 const PRIORITY_COLOR = {

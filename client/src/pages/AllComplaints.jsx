@@ -1,5 +1,4 @@
-import { useEffect, useState, useRef } from "react";
-import React from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import {
   fetchComplaints,
   createComplaintRequest,
@@ -10,6 +9,7 @@ import { getCurrentUser, getToken } from "../services/auth";
 import API_URL from "../services/apiConfig";
 import { useTheme } from "../context/ThemeContext";
 import { useNavigate } from "react-router-dom";
+import PropTypes from "prop-types";
 
 const lightTheme = {
   bg: "#F1F5F9",
@@ -161,7 +161,7 @@ const PriorityBadge = ({ priority }) => {
 };
 
 
-const ComplaintCard = ({ c, theme, onApprove, onReject, approvalLoading, isSelected, onSelect }) => {
+const ComplaintCard = ({ c, theme, onApprove, onReject, approvalLoading, departmentName }) => {
   const t = theme === "dark" ? darkTheme : lightTheme;
   const isApprovalPending = c.status === 'user_approval_pending';
   return (
@@ -229,10 +229,10 @@ const ComplaintCard = ({ c, theme, onApprove, onReject, approvalLoading, isSelec
         >
           <div>
             <div style={{ fontWeight: 700, fontSize: 15, color: t.text }}>
-              {c.category || "General"}
+              {departmentName || "Unknown Department"}
             </div>
             <div style={{ fontSize: 12, color: t.textSecondary, marginTop: 2 }}>
-              {c.issue || "—"}
+              {c.category || "General Issue"}
             </div>
           </div>
           <StatusBadge status={c.status} theme={theme} />
@@ -333,6 +333,14 @@ const ComplaintCard = ({ c, theme, onApprove, onReject, approvalLoading, isSelec
   );
 };
 
+ComplaintCard.propTypes = {
+  c: PropTypes.object.isRequired,
+  theme: PropTypes.string.isRequired,
+  onApprove: PropTypes.func.isRequired,
+  onReject: PropTypes.func.isRequired,
+  approvalLoading: PropTypes.bool.isRequired,
+  departmentName: PropTypes.string,
+};
 
 const inp = (err, theme) => ({
   border: `1.5px solid ${err ? "#EF4444" : theme === "dark" ? "#475569" : "#E2E8F0"}`,
@@ -412,21 +420,21 @@ const AllComplaints = () => {
   const t = theme === "dark" ? darkTheme : lightTheme;
 
 
-   const reloadComplaints = async () => {
-     const filters = {};
-     if (search) filters.search = search;
-     if (filterStatus && filterStatus !== 'all') filters.status = filterStatus;
-     filters.page = page;
-     filters.limit = limit;
+  const reloadComplaints = useCallback(async () => {
+    const filters = {};
+    if (search) filters.search = search;
+    if (filterStatus && filterStatus !== 'all') filters.status = filterStatus;
+    filters.page = page;
+    filters.limit = limit;
 
-     const res = await fetchComplaints(filters);
-     if (res.success) {
-       setComplaints(res.complaints || []);
-       if (res.pagination) {
-         setTotalPages(res.pagination.pages);
-       }
-     }
-   };
+    const res = await fetchComplaints(filters);
+    if (res.success) {
+      setComplaints(res.complaints || []);
+      if (res.pagination) {
+        setTotalPages(res.pagination.pages);
+      }
+    }
+  }, [search, filterStatus, page, limit]);
 
   // Initial load
   useEffect(() => {
@@ -457,7 +465,7 @@ const AllComplaints = () => {
       reloadComplaints();
       setLoading(false);
     })();
-  }, [navigate]);
+  }, [navigate, reloadComplaints]);
 
   // Reload when filters change
   useEffect(() => {
@@ -465,14 +473,14 @@ const AllComplaints = () => {
       setPage(1);
       reloadComplaints();
     }
-   }, [search, filterStatus]);
+   }, [search, filterStatus, reloadComplaints]);
 
   // Reload when page changes
   useEffect(() => {
     if (!loading) {
       reloadComplaints();
     }
-  }, [page]);
+  }, [page, loading, reloadComplaints]);
 
   const handleApprove = async (complaintId) => {
     setApprovalLoading(true);
@@ -534,7 +542,7 @@ const AllComplaints = () => {
       } else {
         setSubErr(data.message || 'Bulk delete failed');
       }
-    } catch (err) {
+    } catch {
       setSubErr('Failed to bulk delete');
     }
     setApprovalLoading(false);
@@ -1257,14 +1265,7 @@ const AllComplaints = () => {
                   onApprove={handleApprove}
                   onReject={openRejectModal}
                   approvalLoading={approvalLoading}
-                  isSelected={selectedComplaints.includes(c._id)}
-                  onSelect={(id) => {
-                    if (selectedComplaints.includes(id)) {
-                      setSelectedComplaints(selectedComplaints.filter(cid => cid !== id));
-                    } else {
-                      setSelectedComplaints([...selectedComplaints, id]);
-                    }
-                  }}
+                  departmentName={assets.find(a => a._id === c.assetId)?.issue || 'Unknown'}
                 />
               ))}
             </div>

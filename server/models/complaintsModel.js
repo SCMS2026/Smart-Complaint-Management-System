@@ -99,5 +99,3 @@ complaintSchema.index({ "slaDeadline": 1 });
 complaintSchema.index({ "createdAt": 1, "status": 1 });
 
 module.exports = mongoose.model("Complaint", complaintSchema);
-
-module.exports = mongoose.model("Complaint", complaintSchema);

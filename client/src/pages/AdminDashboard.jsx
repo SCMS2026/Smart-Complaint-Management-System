@@ -2,10 +2,10 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { fetchComplaints, updateComplaintStatusRequest } from "../services/complaints";
 import { fetchPermissions } from "../services/permissions";
-import { importAssets } from "../services/assets";
 import { fetchUsers, getTokenPayload } from "../services/auth";
 import { createWorkerTask, autoAssignWorker } from "../services/workerTask";
 import ComplaintDetail from "./ComplaintDetail";
+import PropTypes from "prop-types";
 
 const statusStyles = {
   pending: "bg-amber-100 text-amber-700",
@@ -23,7 +23,7 @@ const statusLabels = {
   resolved: "Resolved",
 };
 
-const InfoCard = ({ label, value, description, accent }) => (
+const InfoCard = ({ label, value, description }) => (
   <div className="rounded-3xl bg-white p-6 shadow-sm border border-slate-200">
     <p className="text-sm font-semibold text-slate-500">{label}</p>
     <p className="mt-4 text-3xl font-semibold text-slate-900">{value}</p>
@@ -31,20 +31,27 @@ const InfoCard = ({ label, value, description, accent }) => (
   </div>
 );
 
+InfoCard.propTypes = {
+  label: PropTypes.string.isRequired,
+  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+  description: PropTypes.string,
+};
+
 const StatusBadge = ({ status }) => (
   <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${statusStyles[status] || "bg-gray-100 text-gray-700"}`}>
     {statusLabels[status] || status}
   </span>
 );
 
+StatusBadge.propTypes = {
+  status: PropTypes.string.isRequired,
+};
+
 const AdminDashboard = () => {
   const nav = useNavigate();
   const [stats, setStats] = useState({ pending: 0, verified: 0, inProgress: 0, waitingForUser: 0, totalComplaints: 0, resolved: 0, pendingApprovals: 0 });
-  const [excelFile, setExcelFile] = useState(null);
-  const [importStatus, setImportStatus] = useState("");
   const [complaints, setComplaints] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [permissions, setPermissions] = useState([]);
   const [workers, setWorkers] = useState([]);
   const [selectedComplaintId, setSelectedComplaintId] = useState(null);
@@ -84,8 +91,6 @@ const AdminDashboard = () => {
             resolved,
             pendingApprovals: data.filter((c) => c.status === "pending").length,
           });
-        } else {
-          setError(complaintsRes.message || "Failed to load complaints");
         }
 
         if (permissionsRes.success) {
@@ -98,7 +103,7 @@ const AdminDashboard = () => {
           setWorkers(filteredWorkers);
         }
       } catch (err) {
-        setError(err.message || "Unable to load dashboard data.");
+        console.error(err.message || "Unable to load dashboard data.");
       } finally {
         setLoading(false);
       }
@@ -106,34 +111,6 @@ const AdminDashboard = () => {
 
     loadData();
   }, [nav]);
-
-  const handleFileChange = (e) => {
-    setExcelFile(e.target.files[0]);
-  };
-
-  const handleImport = async () => {
-    if (!excelFile) return setImportStatus("Please select a file");
-    setImportStatus("Importing assets...");
-    const res = await importAssets(excelFile);
-    if (res.success) {
-      let msg = `Added ${res.added || 0} asset`;
-      if (res.errors?.length) msg += `, ${res.errors.length} row skipped`;
-      setImportStatus(msg);
-    } else {
-      setImportStatus(res.message || "Import failed");
-    }
-  };
-
-  const downloadTemplate = () => {
-    const csv = "name,location,category\nExample Asset,Office,Electronics\n";
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "assets-template.csv";
-    a.click();
-    URL.revokeObjectURL(url);
-  };
 
   const assignWorker = async (complaint) => {
     if (!selectedWorkerId) {

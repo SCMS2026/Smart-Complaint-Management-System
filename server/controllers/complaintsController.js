@@ -1002,14 +1002,7 @@ const userApproveComplaint = async (req, res) => {
         }
       });
 
-      const updatedComplaint = await Complaint.findByIdAndUpdate(
-        complaintId,
-        {
-          status: 'assigned',
-          updatedAt: new Date()
-        },
-        { new: true }
-      )
+      const updatedComplaint = await Complaint.findById(complaintId)
         .populate("userId", "name")
         .populate("assetId", "name")
         .populate("department_id", "name")

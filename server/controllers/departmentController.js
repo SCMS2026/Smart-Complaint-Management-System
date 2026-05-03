@@ -13,8 +13,7 @@ const createDepartment = async (req, res) => {
 
         const department = new Department({
             name,
-            description,
-            admin: admin_id
+            description
         });
 
         await department.save();
@@ -159,7 +158,7 @@ const getDepartmentDashboard = async (req, res) => {
 
         // Department performance
         const avgResolutionTime = await Complaint.aggregate([
-            { $match: { department_id: mongoose.Types.ObjectId(departmentId), status: 'completed' } },
+            { $match: { department_id: new mongoose.Types.ObjectId(departmentId), status: 'completed' } },
             {
                 $lookup: {
                     from: 'workertasks',

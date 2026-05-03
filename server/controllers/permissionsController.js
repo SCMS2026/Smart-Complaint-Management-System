@@ -197,6 +197,16 @@ const completePermission = async (req, res) => {
     const { permissionId } = req.params;
     const { completionNotes } = req.body;
 
+    // Auth check BEFORE any DB write
+    const existingPerm = await Permission.findById(permissionId);
+    if (!existingPerm) {
+      return res.status(404).json({ success: false, message: 'Permission request not found' });
+    }
+
+    if (req.user?.role === 'contractor' && existingPerm.requestBy.toString() !== req.user.id) {
+      return res.status(403).json({ success: false, message: 'Access denied' });
+    }
+
     const perm = await Permission.findByIdAndUpdate(
       permissionId,
       { 
@@ -208,15 +218,6 @@ const completePermission = async (req, res) => {
     )
       .populate('requestBy', 'name')
       .populate('assetId', 'name assetCode');
-
-    if (!perm) {
-      return res.status(404).json({ success: false, message: 'Permission request not found' });
-    }
-
-    // Verify this permission belongs to the requesting contractor or they're admin
-    if (req.user?.role === 'contractor' && perm.requestBy.toString() !== req.user.id) {
-      return res.status(403).json({ success: false, message: 'Access denied' });
-    }
 
     res.status(200).json({ 
       success: true, 

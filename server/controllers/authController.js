@@ -107,7 +107,37 @@ const login = async (req, res) => {
       return res.status(401).json({ message: "Invalid credentials" })
     }
 
-    res.json({ message: "Login success" })
+    // Check if user is active
+    if (user.status === 'inactive') {
+      return res.status(403).json({ message: "Account is inactive. Please contact admin." })
+    }
+
+    const token = jwt.sign(
+      { id: user._id, role: user.role, department: user.department },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    )
+
+    const refreshToken = jwt.sign(
+      { id: user._id, type: 'refresh' },
+      process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET,
+      { expiresIn: "30d" }
+    )
+
+    user.refreshToken = refreshToken
+    user.refreshTokenExpiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+    await user.save()
+
+    const userObj = user.toObject()
+    delete userObj.password
+    delete userObj.refreshToken
+
+    res.json({
+      message: "Login success",
+      token,
+      refreshToken,
+      user: userObj
+    })
   } catch (err) {
     console.error(err)
     res.status(500).json({ message: "Server error" })
@@ -422,7 +452,7 @@ const toggleUserStatus = async (req, res) => {
 
     res.json({
       message: `User ${newStatus === 'active' ? 'unblocked' : 'blocked'} successfully`,
-      user: user.select("-password")
+      user: await User.findById(user._id).select("-password -refreshToken")
     });
   } catch (error) {
     res.status(500).json({ message: "Error updating user status", error: error.message });
