@@ -209,7 +209,14 @@ const DOWNLOADS = [
 ];
 
 const TUTORIALS = [
-  { icon: "▶️", title: "How to Submit a Complaint", duration: "3:42", durationSecs: 222, level: "Beginner" },
+  {
+    icon: "▶️",
+    title: "How to Submit a Complaint",
+    duration: "3:42",
+    durationSecs: 222,
+    level: "Beginner",
+    videoUrl: "https://player.cloudinary.com/embed/?cloud_name=dbtkd4rfb&public_id=Video_Project_2_lkpzza",
+  },
   { icon: "▶️", title: "Tracking Your Complaint Status", duration: "2:15", durationSecs: 135, level: "Beginner" },
   { icon: "▶️", title: "Admin Dashboard Walkthrough", duration: "7:30", durationSecs: 450, level: "Admin" },
   { icon: "▶️", title: "Using the Analytics Dashboard", duration: "6:10", durationSecs: 370, level: "Analyzer" },
@@ -252,13 +259,12 @@ const FAQItem = ({ q, a }) => {
 const VideoPlayer = () => {
   const [currentIdx, setCurrentIdx] = useState(0);
   const [playing, setPlaying] = useState(false);
-  const [progress, setProgress] = useState(0); // seconds elapsed
+  const [progress, setProgress] = useState(0);
   const [volume, setVolume] = useState(80);
   const intervalRef = useRef(null);
 
   const current = TUTORIALS[currentIdx];
 
-  // Format seconds -> "m:ss"
   const fmt = (secs) => {
     const m = Math.floor(secs / 60);
     const s = secs % 60;
@@ -308,7 +314,6 @@ const VideoPlayer = () => {
     setProgress(newSec);
   };
 
-  // Clean up on unmount or video change
   useEffect(() => {
     return () => clearInterval(intervalRef.current);
   }, [currentIdx]);
@@ -322,112 +327,151 @@ const VideoPlayer = () => {
       >
         {/* Screen */}
         <div
-          className="relative w-full bg-slate-900 cursor-pointer flex items-center justify-center"
+          className="relative w-full bg-slate-900"
           style={{ aspectRatio: "16/9" }}
-          onClick={togglePlay}
         >
-          {/* Thumbnail overlay */}
-          <div
-            className="absolute inset-0 flex flex-col items-center justify-center gap-3 transition-opacity duration-300"
-            style={{ opacity: playing ? 0.2 : 1 }}
-          >
-            {/* Gradient overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-            {/* Big play button */}
-            <button
-              onClick={(e) => { e.stopPropagation(); togglePlay(); }}
-              className="relative z-10 w-16 h-16 rounded-full bg-sky-500 hover:bg-sky-400 flex items-center justify-center transition-transform duration-150 hover:scale-105 shadow-lg"
+          {current.videoUrl ? (
+            /* ── Real Cloudinary embed ── */
+            <iframe
+              key={current.videoUrl}
+              src={current.videoUrl}
+              className="absolute inset-0 w-full h-full"
+              allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
+              allowFullScreen
+              frameBorder="0"
+              title={current.title}
+            />
+          ) : (
+            /* ── Simulated player for tutorials without a real video ── */
+            <div
+              className="absolute inset-0 flex flex-col items-center justify-center gap-3 cursor-pointer transition-opacity duration-300"
+              style={{ opacity: playing ? 0.2 : 1 }}
+              onClick={togglePlay}
             >
-              {playing
-                ? <PauseIcon />
-                : <PlayIcon />
-              }
-            </button>
-            <span className="relative z-10 text-white text-sm font-medium bg-black/40 px-4 py-1.5 rounded-full">
-              {current.title}
-            </span>
-          </div>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+              <button
+                onClick={(e) => { e.stopPropagation(); togglePlay(); }}
+                className="relative z-10 w-16 h-16 rounded-full bg-sky-500 hover:bg-sky-400 flex items-center justify-center transition-transform duration-150 hover:scale-105 shadow-lg"
+              >
+                {playing ? <PauseIcon /> : <PlayIcon />}
+              </button>
+              <span className="relative z-10 text-white text-sm font-medium bg-black/40 px-4 py-1.5 rounded-full">
+                {current.title}
+              </span>
+            </div>
+          )}
 
-          {/* Playing indicator bars */}
-          {playing && (
-            <div className="flex items-end gap-1 h-12">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <div
-                  key={i}
-                  className="w-1.5 bg-sky-400 rounded-sm"
-                  style={{
-                    animation: `bounce-bar ${0.4 + i * 0.1}s ease-in-out infinite alternate`,
-                    height: `${20 + i * 8}px`,
-                  }}
-                />
-              ))}
+          {/* Playing indicator bars — only for simulated videos */}
+          {!current.videoUrl && playing && (
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="flex items-end gap-1 h-12">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <div
+                    key={i}
+                    className="w-1.5 bg-sky-400 rounded-sm"
+                    style={{
+                      animation: `bounce-bar ${0.4 + i * 0.1}s ease-in-out infinite alternate`,
+                      height: `${20 + i * 8}px`,
+                    }}
+                  />
+                ))}
+              </div>
             </div>
           )}
         </div>
 
-        {/* Progress bar */}
-        <div className="px-5 pt-4 pb-1">
-          <div
-            className="w-full h-1.5 rounded-full cursor-pointer"
-            style={{ backgroundColor: "var(--border-color)" }}
-            onClick={handleSeek}
-          >
-            <div
-              className="h-full bg-sky-500 rounded-full transition-all duration-500"
-              style={{ width: `${progressPct}%` }}
-            />
-          </div>
-        </div>
+        {/* Progress bar — only for simulated videos */}
+        {!current.videoUrl && (
+          <>
+            <div className="px-5 pt-4 pb-1">
+              <div
+                className="w-full h-1.5 rounded-full cursor-pointer"
+                style={{ backgroundColor: "var(--border-color)" }}
+                onClick={handleSeek}
+              >
+                <div
+                  className="h-full bg-sky-500 rounded-full transition-all duration-500"
+                  style={{ width: `${progressPct}%` }}
+                />
+              </div>
+            </div>
 
-        {/* Time row */}
-        <div className="flex justify-between px-5 py-1 text-xs" style={{ color: "var(--text-secondary)" }}>
-          <span>{fmt(progress)}</span>
-          <span>{current.duration}</span>
-        </div>
+            {/* Time row */}
+            <div className="flex justify-between px-5 py-1 text-xs" style={{ color: "var(--text-secondary)" }}>
+              <span>{fmt(progress)}</span>
+              <span>{current.duration}</span>
+            </div>
 
-        {/* Controls */}
-        <div className="flex items-center gap-3 px-5 pb-4">
-          <button
-            onClick={prevVideo}
-            disabled={currentIdx === 0}
-            className="p-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/10 transition disabled:opacity-30 cursor-pointer"
-            style={{ color: "var(--text-secondary)" }}
-          >
-            <PrevIcon />
-          </button>
+            {/* Controls */}
+            <div className="flex items-center gap-3 px-5 pb-4">
+              <button
+                onClick={prevVideo}
+                disabled={currentIdx === 0}
+                className="p-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/10 transition disabled:opacity-30 cursor-pointer"
+                style={{ color: "var(--text-secondary)" }}
+              >
+                <PrevIcon />
+              </button>
 
-          <button
-            onClick={togglePlay}
-            className="w-10 h-10 rounded-xl bg-sky-500 hover:bg-sky-600 text-white flex items-center justify-center transition cursor-pointer"
-          >
-            {playing ? <PauseIcon /> : <PlayIcon />}
-          </button>
+              <button
+                onClick={togglePlay}
+                className="w-10 h-10 rounded-xl bg-sky-500 hover:bg-sky-600 text-white flex items-center justify-center transition cursor-pointer"
+              >
+                {playing ? <PauseIcon /> : <PlayIcon />}
+              </button>
 
-          <button
-            onClick={nextVideo}
-            disabled={currentIdx === TUTORIALS.length - 1}
-            className="p-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/10 transition disabled:opacity-30 cursor-pointer"
-            style={{ color: "var(--text-secondary)" }}
-          >
-            <NextIcon />
-          </button>
+              <button
+                onClick={nextVideo}
+                disabled={currentIdx === TUTORIALS.length - 1}
+                className="p-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/10 transition disabled:opacity-30 cursor-pointer"
+                style={{ color: "var(--text-secondary)" }}
+              >
+                <NextIcon />
+              </button>
 
-          {/* Volume */}
-          <div className="flex items-center gap-2 ml-auto">
-            <span style={{ color: "var(--text-secondary)" }}>
-              <VolumeIcon />
+              {/* Volume */}
+              <div className="flex items-center gap-2 ml-auto">
+                <span style={{ color: "var(--text-secondary)" }}>
+                  <VolumeIcon />
+                </span>
+                <input
+                  type="range"
+                  min={0}
+                  max={100}
+                  value={volume}
+                  onChange={(e) => setVolume(Number(e.target.value))}
+                  className="w-20 accent-sky-500 cursor-pointer"
+                />
+                <span className="text-xs w-8" style={{ color: "var(--text-secondary)" }}>{volume}%</span>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* For real video: show nav controls below iframe */}
+        {current.videoUrl && (
+          <div className="flex items-center gap-3 px-5 py-3 border-t" style={{ borderColor: "var(--border-color)" }}>
+            <button
+              onClick={prevVideo}
+              disabled={currentIdx === 0}
+              className="p-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/10 transition disabled:opacity-30 cursor-pointer"
+              style={{ color: "var(--text-secondary)" }}
+            >
+              <PrevIcon />
+            </button>
+            <span className="text-sm font-semibold flex-1 truncate" style={{ color: "var(--text-main)" }}>
+              {current.title}
             </span>
-            <input
-              type="range"
-              min={0}
-              max={100}
-              value={volume}
-              onChange={(e) => setVolume(Number(e.target.value))}
-              className="w-20 accent-sky-500 cursor-pointer"
-            />
-            <span className="text-xs w-8" style={{ color: "var(--text-secondary)" }}>{volume}%</span>
+            <button
+              onClick={nextVideo}
+              disabled={currentIdx === TUTORIALS.length - 1}
+              className="p-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/10 transition disabled:opacity-30 cursor-pointer"
+              style={{ color: "var(--text-secondary)" }}
+            >
+              <NextIcon />
+            </button>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Playlist */}
@@ -823,14 +867,6 @@ const Resources = () => {
                 {l.label}
               </button>
             ))}
-            <div className="w-full mt-4 pt-4 border-t" style={{ borderColor: "var(--border-color)" }}>
-              <p className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: "var(--text-secondary)" }}>Legal</p>
-              <div className="flex flex-wrap justify-center gap-2">
-                <button onClick={() => navigate("/privacy-policy")} className="px-3 py-1 text-xs rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition" style={{ color: "var(--text-secondary)" }}>Privacy Policy</button>
-                <button onClick={() => navigate("/terms-of-service")} className="px-3 py-1 text-xs rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition" style={{ color: "var(--text-secondary)" }}>Terms of Service</button>
-                <button onClick={() => navigate("/accessibility")} className="px-3 py-1 text-xs rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition" style={{ color: "var(--text-secondary)" }}>Accessibility</button>
-              </div>
-            </div>
           </div>
         </div>
       </section>
