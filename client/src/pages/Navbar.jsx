@@ -530,13 +530,26 @@ const Navbar = () => {
                 Analytics
               </a>
             )}
-            {(user && (user.role === 'contractor' || user.role === 'worker')) && (
-              <a href="/contractor" className="block px-3 py-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition cursor-pointer" style={{ color: 'var(--text-main)' }} onClick={() => setMobileMenuOpen(false)}>
-                Contractor
-              </a>
-            )}
+{(user && (user.role === 'contractor' || user.role === 'worker')) && (
+               <a href="/contractor" className="block px-3 py-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition cursor-pointer" style={{ color: 'var(--text-main)' }} onClick={() => setMobileMenuOpen(false)}>
+                 Contractor
+               </a>
+             )}
 
-            {/* ================= MOBILE AUTH ================= */}
+             {/* LEGAL LINKS */}
+             <div className="border-t" style={{ borderColor: 'var(--border-color)' }}></div>
+             <div className="px-3 py-1 text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--text-secondary)' }}>Legal</div>
+             <a href="/privacy-policy" className="block px-3 py-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition cursor-pointer" style={{ color: 'var(--text-main)' }} onClick={() => setMobileMenuOpen(false)}>
+               Privacy Policy
+             </a>
+             <a href="/terms-of-service" className="block px-3 py-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition cursor-pointer" style={{ color: 'var(--text-main)' }} onClick={() => setMobileMenuOpen(false)}>
+               Terms of Service
+             </a>
+             <a href="/accessibility" className="block px-3 py-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition cursor-pointer" style={{ color: 'var(--text-main)' }} onClick={() => setMobileMenuOpen(false)}>
+               Accessibility
+             </a>
+
+             {/* ================= MOBILE AUTH ================= */}
             {!user && (
               <>
                 <div className="border-t" style={{ borderColor: 'var(--border-color)' }}></div>

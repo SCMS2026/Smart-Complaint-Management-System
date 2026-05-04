@@ -823,6 +823,14 @@ const Resources = () => {
                 {l.label}
               </button>
             ))}
+            <div className="w-full mt-4 pt-4 border-t" style={{ borderColor: "var(--border-color)" }}>
+              <p className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: "var(--text-secondary)" }}>Legal</p>
+              <div className="flex flex-wrap justify-center gap-2">
+                <button onClick={() => navigate("/privacy-policy")} className="px-3 py-1 text-xs rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition" style={{ color: "var(--text-secondary)" }}>Privacy Policy</button>
+                <button onClick={() => navigate("/terms-of-service")} className="px-3 py-1 text-xs rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition" style={{ color: "var(--text-secondary)" }}>Terms of Service</button>
+                <button onClick={() => navigate("/accessibility")} className="px-3 py-1 text-xs rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition" style={{ color: "var(--text-secondary)" }}>Accessibility</button>
+              </div>
+            </div>
           </div>
         </div>
       </section>

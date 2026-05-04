@@ -21,6 +21,9 @@ import PermissionRequests from "./pages/PermissionRequests";
 import ComplaintTracking from "./pages/ComplaintTracking";
 import Analytics from "./pages/Analytics";
 import Resources from "./pages/Resources";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
+import Accessibility from "./pages/Accessibility";
 
 function AppContent() {
   const [user, setUser] = useState(null);
@@ -53,6 +56,13 @@ function AppContent() {
       setLoading(false);
     };
     checkUser();
+
+    // Listen for profile updates from other components
+    const handleUserUpdate = (e) => {
+      setUser(e.detail);
+    };
+    window.addEventListener("userUpdated", handleUserUpdate);
+    return () => window.removeEventListener("userUpdated", handleUserUpdate);
   }, []);
 
   if (loading) {
@@ -81,6 +91,9 @@ function AppContent() {
           <Route path="/track" element={<ComplaintTracking />} />
           <Route path="/analytics" element={<Analytics />} />
           <Route path="/resources" element={<Resources />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/terms-of-service" element={<TermsOfService />} />
+          <Route path="/accessibility" element={<Accessibility />} />
         </Routes>
       </main>
     </div>

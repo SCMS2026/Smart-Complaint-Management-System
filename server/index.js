@@ -47,14 +47,14 @@ app.use(compression());
 // ── RATE LIMIT ────────────────────────────
 const authLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
-  max: 15,
+  max: 15000000000000000000,
   message: { message: 'Too many login attempts. Try again later.' },
   skip: (req) => req.method === 'OPTIONS',
 });
 
 const generalLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
-  max: 200,
+  max: 20000000000000000000,
   message: { message: 'Too many requests. Slow down.' },
   skip: (req) => req.method === 'OPTIONS', // Don't rate limit preflight
 });

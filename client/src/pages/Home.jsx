@@ -654,16 +654,16 @@ const Home = () => {
             <p style={{color:c.muted,fontSize:14,lineHeight:1.7,maxWidth:260}}>A next-generation civic complaint management platform connecting citizens to their government.</p>
           </div>
           {[
-            {head:'Platform',links:['File Complaint','Track Status','Analytics','Resources']},
-            {head:'Roles',links:['Citizens','Workers','Departments','Admins']},
-            {head:'Legal',links:['Privacy Policy','Terms of Service','Accessibility']},
+            {head:'Platform',links:[{label:'File Complaint',path:'/complaint'},{label:'Track Status',path:'/track'},{label:'Analytics',path:'/analytics'},{label:'Resources',path:'/resources'}]},
+            {head:'Roles',links:[{label:'Citizens',path:'/'},{label:'Workers',path:'/contractor'},{label:'Departments',path:'/department-admin'},{label:'Admins',path:'/admin'}]},
+            {head:'Legal',links:[{label:'Privacy Policy',path:'/privacy-policy'},{label:'Terms of Service',path:'/terms-of-service'},{label:'Accessibility',path:'/accessibility'}]},
           ].map((col,i) => (
             <div key={i}>
               <div style={{fontSize:13,fontWeight:700,letterSpacing:'0.08em',textTransform:'uppercase',color:c.muted,marginBottom:14}}>{col.head}</div>
               <div style={{display:'flex',flexDirection:'column',gap:10}}>
                 {col.links.map(l => (
-                  <span key={l} style={{fontSize:14,color:c.muted,cursor:'pointer',transition:'color 0.2s'}}
-                    onMouseEnter={e=>e.target.style.color=c.text} onMouseLeave={e=>e.target.style.color=c.muted}>{l}</span>
+                  <a key={l.label} href={l.path} style={{fontSize:14,color:c.muted,textDecoration:'none',cursor:'pointer',transition:'color 0.2s'}}
+                    onMouseEnter={e=>e.target.style.color=c.text} onMouseLeave={e=>e.target.style.color=c.muted}>{l.label}</a>
                 ))}
               </div>
             </div>

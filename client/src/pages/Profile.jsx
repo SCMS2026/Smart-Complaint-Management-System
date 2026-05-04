@@ -13,24 +13,8 @@ import {
   AlertCircle,
 } from "lucide-react";
 
-// Stub service calls – replace with real imports in your project
-// import { getMe, updateProfile } from "../services/auth";
-// import { getDepartmentById } from "../services/department";
-
-async function getMe() {
-  return { user: JSON.parse(localStorage.getItem("user") || "null") };
-}
-
-async function updateProfile(payload) {
-  const current = JSON.parse(localStorage.getItem("user") || "{}");
-  const updated = { ...current, ...payload };
-  localStorage.setItem("user", JSON.stringify(updated));
-  return { success: true, user: updated };
-}
-
-async function getDepartmentById(id) {
-  return null;
-}
+import { getMe, updateProfile, getCurrentUser } from "../services/auth";
+import { getDepartmentById } from "../services/department";
 
 function initials(name) {
   if (!name) return "?";
@@ -102,7 +86,7 @@ const Profile = () => {
         setDepartmentName(user.department.name);
       } else if (typeof user.department === "string") {
         const res = await getDepartmentById(user.department);
-        setDepartmentName(res?.name || "");
+        setDepartmentName(res?.department?.name || "");
       } else {
         setDepartmentName("");
       }
@@ -121,6 +105,7 @@ const Profile = () => {
       if (res.success) {
         setUser(res.user);
         localStorage.setItem("user", JSON.stringify(res.user));
+        window.dispatchEvent(new CustomEvent("userUpdated", { detail: res.user }));
         setEditMode(false);
         setAvatarError(false);
       } else {
