@@ -18,7 +18,7 @@ import DepartmentAdminDashboard from "./pages/DepartmentAdminDashboard";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import PropertiesList from "./pages/PropertiesList";
 import PermissionRequests from "./pages/PermissionRequests";
-import ComplaintTracking from "./pages/Complainttracking.jsx";
+import Complainttracking from "./pages/Complainttracking.jsx";
 import Analytics from "./pages/Analytics";
 import Resources from "./pages/Resources";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
@@ -88,7 +88,7 @@ function AppContent() {
           <Route path="/contractor" element={<ContractorDashboard />} />
           <Route path="/contractor/properties" element={<PropertiesList />} />
           <Route path="/contractor/permissions" element={<PermissionRequests />} />
-          <Route path="/track" element={<ComplaintTracking />} />
+          <Route path="/track" element={<Complainttracking />} />
           <Route path="/analytics" element={<Analytics />} />
           <Route path="/resources" element={<Resources />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
