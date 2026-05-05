@@ -18,7 +18,7 @@ import DepartmentAdminDashboard from "./pages/DepartmentAdminDashboard";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import PropertiesList from "./pages/PropertiesList";
 import PermissionRequests from "./pages/PermissionRequests";
-import ComplaintTracking from "./pages/ComplaintTracking";
+import ComplaintTracking from "./pages/Complainttracking.jsx";
 import Analytics from "./pages/Analytics";
 import Resources from "./pages/Resources";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
