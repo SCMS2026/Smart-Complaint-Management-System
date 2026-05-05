@@ -85,17 +85,17 @@ const Login = () => {
   }, [nav, googleClientId]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden font-sans selection:bg-blue-200 p-6" style={{ backgroundColor: 'var(--bg-main)' }}>
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden font-sans selection:bg-blue-200 p-4 sm:p-6 md:p-8" style={{ backgroundColor: 'var(--bg-main)' }}>
 
       {/* Background Decorative Elements */}
       <div className="absolute top-0 left-0 w-full h-full bg-linear-to-br from-blue-50 via-indigo-50 to-purple-50 -z-10" style={{ backgroundColor: theme === 'dark' ? '#1e293b' : undefined }}></div>
       <div className="absolute top-20 left-10 w-96 h-96 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
       <div className="absolute bottom-20 right-10 w-96 h-96 bg-purple-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse delay-1000"></div>
 
-      <div className="w-full max-w-5xl rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col md:flex-row z-10 border relative backdrop-blur-sm" style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)' }}>
+      <div className="w-full max-w-4xl lg:max-w-5xl mx-4 sm:mx-auto rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row z-10 border relative backdrop-blur-sm" style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)' }}>
 
         {/* Left Side: Branding/Info */}
-        <div className="w-full md:w-1/2 bg-linear-to-br from-blue-600 to-indigo-700 p-12 text-white flex flex-col justify-between relative overflow-hidden">
+        <div className="w-full md:w-1/2 bg-linear-to-br from-blue-600 to-indigo-700 p-8 sm:p-12 md:p-12 lg:p-16 text-white flex flex-col justify-between relative overflow-hidden">
           {/* Internal graphics */}
           <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 bg-white opacity-10 rounded-full blur-2xl"></div>
           <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-64 h-64 bg-black opacity-10 rounded-full blur-2xl"></div>
@@ -136,7 +136,7 @@ const Login = () => {
         </div>
 
         {/* Right Side: Login Form */}
-        <div className="w-full md:w-1/2 p-10 md:p-14 lg:p-16 backdrop-blur-xl flex flex-col justify-center" style={{ backgroundColor: 'var(--bg-primary)' }}>
+        <div className="w-full md:w-1/2 p-6 sm:p-8 md:p-14 lg:p-16 backdrop-blur-xl flex flex-col justify-center" style={{ backgroundColor: 'var(--bg-primary)' }}>
           <div className="max-w-md w-full mx-auto">
             <div className="mb-10 text-center md:text-left">
               <h2 className="text-3xl font-bold mb-2" style={{ color: 'var(--text-main)' }}>Sign In</h2>

@@ -274,7 +274,7 @@ const SLAPanel = ({ slaBreakdown = [], kpis = {} }) => {
   const total = slaBreakdown.reduce((s, x) => s + x.count, 0);
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 12 }}>
         {["on_track","at_risk","breached"].map(key => {
           const item = slaBreakdown.find(x => x._id === key);
           const count = item?.count || 0;
@@ -422,7 +422,7 @@ const Analytics = () => {
           <p style={{ fontSize: 14, color: "#94a3b8", margin: "0 0 28px", maxWidth: 520 }}>Comprehensive complaint intelligence — SLA tracking, resolution metrics, department performance & geographic breakdown.</p>
 
           {/* Quick KPI strip */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))", gap: 12 }}>
             {[
               { label: "Total",       val: fmt(analytics?.totalComplaints), color: "rgba(255,255,255,0.08)" },
               { label: "Resolution",  val: `${kpis.resolutionRate ?? 0}%`, color: "rgba(16,185,129,0.2)" },
@@ -477,7 +477,7 @@ const Analytics = () => {
             </div>
 
             {/* Charts row */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 20 }}>
               <Card title="Monthly Volume (Last 9 Months)">
                 {chartReady && monthlyData.length > 0 ? (
                   <ChartJSWidget
@@ -528,7 +528,7 @@ const Analytics = () => {
             </div>
 
             {/* Status + Category */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 20 }}>
               <Card title="Status Breakdown">
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   {(analytics?.statusBreakdown || []).map(item => (
@@ -588,7 +588,7 @@ const Analytics = () => {
         {/* ══ SLA ══ */}
         {tab === "sla" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 20 }}>
               <Card title="SLA Status Overview">
                 <SLAPanel slaBreakdown={analytics?.slaBreakdown || []} kpis={kpis} />
               </Card>
@@ -633,7 +633,7 @@ const Analytics = () => {
 
         {/* ══ PRIORITY ══ */}
         {tab === "priority" && (
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 20 }}>
             <Card title="Priority vs Resolution Matrix">
               <PriorityMatrix data={analytics?.priorityVsResolution || []} />
             </Card>
@@ -724,7 +724,7 @@ const Analytics = () => {
             <Card title="Average Resolution Time by Department" subtitle="Green = under 48h · Red = over 48h">
               <ResolutionTable data={analytics?.resolutionTimeStats || []} />
             </Card>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 20 }}>
               <Card title="Resolution Hours (Top 8 Depts)">
                 {chartReady && (analytics?.resolutionTimeStats || []).length > 0 ? (
                   <ChartJSWidget
@@ -782,7 +782,7 @@ const Analytics = () => {
 
         {/* ══ GEOGRAPHY ══ */}
         {tab === "geography" && (
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 20 }}>
             <Card title="By Taluka">
               <div style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: 320, overflowY: "auto", paddingRight: 4 }}>
                 {(analytics?.talukaBreakdown || []).slice(0, 20).map((item, i) => (

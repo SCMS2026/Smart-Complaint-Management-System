@@ -218,7 +218,31 @@ const getWorkerTasksByComplaint = async (req, res) => {
     try {
         const { complaintId } = req.params;
 
-        const workerTasks = await WorkerTask.find({ complaint_id: complaintId })
+        const complaint = await Complaint.findById(complaintId)
+            .select('userId department_id')
+            .populate('userId', '_id');
+
+        if (!complaint) {
+            return res.status(404).json({ message: 'Complaint not found' });
+        }
+
+        const userId = req.user.id;
+        const userRole = req.user.role;
+
+        if (userRole === 'user' && complaint.userId?._id.toString() !== userId.toString()) {
+            return res.status(403).json({ message: 'Unauthorized to view worker photos for this complaint' });
+        }
+
+        if (userRole === 'department_admin' && complaint.department_id?.toString() !== req.user.department?.toString()) {
+            return res.status(403).json({ message: 'Unauthorized to view worker photos for this complaint' });
+        }
+
+        const filter = { complaint_id: complaintId };
+        if (userRole === 'worker' || userRole === 'contractor') {
+            filter.worker_id = userId;
+        }
+
+        const workerTasks = await WorkerTask.find(filter)
             .populate('worker_id', 'name email');
 
         res.status(200).json({ workerTasks });

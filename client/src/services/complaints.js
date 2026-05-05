@@ -211,3 +211,8 @@ export const searchComplaintsPublic = async (query) => {
     return { success: false, message: err.message };
   }
 };
+
+// Worker Tasks for Complaint - Re-export for convenience
+export { getWorkerTasksByComplaint } from './workerTask.js';
+export { getWorkerTasksByComplaint as getWorkerTasksForComplaint } from './workerTask.js';
+

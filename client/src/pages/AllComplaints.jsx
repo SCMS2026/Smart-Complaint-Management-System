@@ -4,6 +4,7 @@ import {
   createComplaintRequest,
   userApproveComplaintRequest,
 } from "../services/complaints";
+import ComplaintDetail from "./ComplaintDetail";
 import { fetchAssets } from "../services/assets";
 import { getCurrentUser, getToken } from "../services/auth";
 import API_URL from "../services/apiConfig";
@@ -161,17 +162,18 @@ const PriorityBadge = ({ priority }) => {
 };
 
 
-const ComplaintCard = ({ c, theme, onApprove, onReject, approvalLoading, departmentName }) => {
+const ComplaintCard = ({ c, theme, onApprove, onReject, onView, approvalLoading, departmentName }) => {
   const t = theme === "dark" ? darkTheme : lightTheme;
   const isApprovalPending = c.status === 'user_approval_pending';
   return (
     <div
       style={{
         background: t.cardBg,
-        borderRadius: 14,
-        boxShadow: t.cardShadow,
+        borderRadius: 18,
+        border: theme === 'dark' ? '1px solid rgba(148,163,184,0.12)' : '1px solid rgba(148,163,184,0.16)',
+        boxShadow: '0 24px 64px rgba(15,23,42,0.08)',
         overflow: "hidden",
-        transition: "transform 0.4s, box-shadow 0.4s",
+        transition: "transform 0.3s ease, box-shadow 0.3s ease",
         borderTop: isApprovalPending ? "3px solid #F59E0B" : "3px solid #3B82F6",
         position: 'relative',
         cursor: "pointer",
@@ -288,22 +290,63 @@ const ComplaintCard = ({ c, theme, onApprove, onReject, approvalLoading, departm
             </span>
           )}
         </div>
+
+        <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 12 }}>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onView(c._id);
+            }}
+            style={{
+              background: "#2563EB",
+              color: "#fff",
+              border: "none",
+              borderRadius: 14,
+              padding: "12px 20px",
+              fontWeight: 700,
+              fontSize: 13,
+              cursor: "pointer",
+              boxShadow: "0 16px 32px rgba(37,99,235,0.18)",
+              transition: "transform 0.2s ease, box-shadow 0.2s ease",
+              minHeight: "44px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-1px)';
+              e.currentTarget.style.boxShadow = '0 20px 38px rgba(37,99,235,0.24)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = '';
+              e.currentTarget.style.boxShadow = '0 16px 32px rgba(37,99,235,0.18)';
+            }}
+          >
+            View Details
+          </button>
+        </div>
+
         {isApprovalPending && (
-          <div style={{ display: "flex", gap: 8, marginTop: 12, paddingTop: 12, borderTop: `1px solid ${t.border}` }}>
+          <div style={{ display: "flex", gap: 10, marginTop: 12, paddingTop: 12, borderTop: `1px solid ${t.border}`, flexWrap: "wrap" }}>
             <button
               onClick={() => onApprove(c._id)}
               disabled={approvalLoading}
               style={{
                 flex: 1,
+                minWidth: "140px",
                 background: "#10B981",
                 color: "#fff",
                 border: "none",
-                borderRadius: 8,
-                padding: "10px 16px",
-                fontWeight: 600,
+                borderRadius: 12,
+                padding: "12px 16px",
+                fontWeight: 700,
                 fontSize: 13,
                 cursor: approvalLoading ? "not-allowed" : "pointer",
                 opacity: approvalLoading ? 0.7 : 1,
+                minHeight: "44px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
               }}
             >
               {approvalLoading ? "Processing..." : "✓ Approve Work"}
@@ -313,15 +356,20 @@ const ComplaintCard = ({ c, theme, onApprove, onReject, approvalLoading, departm
               disabled={approvalLoading}
               style={{
                 flex: 1,
+                minWidth: "140px",
                 background: "#EF4444",
                 color: "#fff",
                 border: "none",
-                borderRadius: 8,
-                padding: "10px 16px",
-                fontWeight: 600,
+                borderRadius: 12,
+                padding: "12px 16px",
+                fontWeight: 700,
                 fontSize: 13,
                 cursor: approvalLoading ? "not-allowed" : "pointer",
                 opacity: approvalLoading ? 0.7 : 1,
+                minHeight: "44px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
               }}
             >
               {approvalLoading ? "Processing..." : "✕ Reject Work"}
@@ -338,6 +386,7 @@ ComplaintCard.propTypes = {
   theme: PropTypes.string.isRequired,
   onApprove: PropTypes.func.isRequired,
   onReject: PropTypes.func.isRequired,
+  onView: PropTypes.func.isRequired,
   approvalLoading: PropTypes.bool.isRequired,
   departmentName: PropTypes.string,
 };
@@ -409,6 +458,7 @@ const AllComplaints = () => {
   const [imagePreview, setPreview] = useState(null);
   const [imageFile, setImageFile] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
+  const [viewComplaintId, setViewComplaintId] = useState(null);
   const { theme } = useTheme();
   const [approvalLoading, setApprovalLoading] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
@@ -1252,11 +1302,12 @@ const AllComplaints = () => {
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
-                gap: 16,
+                gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+                gap: 12,
                 marginTop: 20,
               }}
             >
+              {/* Mobile: 1 col | Tablet: 2 col | Desktop: 3+ col - handled by minmax */}
               {complaints.map((c) => (
                 <ComplaintCard
                   key={c._id}
@@ -1264,11 +1315,23 @@ const AllComplaints = () => {
                   theme={theme}
                   onApprove={handleApprove}
                   onReject={openRejectModal}
+                  onView={(id) => setViewComplaintId(id)}
                   approvalLoading={approvalLoading}
                   departmentName={assets.find(a => a._id === c.assetId)?.issue || 'Unknown'}
                 />
               ))}
             </div>
+
+            {viewComplaintId && (
+              <ComplaintDetail
+                complaintId={viewComplaintId}
+                onClose={() => setViewComplaintId(null)}
+                onStatusChange={async () => {
+                  await reloadComplaints();
+                  setViewComplaintId(null);
+                }}
+              />
+            )}
 
             {/* Pagination Controls */}
             {totalPages > 1 && (

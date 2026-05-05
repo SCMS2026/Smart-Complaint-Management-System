@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { getComplaintById, updateComplaintStatusRequest, markComplaintAsFake, addCommentToComplaint, userApproveComplaintRequest } from "../services/complaints";
+import { getComplaintById, getWorkerTasksForComplaint, updateComplaintStatusRequest, markComplaintAsFake, addCommentToComplaint, userApproveComplaintRequest } from "../services/complaints";
+import WorkerPhotos from "../components/WorkerPhotos";
 import { useTheme } from "../context/ThemeContext";
+
 
 const ComplaintDetail = ({ complaintId, onClose, onStatusChange }) => {
   const { theme } = useTheme();
@@ -12,6 +14,9 @@ const ComplaintDetail = ({ complaintId, onClose, onStatusChange }) => {
   const [commentText, setCommentText] = useState("");
   const [submittingComment, setSubmittingComment] = useState(false);
   const [user, setUser] = useState(null);
+  const [workerTasks, setWorkerTasks] = useState([]);
+  const [loadingTasks, setLoadingTasks] = useState(false);
+
 
   useEffect(() => {
     const userFromStorage = JSON.parse(localStorage.getItem("user") || "null");
@@ -26,8 +31,40 @@ const ComplaintDetail = ({ complaintId, onClose, onStatusChange }) => {
       }
       setLoading(false);
     };
+    
     loadComplaint();
   }, [complaintId]);
+
+  // Load worker tasks for relevant statuses
+  const isComplaintOwner = () => {
+    if (!user || !complaint?.userId) return false;
+    const ownerId = complaint.userId._id?.toString?.() || complaint.userId.toString?.();
+    const currentUserId = user._id?.toString?.() || user.id?.toString?.();
+    return ownerId && currentUserId && ownerId === currentUserId;
+  };
+
+  const hasPhotoTasks = workerTasks.some(task => task.before_photo || task.after_photo);
+
+  useEffect(() => {
+    if (!complaint?._id) return;
+
+    const loadWorkerTasks = async () => {
+      setLoadingTasks(true);
+      try {
+        const res = await getWorkerTasksForComplaint(complaint._id);
+        if (res.success) {
+          setWorkerTasks(res.workerTasks || []);
+        }
+      } catch (err) {
+        console.error('Failed to load worker tasks:', err);
+      } finally {
+        setLoadingTasks(false);
+      }
+    };
+
+    loadWorkerTasks();
+  }, [complaint?._id]);
+
 
   const handleVerify = async () => {
     const res = await updateComplaintStatusRequest(complaintId, "verified");
@@ -141,12 +178,12 @@ const ComplaintDetail = ({ complaintId, onClose, onStatusChange }) => {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
-      <div className={`rounded-2xl shadow-2xl w-full max-w-3xl my-8 overflow-hidden ${isDark ? 'bg-slate-800' : 'bg-white'}`}>
+    <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xl flex items-center justify-center z-50 p-4 overflow-y-auto">
+      <div className={`rounded-4xl shadow-[0_32px_120px_rgba(15,23,42,0.18)] w-full max-w-4xl sm:max-w-5xl mx-4 sm:mx-auto my-4 sm:my-10 overflow-hidden border ${isDark ? 'border-white/10 bg-slate-900' : 'border-slate-200 bg-white'}`}>
         {/* Header */}
-        <div className={`px-6 py-5 flex items-center justify-between ${isDark ? 'bg-gradient-to-r from-slate-900 to-slate-800 border-b border-slate-700' : 'bg-gradient-to-r from-slate-900 to-slate-800 border-b border-slate-700'}`}>
+        <div className={`px-6 py-5 flex items-center justify-between shadow-sm ${isDark ? 'bg-linear-to-r from-slate-900 to-slate-800 border-b border-slate-700' : 'bg-linear-to-r from-slate-900 to-slate-800 border-b border-slate-700'}`}>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur flex items-center justify-center">
+            <div className="w-11 h-11 rounded-2xl bg-white/10 backdrop-blur flex items-center justify-center">
               <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
@@ -156,7 +193,7 @@ const ComplaintDetail = ({ complaintId, onClose, onStatusChange }) => {
               <p className="text-xs text-slate-300 mt-0.5">#{complaint._id?.slice(-6)}</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 rounded-xl hover:bg-white/10 text-slate-300 hover:text-white transition">
+          <button onClick={onClose} className="p-3 rounded-2xl bg-white/10 text-slate-100 hover:bg-white/20 transition shadow-sm">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -164,7 +201,7 @@ const ComplaintDetail = ({ complaintId, onClose, onStatusChange }) => {
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-6 max-h-[calc(100vh-180px)] overflow-y-auto">
+        <div className="p-4 sm:p-6 space-y-6 max-h-[calc(100vh-180px)] overflow-y-auto">
           {error && (
             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2">
               <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -260,6 +297,32 @@ const ComplaintDetail = ({ complaintId, onClose, onStatusChange }) => {
               </div>
             </section>
           )}
+
+           {/* Worker Resolution Photos */}
+           {((['admin','super_admin','department_admin'].includes(user?.role) || isComplaintOwner()) && (loadingTasks || hasPhotoTasks)) && (
+             <section>
+               <SectionHeader 
+                 icon={() => (
+                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 002-2H6a2 2 0 002-2v12a2 2 0 002 2z" />
+                   </svg>
+                 )} 
+                 title="Worker Resolution Photos" 
+                 color="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" 
+               />
+                {loadingTasks ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="w-6 h-6 border-2 border-emerald-200 border-t-emerald-500 rounded-full animate-spin" />
+                    <span className="ml-2 text-sm text-slate-500 dark:text-slate-400">Loading photos...</span>
+                  </div>
+                ) : hasPhotoTasks ? (
+                  <WorkerPhotos tasks={workerTasks} isDark={isDark} />
+                ) : (
+                  <p className="text-sm text-slate-500 dark:text-slate-400 py-3">No before/after photos have been uploaded yet.</p>
+                )}
+             </section>
+           )}
+
 
           {/* Comments Section */}
           <section>

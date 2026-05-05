@@ -1,13 +1,15 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { fetchComplaints, updateComplaintStatusRequest } from "../services/complaints";
+import { fetchComplaints, updateComplaintStatusRequest, getWorkerTasksForComplaint } from "../services/complaints";
 import { fetchPermissions } from "../services/permissions";
 import { fetchUsers, getTokenPayload, getCurrentUser, getToken } from "../services/auth";
 import { fetchDepartments, fetchDepartmentDashboard } from "../services/department";
 import API_URL from "../services/apiConfig";
 import { createWorkerTask, autoAssignWorker } from "../services/workerTask";
 import ComplaintDetail from "./ComplaintDetail";
+import WorkerPhotos from "../components/WorkerPhotos";
 import { useTheme } from "../context/ThemeContext";
+
 import {
   PieChart,
   Pie,
@@ -84,6 +86,9 @@ const DepartmentAdminDashboard = () => {
   const [selectedWorkerId,    setSelectedWorkerId]    = useState("");
   const [assignMsg,           setAssignMsg]           = useState("");
   const [assigning,           setAssigning]           = useState(false);
+  const [selectedComplaintTasks, setSelectedComplaintTasks] = useState([]);
+  const [loadingSelectedTasks, setLoadingSelectedTasks] = useState(false);
+
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("user") || "null");

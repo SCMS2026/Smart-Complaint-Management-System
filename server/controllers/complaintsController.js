@@ -1059,7 +1059,11 @@ const getComplaintById = async (req, res) => {
     }
 
     // Authorization check
-    if (req.user.role === 'user' && complaint.userId.toString() !== req.user.id) {
+    if (
+      req.user.role === 'user' &&
+      complaint.userId &&
+      complaint.userId._id.toString() !== req.user.id
+    ) {
       return res.status(403).json({ message: 'Unauthorized' });
     }
 

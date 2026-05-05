@@ -21,7 +21,7 @@ const Signup = () => {
 
   const handleChange = (e) => {
     setForm((p) => ({ ...p, [e.target.name]: e.target.value }));
-    setError(""); // Clear error on input change
+    setError("");
   };
 
   const validateForm = () => {
@@ -60,7 +60,6 @@ const Signup = () => {
       });
 
       if (res.token) {
-        // persist token/user (registerUser also does this)
         localStorage.setItem("user_token", res.token);
         if (res.user) localStorage.setItem("user", JSON.stringify(res.user));
 

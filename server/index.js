@@ -122,6 +122,9 @@ app.use('/departments', require('./router/departmentRoutes'));
 app.use('/worker-tasks', require('./router/workerTaskRoutes'));
 app.use('/notifications', require('./router/notificationRoutes'));
 
+// ── STATIC UPLOADS ───────────────────────
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 // ── STATIC (PRODUCTION) ───────────────────
 if (!isDev) {
   app.use(express.static(path.join(__dirname, '../client/dist')));
