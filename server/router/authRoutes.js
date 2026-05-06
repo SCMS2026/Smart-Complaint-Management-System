@@ -22,7 +22,11 @@ const validate = (validations) => {
 };
 
 const getClientUrl = () => {
-  return process.env.CLIENT_URL || 'http://localhost:3000';
+  if (process.env.CLIENT_URL) return process.env.CLIENT_URL;
+  if (process.env.NODE_ENV === 'production') {
+    return 'https://smart-complaint-management-system-d.vercel.app';
+  }
+  return 'http://localhost:3000';
 };
 
 // Validation rules
