@@ -314,7 +314,7 @@ const DepartmentAdminDashboard = () => {
         </div>
 
         {/* Tabs */}
-        <div className={`flex items-center gap-1 ${theme === 'dark' ? 'bg-slate-800 border border-slate-700' : 'bg-white border border-slate-100'} rounded-xl p-1 mb-6 shadow-sm w-fit`}>
+        <div className={`flex flex-wrap items-center gap-2 overflow-x-auto max-w-full ${theme === 'dark' ? 'bg-slate-800 border border-slate-700' : 'bg-white border border-slate-100'} rounded-xl p-1 mb-6 shadow-sm`}>
           {[
             { id: "dashboard",   label: "Dashboard" },
             { id: "complaints",  label: "Complaints" },
@@ -333,7 +333,7 @@ const DepartmentAdminDashboard = () => {
           <div className="space-y-6">
             {/* Department Overview */}
             <div className={`rounded-2xl border shadow-sm p-6 ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
-              <div className="flex items-center justify-between mb-6">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center justify-between mb-6">
                 <div>
                   <h2 className={`text-xl font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>{deptDashboard.department?.name || myDeptName}</h2>
                   <p className={`text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>Department Overview</p>

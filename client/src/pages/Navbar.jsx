@@ -79,8 +79,7 @@ const Navbar = () => {
     <header className="fixed top-0 left-0 w-full z-50">
       {/* Glass Navbar */}
       <div className="backdrop-blur-xl shadow-sm" style={{ backgroundColor: 'var(--nav-bg)' }}>
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 min-h-[80px] flex flex-wrap items-center justify-between gap-3">
           {/* ================= LOGO ================= */}
           <a href="/" className="flex items-center gap-3 group">
             <div className="w-10 h-10 rounded-xl bg-linear-to-br from-sky-500 to-indigo-600 flex items-center justify-center text-white font-bold shadow-md">
@@ -96,7 +95,7 @@ const Navbar = () => {
           </a>
 
           {/* ================= NAV ================= */}
-          <nav className="hidden md:flex items-center gap-2 font-medium" style={{ color: 'var(--text-main)' }}>
+          <nav className="hidden md:flex items-center gap-2 font-medium flex-wrap" style={{ color: 'var(--text-main)' }}>
 
             {/* SERVICES */}
             <div className="relative group">
@@ -217,7 +216,30 @@ const Navbar = () => {
               </a>
             )}
           </nav>
-
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="hidden md:inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-black/5 dark:hover:bg-white/10 transition cursor-pointer"
+            style={{ color: 'var(--text-main)', backgroundColor: 'var(--bg-primary)' }}
+            aria-label="Toggle theme"
+          >
+            {theme === 'light' ? (
+              <>
+                <span>Dark</span>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M21 12.79A9 9 0 1111.79 3 7 7 0 0021 12.79z" />
+                </svg>
+              </>
+            ) : (
+              <>
+                <span>Light</span>
+                <svg className="w-4 h-4 text-yellow-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="5" />
+                  <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+                </svg>
+              </>
+            )}
+          </button>
           {/* ================= MOBILE MENU TOGGLE ================= */}
           <button
             type="button"
@@ -225,6 +247,7 @@ const Navbar = () => {
             className="md:hidden p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition"
             style={{ color: 'var(--text-main)' }}
             aria-label="Toggle mobile menu"
+            aria-expanded={mobileMenuOpen}
           >
             <svg
               className="w-6 h-6"
@@ -243,8 +266,8 @@ const Navbar = () => {
 
           {/* ================= NOTIFICATIONS ================= */}
           {user && (
-            <div className="relative">
-              <button
+            <div className="relative hidden md:block">
+              {/* <button
                 onClick={() => setNotifOpen(!notifOpen)}
                 className="relative p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition cursor-pointer"
                 aria-label="Toggle notifications"
@@ -257,7 +280,7 @@ const Navbar = () => {
                     {unreadCount > 9 ? '9+' : unreadCount}
                   </span>
                 )}
-              </button>
+              </button> */}
 
               {/* Notification Dropdown */}
               {notifOpen && (
@@ -351,38 +374,10 @@ const Navbar = () => {
               )}
             </div>
           )}
-          <button
-            type="button"
-            onClick={toggleTheme}
-            className="px-4 py-2 rounded-lg transition cursor-pointer flex items-center gap-2 border hover:bg-black/5 dark:hover:bg-white/10"
-            style={{
-              backgroundColor: 'var(--bg-secondary)',
-              borderColor: 'var(--border-color)',
-              color: 'var(--text-main)'
-            }}
-            aria-label="Toggle theme"
-          >
-            {theme === "light" ? (
-              <>
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path d="M21 12.79A9 9 0 1111.79 3 7 7 0 0021 12.79z" />
-                </svg>
-                <span className="text-sm font-medium">Dark</span>
-              </>
-            ) : (
-              <>
-                <svg className="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <circle cx="12" cy="12" r="5" />
-                  <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
-                </svg>
-                <span className="text-sm font-medium">Light</span>
-              </>
-            )}
-          </button>
 
           {/* ================= AUTH ================= */}
           {!user ? (
-            <div className="flex items-center gap-3">
+            <div className="hidden md:flex items-center gap-3">
               <a
                 href="/login"
                 className="px-4 py-2 rounded-xl hover:bg-black/5 transition font-medium"
@@ -399,7 +394,7 @@ const Navbar = () => {
               </a>
             </div>
           ) : (
-            <div className="relative">
+            <div className="relative hidden md:block">
               {/* Profile Button */}
               <button
                 onClick={() => setOpen(!open)}
@@ -478,8 +473,8 @@ const Navbar = () => {
 
       {/* ================= MOBILE MENU ================= */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t" style={{ backgroundColor: 'var(--nav-bg)', borderColor: 'var(--border-color)' }}>
-          <div className="px-6 py-4 space-y-2">
+        <div className="md:hidden border-t w-full" style={{ backgroundColor: 'var(--nav-bg)', borderColor: 'var(--border-color)', position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 40, maxHeight: 'calc(100vh - 80px)', overflowY: 'auto' }}>
+          <div className="px-4 py-4 space-y-2 sm:px-6">
             {/* SERVICES */}
              <div className="space-y-2">
                <div className="font-medium px-3 py-2" style={{ color: 'var(--text-main)' }}>Services</div>
@@ -510,6 +505,25 @@ const Navbar = () => {
                Complaints
              </a>
 
+             <button
+               type="button"
+               onClick={() => toggleTheme()}
+               className="w-full text-left px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-black/5 dark:hover:bg-white/10 transition flex items-center justify-between"
+               style={{ color: 'var(--text-main)', backgroundColor: 'var(--bg-primary)' }}
+             >
+               <span>{theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}</span>
+               {theme === 'light' ? (
+                 <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                   <path d="M21 12.79A9 9 0 1111.79 3 7 7 0 0021 12.79z" />
+                 </svg>
+               ) : (
+                 <svg className="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                   <circle cx="12" cy="12" r="5" />
+                   <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+                 </svg>
+               )}
+             </button>
+
              {user && user.role === 'admin' && (
               <a href="/admin" className="block px-3 py-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition cursor-pointer" style={{ color: 'var(--text-main)' }} onClick={() => setMobileMenuOpen(false)}>
                 Admin
@@ -534,6 +548,42 @@ const Navbar = () => {
                <a href="/contractor" className="block px-3 py-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition cursor-pointer" style={{ color: 'var(--text-main)' }} onClick={() => setMobileMenuOpen(false)}>
                  Contractor
                </a>
+             )}
+
+             {user && (
+               <>
+                 <div className="border-t" style={{ borderColor: 'var(--border-color)' }}></div>
+                 <div className="px-3 py-1 text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--text-secondary)' }}>Account</div>
+                 <a
+                   href={
+                     user.role === 'super_admin' ? '/super-admin' :
+                       user.role === 'department_admin' ? '/department-admin' :
+                         user.role === 'admin' ? '/admin' :
+                           user.role === 'analyzer' ? '/analyzer' :
+                             user.role === 'contractor' ? '/contractor' :
+                               '/profile'
+                   }
+                   className="block w-full px-3 py-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition cursor-pointer"
+                   style={{ color: 'var(--text-main)' }}
+                   onClick={() => setMobileMenuOpen(false)}
+                 >
+                   Dashboard
+                 </a>
+                 <a
+                   href="/profile"
+                   className="block w-full px-3 py-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition cursor-pointer"
+                   style={{ color: 'var(--text-main)' }}
+                   onClick={() => setMobileMenuOpen(false)}
+                 >
+                   Profile
+                 </a>
+                 <button
+                   onClick={() => { logout(); setMobileMenuOpen(false); }}
+                   className="w-full text-left px-3 py-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition text-red-500"
+                 >
+                   Logout
+                 </button>
+               </>
              )}
 
              {/* LEGAL LINKS */}

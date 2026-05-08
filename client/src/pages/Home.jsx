@@ -186,7 +186,7 @@ const ContactForm = ({ c }) => {
 
   return (
     <form onSubmit={submit} style={{display:'flex',flexDirection:'column',gap:16}}>
-      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
+      <div className="two-col-form" style={{gap:16}}>
         <div>
           <label style={{fontSize:13,fontWeight:600,color:c.muted,display:'block',marginBottom:6}}>Full Name *</label>
           <input name="name" value={form.name} onChange={handle} placeholder="Rajan Mehta" required style={inputStyle}
@@ -305,17 +305,42 @@ const Home = () => {
         .grad-text{background:linear-gradient(135deg,#2563eb 0%,#7c3aed 50%,#0ea5e9 100%);background-size:200% 200%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:gradMove 4s ease infinite}
         .ring-spin{position:absolute;border-radius:50%;border:1.5px solid rgba(37,99,235,0.18);animation:spin linear infinite}
         .contact-info-card{transition:transform 0.2s}.contact-info-card:hover{transform:translateY(-3px)}
+        .hero-section{width:100%;}
+        .hero-grid{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center;padding:80px 24px 60px;}
+        .hero-stat-row{display:flex;gap:32px;flex-wrap:wrap;}
+        .quick-track-row{display:flex;gap:12px;flex-wrap:wrap;}
+        .contact-grid{display:grid;grid-template-columns:1fr 1.6fr;gap:40px;align-items:start;}
+        .cta-button-row{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;}
+        .footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;}
+        .hero-right-card{width:100%;}
+        .two-col-form{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+        .track-input{min-width:0;}
+        @media (max-width: 1024px) {
+          .two-col-form{grid-template-columns:1fr;}
+          .hero-grid{grid-template-columns:1fr;gap:40px;padding:0;}
+          .hero-right{order:-1;}
+          .hero-stat-row{flex-direction:column;gap:20px;}
+          .quick-track-row{flex-direction:column;}
+          .contact-grid{grid-template-columns:1fr;}
+          .cta-button-row{flex-direction:column;gap:12px;}
+          .footer-grid{grid-template-columns:1fr;}
+        }
+        @media (max-width: 640px) {
+          .hero-section{min-height:auto;padding:48px 16px 32px;}
+          .btn-primary,.btn-ghost{width:100%;justify-content:center;}
+          .hero-left{margin-bottom:0;}
+        }
       `}</style>
 
       {/* ── HERO ──────────────────────────────────────────── */}
-      <section style={{position:'relative',minHeight:'95vh',display:'flex',alignItems:'center',
+      <section className="hero-section" style={{position:'relative',minHeight:'95vh',display:'flex',alignItems:'center',
         background:isDark?'radial-gradient(ellipse 80% 60% at 50% -10%,rgba(37,99,235,0.18) 0%,transparent 70%),#0b1120':'radial-gradient(ellipse 80% 60% at 50% -10%,rgba(37,99,235,0.10) 0%,transparent 70%),#f0f4ff',
         overflow:'hidden'}}>
         <Particles/>
         <div className="ring-spin" style={{width:520,height:520,top:'50%',left:'50%',transform:'translate(-50%,-50%)',animationDuration:'40s'}}/>
         <div className="ring-spin" style={{width:720,height:720,top:'50%',left:'50%',transform:'translate(-50%,-50%)',animationDuration:'60s',animationDirection:'reverse'}}/>
 
-        <div style={{maxWidth:1200,margin:'0 auto',padding:'80px 24px 60px',display:'grid',gridTemplateColumns:'1fr 1fr',gap:64,alignItems:'center',position:'relative',zIndex:1,width:'100%'}}>
+        <div className="hero-grid" style={{maxWidth:1200,margin:'0 auto',position:'relative',zIndex:1,width:'100%'}}>
           <div className="hero-left">
             <div style={{display:'inline-flex',alignItems:'center',gap:8,background:isDark?'rgba(37,99,235,0.15)':'rgba(37,99,235,0.08)',border:'1px solid rgba(37,99,235,0.25)',borderRadius:100,padding:'6px 16px',marginBottom:24,fontSize:13,fontWeight:600,color:'#3b82f6'}}>
               <span style={{width:7,height:7,borderRadius:'50%',background:'#3b82f6',display:'inline-block',animation:'pulse2 2s infinite'}}/>
@@ -327,11 +352,11 @@ const Home = () => {
             <p style={{fontSize:18,lineHeight:1.7,color:c.muted,marginBottom:36,maxWidth:480}}>
               Report civic issues, track resolutions in real-time, and hold your local government accountable. Fast. Transparent. Effective.
             </p>
-            <div style={{display:'flex',gap:14,flexWrap:'wrap',marginBottom:48}}>
+            <div className="cta-button-row" style={{marginBottom:48}}>
               <button className="btn-primary" onClick={() => navigate('/complaint')}>File a Complaint <IconArrow/></button>
               <button className="btn-ghost" onClick={() => navigate('/track')} style={{color:c.text,border:`1.5px solid ${c.border}`}}>Track Status</button>
             </div>
-            <div style={{display:'flex',gap:32}}>
+            <div className="hero-stat-row">
               {[['12K+','Complaints Filed'],['94%','Resolution Rate'],['48hr','Avg Response']].map(([n,l]) => (
                 <div key={l}>
                   <div style={{fontSize:22,fontWeight:800,color:c.accent}}>{n}</div>
@@ -389,7 +414,7 @@ const Home = () => {
       <section style={{background:c.surface,padding:'32px 24px'}}>
         <div style={{maxWidth:700,margin:'0 auto',textAlign:'center'}}>
           <p style={{fontSize:14,fontWeight:600,color:c.muted,marginBottom:12,textTransform:'uppercase',letterSpacing:'0.08em'}}>Track your complaint instantly</p>
-          <div style={{display:'flex',gap:12}}>
+          <div className="quick-track-row">
             <input className="track-input" value={trackId} onChange={e => setTrackId(e.target.value)}
               placeholder="Enter Complaint ID  e.g. 68001a2b..."
               style={{flex:1,padding:'14px 20px',borderRadius:12,fontSize:15,border:`1.5px solid ${c.border}`,background:c.surface2,color:c.text,fontFamily:'inherit',transition:'all 0.2s'}}/>
@@ -590,7 +615,7 @@ const Home = () => {
             <h2 style={{fontSize:'clamp(2rem,4vw,2.8rem)',fontWeight:800,letterSpacing:'-0.02em',marginBottom:14}}>Get in touch</h2>
             <p style={{color:c.muted,fontSize:17,maxWidth:500,margin:'0 auto'}}>Have a question, feedback, or partnership inquiry? We'd love to hear from you.</p>
           </div>
-          <div style={{display:'grid',gridTemplateColumns:'1fr 1.6fr',gap:40,alignItems:'start'}}>
+          <div className="contact-grid">
             {/* Info column */}
             <div>
               <div style={{marginBottom:28}}>
@@ -648,7 +673,7 @@ const Home = () => {
 
       {/* ── FOOTER ────────────────────────────────────────── */}
       <footer style={{background:c.surface,borderTop:`1px solid ${c.border}`,padding:'48px 24px 32px'}}>
-        <div style={{maxWidth:1200,margin:'0 auto',display:'grid',gridTemplateColumns:'2fr 1fr 1fr 1fr',gap:40}}>
+        <div className="footer-grid" style={{maxWidth:1200,margin:'0 auto'}}>
           <div>
             <div style={{fontSize:20,fontWeight:800,marginBottom:12}}><span style={{color:c.accent}}>Smart</span>Complaint</div>
             <p style={{color:c.muted,fontSize:14,lineHeight:1.7,maxWidth:260}}>A next-generation civic complaint management platform connecting citizens to their government.</p>
