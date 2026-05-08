@@ -5,10 +5,12 @@ const session = require('express-session');
 
 const router = express.Router();
 
+env.config();
+
 passport.use(new GoogleStrategy({
-    clientID: 'YOUR_GOOGLE_CLIENT_ID',
-    clientSecret: 'YOUR_GOOGLE_CLIENT_SECRET',
-    callbackURL: '/api/auth/google/callback'
+    clientID: process.env.GOOGLE_CLIENT_ID || 'YOUR_GOOGLE_CLIENT_ID',
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET || 'YOUR_GOOGLE_CLIENT_SECRET',
+    callbackURL: process.env.GOOGLE_CALLBACK_URL || 'http://localhost:3000/auth/google/callback'
   },
   function(accessToken, refreshToken, profile, cb) {
     // Save or update user in DB here
