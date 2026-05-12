@@ -24,6 +24,7 @@ import Resources from "./pages/Resources";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import Accessibility from "./pages/Accessibility";
+import Contact from "./pages/Contact";
 
 function AppContent() {
   const [user, setUser] = useState(null);
@@ -91,6 +92,7 @@ function AppContent() {
           <Route path="/track" element={<Complainttracking />} />
           <Route path="/analytics" element={<Analytics />} />
           <Route path="/resources" element={<Resources />} />
+          <Route path="/contact" element={<Contact />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/terms-of-service" element={<TermsOfService />} />
           <Route path="/accessibility" element={<Accessibility />} />

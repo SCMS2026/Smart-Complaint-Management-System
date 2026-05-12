@@ -176,7 +176,7 @@ function ComplaintDetail({ complaint, isDark, theme, onClose }) {
       </div>
 
       {/* Info grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 24px", marginBottom: 24 }}>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         {[
           ["Category",     complaint.category],
           ["Location",     complaint.location],
@@ -186,9 +186,9 @@ function ComplaintDetail({ complaint, isDark, theme, onClose }) {
           ["Last Updated", fmtDate(complaint.lastUpdated)],
           ...(complaint.slaDeadline ? [["SLA Deadline", fmtDate(complaint.slaDeadline)]] : []),
         ].map(([label, value]) => (
-          <div key={label} style={{ padding: "8px 0", borderBottom: `1px solid ${isDark ? "#1E293B" : "#F1F5F9"}` }}>
-            <p style={{ margin: "0 0 2px", fontSize: 10, fontWeight: 700, color: theme.sub, textTransform: "uppercase", letterSpacing: "0.07em" }}>{label}</p>
-            <p style={{ margin: 0, fontSize: 13, fontWeight: 500, color: theme.text }}>{value || "—"}</p>
+          <div key={label} className="pb-3 border-b" style={{ borderColor: isDark ? "#1E293B" : "#F1F5F9" }}>
+            <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.07em]" style={{ color: theme.sub }}>{label}</p>
+            <p className="m-0 text-sm font-medium" style={{ color: theme.text }}>{value || "—"}</p>
           </div>
         ))}
       </div>
@@ -266,49 +266,41 @@ export default function ComplaintTracking() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: theme.bg, fontFamily: "'DM Sans','Segoe UI',sans-serif", padding: "32px 16px 64px" }}>
+    <div className="min-h-screen bg-slate-50 px-4 py-8 sm:px-6 sm:py-10" style={{ background: theme.bg, fontFamily: "'DM Sans','Segoe UI',sans-serif" }}>
       <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
-      <div style={{ maxWidth: 800, margin: "0 auto" }}>
+      <div className="mx-auto max-w-5xl">
 
         {/* Header */}
-        <div style={{
-          background: "linear-gradient(135deg,#1E3A5F,#2563EB)",
-          borderRadius: 20, padding: "36px 32px", marginBottom: 28,
-          boxShadow: "0 8px 32px rgba(37,99,235,0.3)", position: "relative", overflow: "hidden",
-        }}>
-          <div style={{ position: "absolute", right: -40, top: -40, width: 200, height: 200, borderRadius: "50%", background: "rgba(255,255,255,0.05)" }} />
-          <p style={{ margin: "0 0 6px", color: "#93C5FD", fontSize: 12, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase" }}>
+        <div className="relative overflow-hidden rounded-[20px] p-6 sm:p-8 mb-7 shadow-[0_8px_32px_rgba(37,99,235,0.3)]" style={{ background: "linear-gradient(135deg,#1E3A5F,#2563EB)" }}>
+          <div className="absolute -right-10 -top-10 h-52 w-52 rounded-full bg-white/5" />
+          <p className="m-0 text-xs sm:text-sm font-bold uppercase tracking-[0.12em] text-sky-300">
             Smart Complaint System
           </p>
-          <h1 style={{ margin: "0 0 8px", color: "#fff", fontSize: 28, fontWeight: 700 }}>
+          <h1 className="mt-2 mb-2 text-2xl sm:text-3xl font-bold text-white">
             Track Your Complaint
           </h1>
-          <p style={{ margin: 0, color: "#BFDBFE", fontSize: 14 }}>
+          <p className="text-sm sm:text-base text-sky-200">
             Search by your name, issue type, or location to find your complaint
           </p>
         </div>
 
         {/* Search Box */}
-        <div style={{
-          background: theme.card, border: `1px solid ${theme.border}`,
-          borderRadius: 16, padding: 24, marginBottom: 24,
-          boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
-        }}>
-          <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: theme.sub, marginBottom: 10, letterSpacing: "0.06em", textTransform: "uppercase" }}>
+        <div className="rounded-[20px] border p-5 sm:p-6 mb-6 shadow-sm" style={{ background: theme.card, borderColor: theme.border }}>
+          <label className="block text-xs sm:text-sm font-bold uppercase tracking-[0.06em] mb-2" style={{ color: theme.sub }}>
             Search Complaints
           </label>
-          <div style={{ display: "flex", gap: 10 }}>
+          <div className="flex flex-col gap-3 sm:flex-row">
             <input
               value={query}
               onChange={handleInput}
               onKeyDown={handleKeyDown}
               placeholder="Enter your name, issue (e.g. pothole, water leak) or location..."
+              className="min-w-0 flex-1 rounded-[14px] border px-4 py-3 text-sm sm:text-base transition-all outline-none"
               style={{
-                flex: 1, padding: "12px 16px", borderRadius: 10,
-                border: `1.5px solid ${theme.border}`, background: theme.input,
-                color: theme.text, fontSize: 14, outline: "none",
-                transition: "border-color 0.2s",
+                borderColor: theme.border,
+                background: theme.input,
+                color: theme.text,
               }}
               onFocus={(e) => (e.target.style.borderColor = "#2563EB")}
               onBlur={(e) => (e.target.style.borderColor = theme.border)}
@@ -316,30 +308,28 @@ export default function ComplaintTracking() {
             <button
               onClick={() => { clearTimeout(debounceRef.current); doSearch(query); }}
               disabled={loading || query.trim().length < 2}
+              className="rounded-[14px] px-4 py-3 text-sm sm:text-base font-semibold transition-all whitespace-nowrap"
               style={{
-                padding: "12px 24px", borderRadius: 10, border: "none",
                 background: loading || query.trim().length < 2
                   ? isDark ? "#1E293B" : "#E2E8F0"
                   : "linear-gradient(135deg,#1E3A5F,#2563EB)",
                 color: loading || query.trim().length < 2 ? theme.sub : "#fff",
-                fontWeight: 700, fontSize: 14,
                 cursor: loading || query.trim().length < 2 ? "not-allowed" : "pointer",
-                display: "flex", alignItems: "center", gap: 8, whiteSpace: "nowrap",
               }}
             >
               {loading ? (
-                <>
+                <span className="inline-flex items-center gap-2">
                   <span style={{
                     width: 14, height: 14, border: "2px solid #94A3B8",
                     borderTopColor: "#2563EB", borderRadius: "50%",
                     display: "inline-block", animation: "spin 0.7s linear infinite",
                   }} />
                   Searching…
-                </>
+                </span>
               ) : "Search →"}
             </button>
           </div>
-          <p style={{ margin: "10px 0 0", fontSize: 12, color: theme.sub }}>
+          <p className="mt-3 text-xs sm:text-sm" style={{ color: theme.sub }}>
             💡 Try: your name · "water leak" · "Surat" · "pothole"
           </p>
         </div>
@@ -353,17 +343,17 @@ export default function ComplaintTracking() {
 
         {/* Results + Detail side-by-side on wide, stacked on narrow */}
         {results && results.length > 0 && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <div className="flex flex-col gap-4">
 
             {/* Result count */}
-            <p style={{ margin: 0, fontSize: 13, color: theme.sub, fontWeight: 500 }}>
+            <p className="m-0 text-sm sm:text-base font-medium" style={{ color: theme.sub }}>
               {results.length} complaint{results.length !== 1 ? "s" : ""} found
             </p>
 
-            <div style={{ display: "grid", gridTemplateColumns: selected ? "1fr 1.4fr" : "1fr", gap: 16, alignItems: "start" }}>
+            <div className={`grid gap-4 ${selected ? "lg:grid-cols-[1fr_1.4fr]" : "grid-cols-1"}`}>
 
               {/* List */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <div className="flex flex-col gap-3">
                 {results.map((c) => (
                   <ComplaintCard
                     key={c.id}
@@ -390,10 +380,11 @@ export default function ComplaintTracking() {
             {/* New search */}
             <button
               onClick={() => { setResults(null); setQuery(""); setSelected(null); setError(""); }}
+              className="mx-auto rounded-[14px] border px-5 py-3 text-sm font-semibold transition-all"
               style={{
-                alignSelf: "center", padding: "10px 24px", borderRadius: 10,
-                border: `1.5px solid ${theme.border}`, background: "transparent",
-                color: theme.sub, fontWeight: 600, fontSize: 13, cursor: "pointer",
+                borderColor: theme.border,
+                color: theme.sub,
+                background: "transparent",
               }}
             >
               ← New Search

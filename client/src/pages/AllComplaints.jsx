@@ -469,7 +469,7 @@ const AllComplaints = () => {
 
   const t = theme === "dark" ? darkTheme : lightTheme;
 
-
+console.log("assets", assets);
   const reloadComplaints = useCallback(async () => {
     const filters = {};
     if (search) filters.search = search;
@@ -750,84 +750,64 @@ const AllComplaints = () => {
         paddingBottom: 48,
       }}
     >
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 gap-3 sm:gap-4 px-4 sm:px-6 md:px-8 pt-6 sm:pt-8">
         <div>
-          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800 }}>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-black" style={{ margin: 0 }}>
             📋 Complaints
           </h1>
-          <p style={{ margin: "4px 0 0", opacity: 0.8, fontSize: 13 }}>
+          <p className="text-xs sm:text-sm mt-2 opacity-80">
             {complaints.length} total complaint
             {complaints.length !== 1 ? "s" : ""}
             {selectedComplaints.length > 0 && ` • ${selectedComplaints.length} selected`}
           </p>
         </div>
-         <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-           {/* Bulk Delete Button - Only for admin users */}
-           {selectedComplaints.length > 0 && currentUser?.role === 'admin' && (
-             <button
-               onClick={handleBulkDelete}
-               disabled={approvalLoading}
-               style={{
-                 background: approvalLoading ? "#FCA5A5" : "#EF4444",
-                 color: "#fff",
-                 border: "none",
-                 borderRadius: 10,
-                 padding: "10px 16px",
-                 fontWeight: 700,
-                 fontSize: 14,
-                 cursor: approvalLoading ? "not-allowed" : "pointer",
-                 boxShadow: "0 4px 12px rgba(239,68,68,.3)",
-               }}
-             >
-               🗑 Delete Selected ({selectedComplaints.length})
-             </button>
-           )}
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 items-stretch sm:items-center">
+          {/* Bulk Delete Button - Only for admin users */}
+          {selectedComplaints.length > 0 && currentUser?.role === 'admin' && (
+            <button
+              onClick={handleBulkDelete}
+              disabled={approvalLoading}
+              className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold rounded-lg whitespace-nowrap transition-opacity"
+              style={{
+                background: approvalLoading ? "#FCA5A5" : "#EF4444",
+                color: "#fff",
+                border: "none",
+                cursor: approvalLoading ? "not-allowed" : "pointer",
+                boxShadow: "0 4px 12px rgba(239,68,68,.3)",
+                opacity: approvalLoading ? 0.7 : 1,
+              }}
+            >
+              🗑 Delete ({selectedComplaints.length})
+            </button>
+          )}
           <button
             onClick={() => {
               setShowForm((v) => !v);
               setErrors({});
               setSubErr("");
             }}
+            className="px-4 sm:px-6 py-2 text-xs sm:text-sm font-bold rounded-lg transition-all"
             style={{
               background: t.cardBg,
               color: t.text,
               border: `1.5px solid ${t.border}`,
-              borderRadius: 10,
-              padding: "10px 22px",
-              fontWeight: 700,
-              fontSize: 14,
               cursor: "pointer",
-              transition: "transform .15s, border-color .2s, box-shadow .2s",
               boxShadow: t.cardShadow,
             }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = "scale(1.04)";
-              e.currentTarget.style.borderColor = "#2563EB";
-              e.currentTarget.style.boxShadow = `0 8px 24px rgba(37,99,235,${theme === "dark" ? 0.4 : 0.25})`;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = "";
-              e.currentTarget.style.borderColor = t.border;
-              e.currentTarget.style.boxShadow = t.cardShadow;
-            }}
           >
-            {showForm ? "✕ Close" : "+ New Complaint"}
+            {showForm ? "✕ Close" : "+ New"}
           </button>
         </div>
       </div>
 
-      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 20px" }}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
         {submitSuccess && (
           <div
+            className="my-4 sm:my-6 rounded-lg border px-3 sm:px-4 py-3 text-sm sm:text-base font-semibold"
             style={{
-              marginTop: 20,
               background: t.successBg,
-              border: `1px solid ${t.successBorder}`,
-              borderRadius: 10,
-              padding: "14px 20px",
+              borderColor: t.successBorder,
               color: t.successText,
-              fontWeight: 600,
-              fontSize: 14,
             }}
           >
             ✅ Complaint successfully submitted!
@@ -836,22 +816,18 @@ const AllComplaints = () => {
 
         {showForm && (
           <div
+            className="my-6 rounded-2xl overflow-hidden"
             style={{
               background: t.formCardBg,
-              borderRadius: 16,
-              marginTop: 24,
               boxShadow: t.shadow,
-              overflow: "hidden",
               animation: "slideDown .25s ease",
             }}
           >
             <div
+              className="px-4 sm:px-6 py-3 sm:py-4 border-b text-base sm:text-lg font-bold"
               style={{
                 background: t.formSectionBg,
-                padding: "16px 24px",
-                borderBottom: `1px solid ${t.border}`,
-                fontWeight: 700,
-                fontSize: 16,
+                borderColor: t.border,
                 color: t.text,
               }}
             >
@@ -860,12 +836,7 @@ const AllComplaints = () => {
 
             <form
               onSubmit={handleSubmit}
-              style={{
-                padding: 24,
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                gap: 16,
-              }}
+              className="p-4 sm:p-6 md:p-8 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4"
             >
               <Field label="Your Name" error={errors.name} theme={theme}>
                 <input
@@ -1172,17 +1143,11 @@ const AllComplaints = () => {
               <button
                 type="submit"
                 disabled={submitting}
+                className="col-span-full rounded-xl py-3 text-sm sm:text-base font-semibold text-white transition-all"
                 style={{
-                  gridColumn: "1 / -1",
                   background: submitting
                     ? "#93C5FD"
                     : "linear-gradient(135deg,#2563EB,#1E40AF)",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: 10,
-                  padding: "12px 0",
-                  fontWeight: 700,
-                  fontSize: 15,
                   cursor: submitting ? "not-allowed" : "pointer",
                   boxShadow: "0 4px 12px rgba(37,99,235,.35)",
                 }}
@@ -1193,31 +1158,17 @@ const AllComplaints = () => {
           </div>
         )}
 
-        <div
-          style={{
-            marginTop: 28,
-            display: "flex",
-            gap: 10,
-            flexWrap: "wrap",
-            alignItems: "center",
-          }}
-        >
+        <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4 flex-wrap items-start sm:items-center px-4 sm:px-0">
           {/* Search */}
-          <div style={{ position: "relative", flex: "1 1 220px", maxWidth: 320 }}>
+          <div className="relative w-full sm:flex-1 sm:max-w-xs">
             <span
-              style={{
-                position: "absolute",
-                left: 11,
-                top: "50%",
-                transform: "translateY(-50%)",
-                fontSize: 15,
-                color: t.textSecondary,
-                pointerEvents: "none",
-              }}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-base pointer-events-none"
+              style={{ color: t.textSecondary }}
             >
               🔍
             </span>
             <input
+              className="w-full rounded-xl py-2 pl-10 pr-3 text-sm sm:text-base transition-all"
               style={{ ...inp(false, theme), paddingLeft: 34 }}
               placeholder="Search issue, city, category..."
               value={search}
@@ -1225,53 +1176,42 @@ const AllComplaints = () => {
             />
           </div>
 
+          <div className="flex gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible">
+            {[
+              "all",
+              "pending",
+              "verified",
+              "assigned",
+              "in_progress",
+              "completed",
+              "user_approval_pending",
+              "approved_by_user",
+              "rejected",
+              "rejected_by_user",
+            ].map((s) => (
+              <button
+                key={s}
+                onClick={() => setFilterStatus(s)}
+                className="px-3 py-2 text-xs sm:text-sm font-semibold rounded-full whitespace-nowrap transition-all flex-shrink-0"
+                style={{
+                  border:
+                    filterStatus === s
+                      ? `2px solid ${t.filterBtnActiveBorder}`
+                      : `1.5px solid ${t.filterBtnBorder}`,
+                  background: filterStatus === s ? t.filterBtnActiveBg : t.filterBtnBg,
+                  color: filterStatus === s ? t.filterBtnActiveColor : t.filterBtnColor,
+                }}
+              >
+                {s === "all"
+                  ? "All"
+                  : s.replace("_", " ").replace(/\b\w/g, (l) => l.toUpperCase())}
+              </button>
+            ))}
+          </div>
 
-
-           {/* Status Filters */}
-           {[
-             "all",
-             "pending",
-             "verified",
-             "assigned",
-             "in_progress",
-             "completed",
-             "user_approval_pending",
-             "approved_by_user",
-             "rejected",
-             "rejected_by_user",
-           ].map((s) => (
-            <button
-              key={s}
-              onClick={() => setFilterStatus(s)}
-              style={{
-                border:
-                  filterStatus === s
-                    ? `2px solid ${t.filterBtnActiveBorder}`
-                    : `1.5px solid ${t.filterBtnBorder}`,
-                background: filterStatus === s ? t.filterBtnActiveBg : t.filterBtnBg,
-                color: filterStatus === s ? t.filterBtnActiveColor : t.filterBtnColor,
-                borderRadius: 20,
-                padding: "6px 14px",
-                fontSize: 12,
-                fontWeight: 600,
-                cursor: "pointer",
-                transition: "all .15s",
-              }}
-            >
-              {s === "all"
-                ? "All"
-                : s.replace("_", " ").replace(/\b\w/g, (l) => l.toUpperCase())}
-            </button>
-          ))}
-
-          {/* Results count */}
           <span
-            style={{
-              fontSize: 13,
-              color: t.textSecondary,
-              fontWeight: 500,
-              marginLeft: "auto",
-            }}
+            className="text-xs sm:text-sm font-medium ml-auto"
+            style={{ color: t.textSecondary }}
           >
             {complaints.length} result{complaints.length !== 1 ? "s" : ""}
           </span>
@@ -1299,15 +1239,7 @@ const AllComplaints = () => {
           </div>
         ) : (
           <>
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-                gap: 12,
-                marginTop: 20,
-              }}
-            >
-              {/* Mobile: 1 col | Tablet: 2 col | Desktop: 3+ col - handled by minmax */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5 mt-5 sm:mt-6">
               {complaints.map((c) => (
                 <ComplaintCard
                   key={c._id}
@@ -1335,56 +1267,38 @@ const AllComplaints = () => {
 
             {/* Pagination Controls */}
             {totalPages > 1 && (
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  gap: 12,
-                  marginTop: 32,
-                  padding: "16px 0",
-                }}
-              >
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mt-8 py-4">
                 <button
                   onClick={() => setPage(p => Math.max(1, p - 1))}
                   disabled={page === 1}
+                  className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-all whitespace-nowrap"
                   style={{
-                    padding: "8px 16px",
                     border: `1.5px solid ${t.border}`,
                     background: page === 1 ? t.border : t.cardBg,
                     color: page === 1 ? t.textSecondary : t.text,
-                    borderRadius: 8,
                     cursor: page === 1 ? "not-allowed" : "pointer",
-                    fontWeight: 600,
-                    fontSize: 13,
+                    opacity: page === 1 ? 0.6 : 1,
                   }}
                 >
                   ◀ Previous
                 </button>
 
-                <div style={{ display: "flex", gap: 4 }}>
+                <div className="flex items-center gap-2">
                   {Array.from({ length: totalPages }, (_, i) => i + 1)
                     .filter(p => p === 1 || p === totalPages || (p >= page - 1 && p <= page + 1))
                     .map((p, idx, arr) => (
                       <React.Fragment key={p}>
                         {idx > 0 && arr[idx - 1] !== p - 1 && (
-                          <span style={{ color: t.textSecondary }}>...</span>
+                          <span className="text-xs text-secondary" style={{ color: t.textSecondary }}>...</span>
                         )}
                         <button
                           onClick={() => setPage(p)}
+                          className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-lg text-xs sm:text-sm font-semibold transition-all"
                           style={{
-                            width: 36,
-                            height: 36,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
                             border: page === p ? `2px solid #2563EB` : `1.5px solid ${t.border}`,
                             background: page === p ? "#2563EB" : t.cardBg,
                             color: page === p ? "#fff" : t.text,
-                            borderRadius: 8,
                             cursor: "pointer",
-                            fontWeight: 600,
-                            fontSize: 13,
                           }}
                         >
                           {p}
@@ -1396,15 +1310,13 @@ const AllComplaints = () => {
                 <button
                   onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                   disabled={page === totalPages}
+                  className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-all whitespace-nowrap"
                   style={{
-                    padding: "8px 16px",
                     border: `1.5px solid ${t.border}`,
                     background: page === totalPages ? t.border : t.cardBg,
                     color: page === totalPages ? t.textSecondary : t.text,
-                    borderRadius: 8,
                     cursor: page === totalPages ? "not-allowed" : "pointer",
-                    fontWeight: 600,
-                    fontSize: 13,
+                    opacity: page === totalPages ? 0.6 : 1,
                   }}
                 >
                   Next ▶
@@ -1416,49 +1328,36 @@ const AllComplaints = () => {
       </div>
 
       {showRejectModal && (
-        <div style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: "rgba(0,0,0,0.5)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          zIndex: 1000,
-        }}>
-          <div style={{
-            background: t.cardBg,
-            borderRadius: 16,
-            padding: 24,
-            width: "90%",
-            maxWidth: 400,
-            boxShadow: t.shadow,
-          }}>
-            <h3 style={{ margin: "0 0 16px", color: t.text, fontSize: 18, fontWeight: 700 }}>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 sm:p-6">
+          <div
+            className="w-full max-w-md rounded-3xl p-4 sm:p-6"
+            style={{
+              background: t.cardBg,
+              boxShadow: t.shadow,
+            }}
+          >
+            <h3 className="text-base sm:text-lg font-bold mb-3" style={{ color: t.text }}>
               Reject Work
             </h3>
-            <p style={{ color: t.textSecondary, marginBottom: 16, fontSize: 14 }}>
+            <p className="text-xs sm:text-sm mb-4" style={{ color: t.textSecondary }}>
               Please provide a reason why the work is not satisfactory. This will be sent to the department for reassignment.
             </p>
             <textarea
               value={rejectionReason}
               onChange={(e) => setRejectionReason(e.target.value)}
               placeholder="Enter reason for rejection..."
+              className="w-full mb-4 text-sm sm:text-base resize-none"
               style={{
                 ...inp(false, theme),
                 minHeight: 100,
-                resize: "vertical",
-                marginBottom: 16,
               }}
             />
             {submitError && (
-              <p style={{ color: "#EF4444", fontSize: 13, marginBottom: 12 }}>
+              <p className="text-xs sm:text-sm text-red-500 mb-3">
                 {submitError}
               </p>
             )}
-            <div style={{ display: "flex", gap: 12 }}>
+            <div className="flex flex-col sm:flex-row gap-3">
               <button
                 onClick={() => {
                   setShowRejectModal(false);
@@ -1466,14 +1365,11 @@ const AllComplaints = () => {
                   setRejectionReason("");
                   setSubErr("");
                 }}
+                className="flex-1 py-3 text-sm font-semibold rounded-xl transition-all"
                 style={{
-                  flex: 1,
                   background: t.border,
                   color: t.text,
                   border: "none",
-                  borderRadius: 8,
-                  padding: "10px",
-                  fontWeight: 600,
                   cursor: "pointer",
                 }}
               >
@@ -1482,14 +1378,11 @@ const AllComplaints = () => {
               <button
                 onClick={handleReject}
                 disabled={approvalLoading}
+                className="flex-1 py-3 text-sm font-semibold rounded-xl transition-opacity"
                 style={{
-                  flex: 1,
                   background: "#EF4444",
                   color: "#fff",
                   border: "none",
-                  borderRadius: 8,
-                  padding: "10px",
-                  fontWeight: 600,
                   cursor: approvalLoading ? "not-allowed" : "pointer",
                   opacity: approvalLoading ? 0.7 : 1,
                 }}

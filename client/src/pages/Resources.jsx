@@ -217,7 +217,7 @@ const TUTORIALS = [
     level: "Beginner",
     videoUrl: "https://player.cloudinary.com/embed/?cloud_name=dbtkd4rfb&public_id=Video_Project_2_lkpzza",
   },
-  { icon: "▶️", title: "Tracking Your Complaint Status", duration: "2:15", durationSecs: 135, level: "Beginner" },
+  { icon: "▶️", title: "Tracking Your Complaint Status", duration: "2:15", durationSecs: 135, level: "Beginner",videoUrl: "https://player.cloudinary.com/embed/?cloud_name=dbtkd4rfb&public_id=trak_pfthnw" },
   { icon: "▶️", title: "Admin Dashboard Walkthrough", duration: "7:30", durationSecs: 450, level: "Admin" },
   { icon: "▶️", title: "Using the Analytics Dashboard", duration: "6:10", durationSecs: 370, level: "Analyzer" },
   { icon: "▶️", title: "Auto-Assign & SLA Monitoring", duration: "4:55", durationSecs: 295, level: "Admin" },
