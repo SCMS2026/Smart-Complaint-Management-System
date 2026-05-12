@@ -11,6 +11,7 @@ import {
   CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   AreaChart, Area,
 } from "recharts";
+import { Users, Building2, SquareKanban, NotepadText, CircleCheck,Pencil,Trash } from "lucide-react";
 
 /* ─── helpers ─── */
 const initials = (name = "") => name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase() || "?";
@@ -36,26 +37,26 @@ const fetchAnalytics = async () => {
 };
 
 /* ─── config ─── */
-const CHART_COLORS = ["#3B82F6","#10B981","#F59E0B","#EF4444","#8B5CF6","#EC4899","#06B6D4","#84CC16"];
+const CHART_COLORS = ["#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6", "#EC4899", "#06B6D4", "#84CC16"];
 
 const STATUS_CFG = {
-  pending:              { bg:"bg-amber-50",  text:"text-amber-700",  dot:"bg-amber-400",  border:"border-amber-200",  label:"Pending"           },
-  verified:             { bg:"bg-blue-50",   text:"text-blue-700",   dot:"bg-blue-500",   border:"border-blue-200",   label:"Verified"          },
-  in_progress:          { bg:"bg-violet-50", text:"text-violet-700", dot:"bg-violet-500", border:"border-violet-200", label:"In Progress"       },
-  completed:            { bg:"bg-emerald-50",text:"text-emerald-700",dot:"bg-emerald-500",border:"border-emerald-200",label:"Completed"         },
-  rejected:             { bg:"bg-red-50",    text:"text-red-600",    dot:"bg-red-400",    border:"border-red-200",    label:"Rejected"          },
-  user_approval_pending:{ bg:"bg-orange-50", text:"text-orange-700", dot:"bg-orange-400", border:"border-orange-200", label:"Awaiting Approval" },
-  approved_by_user:     { bg:"bg-teal-50",   text:"text-teal-700",   dot:"bg-teal-500",   border:"border-teal-200",   label:"Approved"          },
-  rejected_by_user:     { bg:"bg-rose-50",   text:"text-rose-700",   dot:"bg-rose-400",   border:"border-rose-200",   label:"Rejected by User"  },
+  pending: { bg: "bg-amber-50", text: "text-amber-700", dot: "bg-amber-400", border: "border-amber-200", label: "Pending" },
+  verified: { bg: "bg-blue-50", text: "text-blue-700", dot: "bg-blue-500", border: "border-blue-200", label: "Verified" },
+  in_progress: { bg: "bg-violet-50", text: "text-violet-700", dot: "bg-violet-500", border: "border-violet-200", label: "In Progress" },
+  completed: { bg: "bg-emerald-50", text: "text-emerald-700", dot: "bg-emerald-500", border: "border-emerald-200", label: "Completed" },
+  rejected: { bg: "bg-red-50", text: "text-red-600", dot: "bg-red-400", border: "border-red-200", label: "Rejected" },
+  user_approval_pending: { bg: "bg-orange-50", text: "text-orange-700", dot: "bg-orange-400", border: "border-orange-200", label: "Awaiting Approval" },
+  approved_by_user: { bg: "bg-teal-50", text: "text-teal-700", dot: "bg-teal-500", border: "border-teal-200", label: "Approved" },
+  rejected_by_user: { bg: "bg-rose-50", text: "text-rose-700", dot: "bg-rose-400", border: "border-rose-200", label: "Rejected by User" },
 };
 
 const ROLE_CLR = {
-  super_admin:    "bg-violet-100 text-violet-700 border-violet-200",
-  department_admin:"bg-blue-100 text-blue-700 border-blue-200",
-  worker:         "bg-emerald-100 text-emerald-700 border-emerald-200",
-  analyzer:       "bg-amber-100 text-amber-700 border-amber-200",
-  contractor:     "bg-orange-100 text-orange-700 border-orange-200",
-  user:           "bg-slate-100 text-slate-600 border-slate-200",
+  super_admin: "bg-violet-100 text-violet-700 border-violet-200",
+  department_admin: "bg-blue-100 text-blue-700 border-blue-200",
+  worker: "bg-emerald-100 text-emerald-700 border-emerald-200",
+  analyzer: "bg-amber-100 text-amber-700 border-amber-200",
+  contractor: "bg-orange-100 text-orange-700 border-orange-200",
+  user: "bg-slate-100 text-slate-600 border-slate-200",
 };
 
 const DEPT_GRAD = [
@@ -66,15 +67,15 @@ const DEPT_GRAD = [
 ];
 
 const TABS = [
-  { id:"overview",    label:"Overview",    icon:"📊" },
-  { id:"departments", label:"Departments", icon:"🏢" },
-  { id:"users",       label:"Users",       icon:"👥" },
-  { id:"complaints",  label:"Complaints",  icon:"📋" },
+  { id: "overview", label: "Overview", icon: <SquareKanban /> },
+  { id: "departments", label: "Departments", icon: <Building2 /> },
+  { id: "users", label: "Users", icon: <Users /> },
+  { id: "complaints", label: "Complaints", icon: <NotepadText /> },
 ];
 
 /* ─── tiny components ─── */
 const StatusBadge = ({ status }) => {
-  const c = STATUS_CFG[status] || { bg:"bg-slate-50", text:"text-slate-500", dot:"bg-slate-400", border:"border-slate-200", label: status };
+  const c = STATUS_CFG[status] || { bg: "bg-slate-50", text: "text-slate-500", dot: "bg-slate-400", border: "border-slate-200", label: status };
   return (
     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border whitespace-nowrap ${c.bg} ${c.text} ${c.border}`}>
       <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${c.dot}`} />
@@ -84,7 +85,7 @@ const StatusBadge = ({ status }) => {
 };
 
 const Avatar = ({ name, src, size = "md" }) => {
-  const s = { sm:"w-7 h-7 text-[10px]", md:"w-9 h-9 text-xs", lg:"w-11 h-11 text-sm" }[size];
+  const s = { sm: "w-7 h-7 text-[10px]", md: "w-9 h-9 text-xs", lg: "w-11 h-11 text-sm" }[size];
   if (src) return <img src={src} alt="" className={`${s} rounded-full object-cover flex-shrink-0 ring-2 ring-white dark:ring-slate-700`} />;
   return (
     <div className={`${s} rounded-full bg-gradient-to-br from-slate-300 to-slate-500 flex items-center justify-center text-white font-bold flex-shrink-0 ring-2 ring-white dark:ring-slate-700`}>
@@ -148,26 +149,26 @@ const SuperAdminDashboard = () => {
   const { theme } = useTheme();
   const dk = theme === "dark";
 
-  const [departments, setDepartments]   = useState([]);
-  const [users, setUsers]               = useState([]);
-  const [complaints, setComplaints]     = useState([]);
-  const [workerTasks, setWorkerTasks]   = useState([]);
-  const [analytics, setAnalytics]       = useState(null);
-  const [loading, setLoading]           = useState(true);
-  const [activeTab, setActiveTab]       = useState("overview");
-  const [toast, setToast]               = useState(null);
+  const [departments, setDepartments] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [complaints, setComplaints] = useState([]);
+  const [workerTasks, setWorkerTasks] = useState([]);
+  const [analytics, setAnalytics] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("overview");
+  const [toast, setToast] = useState(null);
   const [selectedUsers, setSelectedUsers] = useState([]);
-  const [searchUsers, setSearchUsers]   = useState("");
-  const [filterRole, setFilterRole]     = useState("all");
+  const [searchUsers, setSearchUsers] = useState("");
+  const [filterRole, setFilterRole] = useState("all");
   const [searchComplaints, setSearchComplaints] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
 
   /* modals */
-  const [showDeptForm, setShowDeptForm]   = useState(false);
-  const [editingDept, setEditingDept]     = useState(null);
-  const [deptForm, setDeptForm]           = useState({ name:"", description:"" });
-  const [showUserForm, setShowUserForm]   = useState(false);
-  const [userForm, setUserForm]           = useState({ name:"", email:"", password:"", role:"", department_id:"" });
+  const [showDeptForm, setShowDeptForm] = useState(false);
+  const [editingDept, setEditingDept] = useState(null);
+  const [deptForm, setDeptForm] = useState({ name: "", description: "" });
+  const [showUserForm, setShowUserForm] = useState(false);
+  const [userForm, setUserForm] = useState({ name: "", email: "", password: "", role: "", department_id: "" });
   const [deleteConfirm, setDeleteConfirm] = useState(null);
 
   const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
@@ -209,7 +210,7 @@ const SuperAdminDashboard = () => {
       if (r.success) { setDepartments([...departments, r.department]); showToast("Department created"); }
       else showToast(r.message, "error");
     }
-    setShowDeptForm(false); setEditingDept(null); setDeptForm({ name:"", description:"" });
+    setShowDeptForm(false); setEditingDept(null); setDeptForm({ name: "", description: "" });
   };
 
   const handleDeptDelete = async () => {
@@ -225,7 +226,7 @@ const SuperAdminDashboard = () => {
     const r = await createUser(userForm);
     if (r.success) { setUsers([...users, r.user]); showToast("User created"); }
     else showToast(r.message, "error");
-    setShowUserForm(false); setUserForm({ name:"", email:"", password:"", role:"", department_id:"" });
+    setShowUserForm(false); setUserForm({ name: "", email: "", password: "", role: "", department_id: "" });
   };
 
   const handleRoleChange = async (userId, role, deptId) => {
@@ -271,7 +272,7 @@ const SuperAdminDashboard = () => {
     departments: departments.length,
     users: users.length,
     complaints: complaints.length,
-    resolved: complaints.filter(c => ["completed","approved_by_user"].includes(c.status)).length,
+    resolved: complaints.filter(c => ["completed", "approved_by_user"].includes(c.status)).length,
     pending: complaints.filter(c => c.status === "pending").length,
     workers: users.filter(u => u.role === "worker").length,
   };
@@ -320,7 +321,7 @@ const SuperAdminDashboard = () => {
       )}
 
       {/* ── Header / secondary nav ── */}
-      <div className={`sticky top-16 z-30 border-b shadow-sm ${dk ? "bg-slate-800/95 border-slate-700 backdrop-blur-md" : "bg-white/95 border-slate-100 backdrop-blur-md"}`}>
+      <div className={`sticky top-0 z-30 border-b shadow-sm ${dk ? "bg-slate-800/95 border-slate-700 backdrop-blur-md" : "bg-white/95 border-slate-100 backdrop-blur-md"}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-13 flex items-center justify-between gap-4 py-2">
           {/* Brand chip */}
           <div className="flex items-center gap-2 flex-shrink-0">
@@ -378,15 +379,15 @@ const SuperAdminDashboard = () => {
             {/* Stat cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
               {[
-                { label:"Departments", value:stats.departments, icon:"🏢", grad:"from-blue-500 to-indigo-600", sub:`${users.filter(u=>u.role==="department_admin").length} admins`, tab:"departments" },
-                { label:"Total Users",  value:stats.users,       icon:"👥", grad:"from-violet-500 to-purple-600", sub:`${stats.workers} workers`, tab:"users" },
-                { label:"Complaints",   value:stats.complaints,  icon:"📋", grad:"from-amber-400 to-orange-500", sub:`${stats.pending} pending`, tab:"complaints" },
-                { label:"Resolved",     value:stats.resolved,    icon:"✅", grad:"from-emerald-400 to-teal-600",  sub:`${stats.complaints ? Math.round(stats.resolved/stats.complaints*100) : 0}% rate`, tab:"complaints" },
+                { label: "Departments", value: stats.departments, icon: <Building2 />, sub: `${users.filter(u => u.role === "department_admin").length} admins`, tab: "departments" },
+                { label: "Total Users", value: stats.users, icon: <Users />, sub: `${stats.workers} workers`, tab: "users" },
+                { label: "Complaints", value: stats.complaints, icon: <NotepadText />, sub: `${stats.pending} pending`, tab: "complaints" },
+                { label: "Resolved", value: stats.resolved, icon: <CircleCheck />, sub: `${stats.complaints ? Math.round(stats.resolved / stats.complaints * 100) : 0}% rate`, tab: "complaints" },
               ].map(s => (
                 <button key={s.label} onClick={() => setActiveTab(s.tab)}
-                  className={`group relative overflow-hidden rounded-2xl p-5 text-left bg-gradient-to-br ${s.grad} hover:scale-[1.02] hover:shadow-lg transition-all duration-200`}>
+                  className={`group relative overflow-hidden rounded-2xl p-5 text-left bg-blue-500 hover:scale-[1.02] hover:shadow-lg transition-all duration-200`}>
                   <div className="absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full translate-x-6 -translate-y-6 group-hover:scale-125 transition-transform duration-300" />
-                  <span className="text-2xl block mb-3">{s.icon}</span>
+                  <span className="text-2xl block mb-3 text-white">{s.icon}</span>
                   <p className="text-3xl font-black text-white leading-none">{s.value}</p>
                   <p className="text-white/75 text-[10px] font-bold mt-1.5 uppercase tracking-widest">{s.label}</p>
                   <p className="text-white/55 text-[11px] mt-0.5">{s.sub}</p>
@@ -396,13 +397,13 @@ const SuperAdminDashboard = () => {
 
             {/* Role breakdown */}
             <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 sm:gap-3">
-              {["user","department_admin","worker","contractor","analyzer","super_admin"].map(r => (
+              {["user", "department_admin", "worker", "contractor", "analyzer", "super_admin"].map(r => (
                 <div key={r} className={`${card(dk)} p-3 sm:p-4 text-center`}>
                   <p className={`text-xl sm:text-2xl font-black ${dk ? "text-white" : "text-slate-800"}`}>
-                    {users.filter(u=>u.role===r).length}
+                    {users.filter(u => u.role === r).length}
                   </p>
                   <p className={`text-[9px] font-bold uppercase tracking-wider mt-1 leading-tight ${dk ? "text-slate-500" : "text-slate-400"}`}>
-                    {r.replace(/_/g," ")}
+                    {r.replace(/_/g, " ")}
                   </p>
                 </div>
               ))}
@@ -417,12 +418,12 @@ const SuperAdminDashboard = () => {
                   <ResponsiveContainer width="100%" height={220}>
                     <PieChart>
                       <Pie data={analytics.statusBreakdown} dataKey="count" nameKey="_id" cx="50%" cy="50%" outerRadius={80} innerRadius={48} labelLine={false}
-                        label={({ percent }) => `${(percent*100).toFixed(0)}%`}>
-                        {analytics.statusBreakdown.map((_,i) => <Cell key={i} fill={CHART_COLORS[i%CHART_COLORS.length]} strokeWidth={0} />)}
+                        label={({ percent }) => `${(percent * 100).toFixed(0)}%`}>
+                        {analytics.statusBreakdown.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} strokeWidth={0} />)}
                       </Pie>
-                      <Tooltip contentStyle={tooltipStyle} formatter={(v,n) => [v, n.replace(/_/g," ")]} />
-                      <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize:11, color: axisColor }}
-                        formatter={v => v.replace(/_/g," ")} />
+                      <Tooltip contentStyle={tooltipStyle} formatter={(v, n) => [v, n.replace(/_/g, " ")]} />
+                      <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 11, color: axisColor }}
+                        formatter={v => v.replace(/_/g, " ")} />
                     </PieChart>
                   </ResponsiveContainer>
                 ) : <div className={`h-40 flex items-center justify-center text-sm ${dk ? "text-slate-600" : "text-slate-300"}`}>No data</div>}
@@ -441,11 +442,11 @@ const SuperAdminDashboard = () => {
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
-                      <XAxis dataKey="_id" tick={{ fontSize:10, fill:axisColor }} axisLine={false} tickLine={false} />
-                      <YAxis tick={{ fontSize:10, fill:axisColor }} axisLine={false} tickLine={false} width={25} />
+                      <XAxis dataKey="_id" tick={{ fontSize: 10, fill: axisColor }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fontSize: 10, fill: axisColor }} axisLine={false} tickLine={false} width={25} />
                       <Tooltip contentStyle={tooltipStyle} />
                       <Area type="monotone" dataKey="count" stroke="#3B82F6" strokeWidth={2.5} fill="url(#ag)"
-                        dot={{ fill:"#3B82F6", r:4, strokeWidth:2, stroke: dk ? "#1e293b" : "#fff" }} />
+                        dot={{ fill: "#3B82F6", r: 4, strokeWidth: 2, stroke: dk ? "#1e293b" : "#fff" }} />
                     </AreaChart>
                   </ResponsiveContainer>
                 ) : <div className={`h-40 flex items-center justify-center text-sm ${dk ? "text-slate-600" : "text-slate-300"}`}>No data</div>}
@@ -458,10 +459,10 @@ const SuperAdminDashboard = () => {
                   <ResponsiveContainer width="100%" height={200}>
                     <BarChart data={analytics.categoryBreakdown} layout="vertical">
                       <CartesianGrid strokeDasharray="3 3" stroke={gridColor} horizontal={false} />
-                      <XAxis type="number" tick={{ fontSize:10, fill:axisColor }} axisLine={false} tickLine={false} />
-                      <YAxis dataKey="_id" type="category" tick={{ fontSize:10, fill:axisColor }} axisLine={false} tickLine={false} width={80} />
+                      <XAxis type="number" tick={{ fontSize: 10, fill: axisColor }} axisLine={false} tickLine={false} />
+                      <YAxis dataKey="_id" type="category" tick={{ fontSize: 10, fill: axisColor }} axisLine={false} tickLine={false} width={80} />
                       <Tooltip contentStyle={tooltipStyle} />
-                      <Bar dataKey="count" fill="#10B981" radius={[0,6,6,0]} />
+                      <Bar dataKey="count" fill="#10B981" radius={[0, 6, 6, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 ) : <div className={`h-40 flex items-center justify-center text-sm ${dk ? "text-slate-600" : "text-slate-300"}`}>No data</div>}
@@ -477,13 +478,13 @@ const SuperAdminDashboard = () => {
                       completed: d.completed, inProgress: d.inProgress, pending: d.pending,
                     }))}>
                       <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
-                      <XAxis dataKey="name" tick={{ fontSize:10, fill:axisColor }} axisLine={false} tickLine={false} />
-                      <YAxis tick={{ fontSize:10, fill:axisColor }} axisLine={false} tickLine={false} width={25} />
+                      <XAxis dataKey="name" tick={{ fontSize: 10, fill: axisColor }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fontSize: 10, fill: axisColor }} axisLine={false} tickLine={false} width={25} />
                       <Tooltip contentStyle={tooltipStyle} />
-                      <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize:10, color:axisColor }} />
+                      <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 10, color: axisColor }} />
                       <Bar dataKey="completed" fill="#10B981" name="Completed" stackId="a" />
                       <Bar dataKey="inProgress" fill="#8B5CF6" name="In Progress" stackId="a" />
-                      <Bar dataKey="pending" fill="#F59E0B" name="Pending" stackId="a" radius={[4,4,0,0]} />
+                      <Bar dataKey="pending" fill="#F59E0B" name="Pending" stackId="a" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 ) : <div className={`h-40 flex items-center justify-center text-sm ${dk ? "text-slate-600" : "text-slate-300"}`}>No data</div>}
@@ -500,7 +501,7 @@ const SuperAdminDashboard = () => {
                 <h1 className={`text-2xl font-black ${heading(dk)}`}>Departments</h1>
                 <p className={sub(dk) + " mt-0.5"}>{departments.length} departments in system</p>
               </div>
-              <button onClick={() => { setShowDeptForm(true); setEditingDept(null); setDeptForm({ name:"", description:"" }); }}
+              <button onClick={() => { setShowDeptForm(true); setEditingDept(null); setDeptForm({ name: "", description: "" }); }}
                 className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl transition shadow-sm shadow-blue-300/30">
                 + <span className="hidden sm:inline">New</span> Department
               </button>
@@ -509,7 +510,7 @@ const SuperAdminDashboard = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
               {departments.length === 0 ? (
                 <div className="col-span-3 py-16 text-center">
-                  <p className="text-4xl mb-3">🏢</p>
+                  <p className="text-4xl mb-3"><Building2 /></p>
                   <p className={`text-sm ${dk ? "text-slate-600" : "text-slate-400"}`}>No departments yet</p>
                 </div>
               ) : departments.map((dept, idx) => {
@@ -521,7 +522,7 @@ const SuperAdminDashboard = () => {
                     <div className="p-5">
                       <div className="flex items-start justify-between gap-3 mb-4">
                         <div className="flex items-center gap-3">
-                          <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${DEPT_GRAD[idx%DEPT_GRAD.length]} flex items-center justify-center text-white font-black text-sm flex-shrink-0 shadow-sm`}>
+                          <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${DEPT_GRAD[idx % DEPT_GRAD.length]} flex items-center justify-center text-white font-black text-sm flex-shrink-0 shadow-sm`}>
                             {dept.name[0]?.toUpperCase()}
                           </div>
                           <div>
@@ -530,10 +531,10 @@ const SuperAdminDashboard = () => {
                           </div>
                         </div>
                         <div className="flex gap-1.5 flex-shrink-0">
-                          <button onClick={() => { setEditingDept(dept); setDeptForm({ name:dept.name, description:dept.description||"" }); setShowDeptForm(true); }}
-                            className={`p-2 rounded-lg text-sm transition ${dk ? "text-slate-400 hover:text-blue-400 hover:bg-blue-900/30" : "text-slate-400 hover:text-blue-600 hover:bg-blue-50"}`}>✏️</button>
-                          <button onClick={() => setDeleteConfirm({ type:"dept", id:dept._id, name:dept.name })}
-                            className={`p-2 rounded-lg text-sm transition ${dk ? "text-slate-400 hover:text-red-400 hover:bg-red-900/30" : "text-slate-400 hover:text-red-500 hover:bg-red-50"}`}>🗑</button>
+                          <button onClick={() => { setEditingDept(dept); setDeptForm({ name: dept.name, description: dept.description || "" }); setShowDeptForm(true); }}
+                            className={`p-2 rounded-lg text-sm transition ${dk ? "text-slate-400 hover:text-blue-400 hover:bg-blue-900/30" : "text-slate-400 hover:text-blue-600 hover:bg-blue-50"}`}><Pencil /></button>
+                          <button onClick={() => setDeleteConfirm({ type: "dept", id: dept._id, name: dept.name })}
+                            className={`p-2 rounded-lg text-sm transition ${dk ? "text-slate-400 hover:text-red-400 hover:bg-red-900/30" : "text-slate-400 hover:text-red-500 hover:bg-red-50"}`}><Trash /></button>
                         </div>
                       </div>
                       <div className={`grid grid-cols-3 gap-2 text-center border-t pt-4 ${dk ? "border-slate-700" : "border-slate-50"}`}>
@@ -587,14 +588,14 @@ const SuperAdminDashboard = () => {
                 placeholder="Search name or email…"
                 className={`flex-1 rounded-xl border px-4 py-2.5 text-sm outline-none transition
                   ${dk ? "bg-slate-800 border-slate-700 text-white placeholder-slate-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-900/40"
-                       : "bg-white border-slate-200 text-slate-800 focus:border-blue-300 focus:ring-2 focus:ring-blue-100"}`} />
+                    : "bg-white border-slate-200 text-slate-800 focus:border-blue-300 focus:ring-2 focus:ring-blue-100"}`} />
               <select value={filterRole} onChange={e => setFilterRole(e.target.value)}
                 className={`sm:w-44 rounded-xl border px-4 py-2.5 text-sm outline-none transition
                   ${dk ? "bg-slate-800 border-slate-700 text-slate-200 focus:border-blue-500"
-                       : "bg-white border-slate-200 text-slate-600 focus:border-blue-300"}`}>
+                    : "bg-white border-slate-200 text-slate-600 focus:border-blue-300"}`}>
                 <option value="all">All Roles</option>
-                {["user","department_admin","worker","contractor","analyzer","super_admin"].map(r => (
-                  <option key={r} value={r}>{r.replace(/_/g," ")}</option>
+                {["user", "department_admin", "worker", "contractor", "analyzer", "super_admin"].map(r => (
+                  <option key={r} value={r}>{r.replace(/_/g, " ")}</option>
                 ))}
               </select>
             </div>
@@ -609,7 +610,7 @@ const SuperAdminDashboard = () => {
                   <div key={user._id} className={`${card(dk)} p-4 transition ${sel ? dk ? "border-blue-600/50" : "border-blue-200" : ""}`}>
                     <div className="flex items-start gap-3">
                       <input type="checkbox" checked={sel}
-                        onChange={e => e.target.checked ? setSelectedUsers([...selectedUsers,user._id]) : setSelectedUsers(selectedUsers.filter(i=>i!==user._id))}
+                        onChange={e => e.target.checked ? setSelectedUsers([...selectedUsers, user._id]) : setSelectedUsers(selectedUsers.filter(i => i !== user._id))}
                         className="mt-1 w-4 h-4 rounded flex-shrink-0" />
                       <Avatar name={user.name} src={user.profileImage} />
                       <div className="flex-1 min-w-0">
@@ -618,17 +619,17 @@ const SuperAdminDashboard = () => {
                             <p className={`font-bold text-sm ${dk ? "text-white" : "text-slate-800"}`}>{user.name}</p>
                             <p className={`text-xs truncate ${dk ? "text-slate-400" : "text-slate-400"}`}>{user.email}</p>
                           </div>
-                          <button onClick={() => setDeleteConfirm({ type:"user", id:user._id, name:user.name })}
+                          <button onClick={() => setDeleteConfirm({ type: "user", id: user._id, name: user.name })}
                             className="text-xs text-red-400 hover:text-red-500 px-2 py-1 rounded-lg transition flex-shrink-0">Del</button>
                         </div>
                         <div className="flex items-center gap-2 mt-2 flex-wrap">
                           <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${ROLE_CLR[user.role] || "bg-slate-100 text-slate-500 border-slate-200"}`}>
-                            {user.role?.replace(/_/g," ")}
+                            {user.role?.replace(/_/g, " ")}
                           </span>
                           <button onClick={() => handleToggleStatus(user._id)}
                             disabled={user._id === currentUser?._id}
-                            className={`text-[10px] px-2 py-0.5 rounded-full font-bold transition ${user.status==="active" ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-600"}`}>
-                            {user.status==="active" ? "● Active" : "○ Blocked"}
+                            className={`text-[10px] px-2 py-0.5 rounded-full font-bold transition ${user.status === "active" ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-600"}`}>
+                            {user.status === "active" ? "● Active" : "○ Blocked"}
                           </button>
                         </div>
                       </div>
@@ -647,10 +648,10 @@ const SuperAdminDashboard = () => {
                       <th className="px-5 py-4 w-10">
                         <input type="checkbox"
                           checked={selectedUsers.length === users.length && users.length > 0}
-                          onChange={e => e.target.checked ? setSelectedUsers(users.map(u=>u._id)) : setSelectedUsers([])}
+                          onChange={e => e.target.checked ? setSelectedUsers(users.map(u => u._id)) : setSelectedUsers([])}
                           className="w-4 h-4 rounded" />
                       </th>
-                      {["User","Email","Role","Status","Department","Actions"].map(h => (
+                      {["User", "Email", "Role", "Status", "Department", "Actions"].map(h => (
                         <th key={h} className={`px-5 py-4 text-left ${tableHead(dk)}`}>{h}</th>
                       ))}
                     </tr>
@@ -659,12 +660,12 @@ const SuperAdminDashboard = () => {
                     {filteredUsers.length === 0 ? (
                       <tr><td colSpan={7} className={`py-16 text-center text-sm ${dk ? "text-slate-600" : "text-slate-300"}`}>No users match your filters</td></tr>
                     ) : filteredUsers.map(user => {
-                      const deptId = user.department && typeof user.department==="object" ? user.department._id : user.department||"";
+                      const deptId = user.department && typeof user.department === "object" ? user.department._id : user.department || "";
                       return (
                         <tr key={user._id} className={tableRow(dk) + (selectedUsers.includes(user._id) ? dk ? " bg-blue-900/10" : " bg-blue-50/30" : "")}>
                           <td className="px-5 py-3.5">
                             <input type="checkbox" checked={selectedUsers.includes(user._id)}
-                              onChange={e => e.target.checked ? setSelectedUsers([...selectedUsers,user._id]) : setSelectedUsers(selectedUsers.filter(i=>i!==user._id))}
+                              onChange={e => e.target.checked ? setSelectedUsers([...selectedUsers, user._id]) : setSelectedUsers(selectedUsers.filter(i => i !== user._id))}
                               className="w-4 h-4 rounded" />
                           </td>
                           <td className="px-5 py-3.5">
@@ -680,8 +681,8 @@ const SuperAdminDashboard = () => {
                               disabled={user._id === currentUser?._id}
                               className={`text-xs rounded-lg px-2 py-1.5 border outline-none focus:ring-1 transition
                                 ${dk ? "bg-slate-700 border-slate-600 text-slate-200 focus:ring-blue-500" : "bg-white border-slate-200 text-slate-700 focus:ring-blue-100"}`}>
-                              {["user","department_admin","worker","contractor","analyzer","super_admin"].map(r => (
-                                <option key={r} value={r}>{r.replace(/_/g," ")}</option>
+                              {["user", "department_admin", "worker", "contractor", "analyzer", "super_admin"].map(r => (
+                                <option key={r} value={r}>{r.replace(/_/g, " ")}</option>
                               ))}
                             </select>
                           </td>
@@ -689,8 +690,8 @@ const SuperAdminDashboard = () => {
                             <button onClick={() => handleToggleStatus(user._id)}
                               disabled={user._id === currentUser?._id}
                               className={`text-[11px] px-2.5 py-1 rounded-full font-bold transition
-                                ${user.status==="active" ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200" : "bg-red-100 text-red-600 hover:bg-red-200"}`}>
-                              {user.status==="active" ? "● Active" : "○ Blocked"}
+                                ${user.status === "active" ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200" : "bg-red-100 text-red-600 hover:bg-red-200"}`}>
+                              {user.status === "active" ? "● Active" : "○ Blocked"}
                             </button>
                           </td>
                           <td className="px-5 py-3.5">
@@ -703,7 +704,7 @@ const SuperAdminDashboard = () => {
                             </select>
                           </td>
                           <td className="px-5 py-3.5">
-                            <button onClick={() => setDeleteConfirm({ type:"user", id:user._id, name:user.name })}
+                            <button onClick={() => setDeleteConfirm({ type: "user", id: user._id, name: user.name })}
                               className="text-xs text-red-400 hover:text-red-500 font-semibold px-2 py-1 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition">
                               Delete
                             </button>
@@ -728,16 +729,16 @@ const SuperAdminDashboard = () => {
 
             {/* Status filter pills */}
             <div className="flex gap-2 flex-wrap mb-4">
-              {["all","pending","verified","in_progress","completed","rejected","approved_by_user"].map(s => {
-                const cnt = s==="all" ? complaints.length : complaints.filter(c=>c.status===s).length;
+              {["all", "pending", "verified", "in_progress", "completed", "rejected", "approved_by_user"].map(s => {
+                const cnt = s === "all" ? complaints.length : complaints.filter(c => c.status === s).length;
                 const active = filterStatus === s;
                 return (
                   <button key={s} onClick={() => setFilterStatus(s)}
                     className={`text-[11px] font-bold px-3 py-1.5 rounded-full border transition whitespace-nowrap
                       ${active ? "bg-blue-600 text-white border-blue-600"
-                               : dk ? "bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-500"
-                                    : "bg-white border-slate-200 text-slate-500 hover:border-slate-300"}`}>
-                    {s==="all" ? `All (${cnt})` : `${s.replace(/_/g," ")} (${cnt})`}
+                        : dk ? "bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-500"
+                          : "bg-white border-slate-200 text-slate-500 hover:border-slate-300"}`}>
+                    {s === "all" ? `All (${cnt})` : `${s.replace(/_/g, " ")} (${cnt})`}
                   </button>
                 );
               })}
@@ -749,7 +750,7 @@ const SuperAdminDashboard = () => {
                 placeholder="Search complaints…"
                 className={`w-full sm:w-80 rounded-xl border px-4 py-2.5 text-sm outline-none transition
                   ${dk ? "bg-slate-800 border-slate-700 text-white placeholder-slate-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-900/40"
-                       : "bg-white border-slate-200 focus:border-blue-300 focus:ring-2 focus:ring-blue-100"}`} />
+                    : "bg-white border-slate-200 focus:border-blue-300 focus:ring-2 focus:ring-blue-100"}`} />
             </div>
 
             {/* Mobile cards */}
@@ -784,7 +785,7 @@ const SuperAdminDashboard = () => {
                 <table className="w-full min-w-[700px]">
                   <thead>
                     <tr className={`border-b ${dk ? "border-slate-700 bg-slate-700/30" : "border-slate-100 bg-slate-50/70"}`}>
-                      {["ID","Issue","Status","Department","Filed By","Date"].map(h => (
+                      {["ID", "Issue", "Status", "Department", "Filed By", "Date"].map(h => (
                         <th key={h} className={`px-5 py-4 text-left ${tableHead(dk)}`}>{h}</th>
                       ))}
                     </tr>
@@ -798,7 +799,7 @@ const SuperAdminDashboard = () => {
                           <span className={`font-mono text-xs ${dk ? "text-slate-600" : "text-slate-300"}`}>#{c._id?.slice(-6)}</span>
                         </td>
                         <td className="px-5 py-4 max-w-[220px]">
-                          <p className={`text-sm font-semibold truncate group-hover:text-blue-500 transition-colors ${dk ? "text-slate-200" : "text-slate-700"}`}>{c.issue||"—"}</p>
+                          <p className={`text-sm font-semibold truncate group-hover:text-blue-500 transition-colors ${dk ? "text-slate-200" : "text-slate-700"}`}>{c.issue || "—"}</p>
                         </td>
                         <td className="px-5 py-4"><StatusBadge status={c.status} /></td>
                         <td className="px-5 py-4">
@@ -806,7 +807,7 @@ const SuperAdminDashboard = () => {
                             {c.department_id?.name || "Unassigned"}
                           </span>
                         </td>
-                        <td className={`px-5 py-4 text-sm ${dk ? "text-slate-400" : "text-slate-500"}`}>{c.userId?.name||"—"}</td>
+                        <td className={`px-5 py-4 text-sm ${dk ? "text-slate-400" : "text-slate-500"}`}>{c.userId?.name || "—"}</td>
                         <td className={`px-5 py-4 text-xs whitespace-nowrap ${dk ? "text-slate-500" : "text-slate-400"}`}>{fmtDate(c.createdAt)}</td>
                       </tr>
                     ))}
@@ -821,45 +822,45 @@ const SuperAdminDashboard = () => {
       {/* ═══ Modals ═══ */}
       {showDeptForm && (
         <Modal title={editingDept ? "Edit Department" : "Create Department"} submitLabel={editingDept ? "Update" : "Create"} dk={dk}
-          onClose={() => { setShowDeptForm(false); setEditingDept(null); setDeptForm({ name:"", description:"" }); }}
+          onClose={() => { setShowDeptForm(false); setEditingDept(null); setDeptForm({ name: "", description: "" }); }}
           onSubmit={handleDeptSubmit}>
           <Field label="Department Name" required dk={dk}>
             <input type="text" required className={inputCls(dk)} value={deptForm.name} placeholder="e.g. Water Supply"
-              onChange={e => setDeptForm({ ...deptForm, name:e.target.value })} />
+              onChange={e => setDeptForm({ ...deptForm, name: e.target.value })} />
           </Field>
           <Field label="Description" dk={dk}>
-            <textarea rows={3} className={inputCls(dk)+" resize-none"} value={deptForm.description} placeholder="Brief description…"
-              onChange={e => setDeptForm({ ...deptForm, description:e.target.value })} />
+            <textarea rows={3} className={inputCls(dk) + " resize-none"} value={deptForm.description} placeholder="Brief description…"
+              onChange={e => setDeptForm({ ...deptForm, description: e.target.value })} />
           </Field>
         </Modal>
       )}
 
       {showUserForm && (
         <Modal title="Create New User" submitLabel="Create User" dk={dk}
-          onClose={() => { setShowUserForm(false); setUserForm({ name:"", email:"", password:"", role:"", department_id:"" }); }}
+          onClose={() => { setShowUserForm(false); setUserForm({ name: "", email: "", password: "", role: "", department_id: "" }); }}
           onSubmit={handleUserSubmit}>
           {[
-            { label:"Full Name", key:"name", type:"text", ph:"Arjun Mehta", req:true },
-            { label:"Email", key:"email", type:"email", ph:"arjun@gov.in", req:true },
-            { label:"Password", key:"password", type:"password", ph:"••••••••", req:true },
+            { label: "Full Name", key: "name", type: "text", ph: "Arjun Mehta", req: true },
+            { label: "Email", key: "email", type: "email", ph: "arjun@gov.in", req: true },
+            { label: "Password", key: "password", type: "password", ph: "••••••••", req: true },
           ].map(f => (
             <Field key={f.key} label={f.label} required={f.req} dk={dk}>
               <input type={f.type} required={f.req} className={inputCls(dk)} placeholder={f.ph}
-                value={userForm[f.key]} onChange={e => setUserForm({ ...userForm, [f.key]:e.target.value })} />
+                value={userForm[f.key]} onChange={e => setUserForm({ ...userForm, [f.key]: e.target.value })} />
             </Field>
           ))}
           <Field label="Role" required dk={dk}>
-            <select required className={inputCls(dk)+" cursor-pointer"} value={userForm.role}
-              onChange={e => setUserForm({ ...userForm, role:e.target.value })}>
+            <select required className={inputCls(dk) + " cursor-pointer"} value={userForm.role}
+              onChange={e => setUserForm({ ...userForm, role: e.target.value })}>
               <option value="">Select role…</option>
-              {["department_admin","worker","contractor","analyzer","super_admin"].map(r => (
-                <option key={r} value={r}>{r.replace(/_/g," ")}</option>
+              {["department_admin", "worker", "contractor", "analyzer", "super_admin"].map(r => (
+                <option key={r} value={r}>{r.replace(/_/g, " ")}</option>
               ))}
             </select>
           </Field>
           <Field label="Department" dk={dk}>
-            <select className={inputCls(dk)+" cursor-pointer"} value={userForm.department_id}
-              onChange={e => setUserForm({ ...userForm, department_id:e.target.value })}>
+            <select className={inputCls(dk) + " cursor-pointer"} value={userForm.department_id}
+              onChange={e => setUserForm({ ...userForm, department_id: e.target.value })}>
               <option value="">None</option>
               {departments.map(d => <option key={d._id} value={d._id}>{d.name}</option>)}
             </select>
@@ -868,16 +869,16 @@ const SuperAdminDashboard = () => {
       )}
 
       {deleteConfirm && (
-        <Modal title={`Delete ${deleteConfirm.type==="user" ? "User" : "Department"}`} submitLabel="Yes, Delete" danger dk={dk}
+        <Modal title={`Delete ${deleteConfirm.type === "user" ? "User" : "Department"}`} submitLabel="Yes, Delete" danger dk={dk}
           onClose={() => setDeleteConfirm(null)}
-          onSubmit={e => { e.preventDefault(); deleteConfirm.type==="user" ? handleUserDelete() : handleDeptDelete(); }}>
+          onSubmit={e => { e.preventDefault(); deleteConfirm.type === "user" ? handleUserDelete() : handleDeptDelete(); }}>
           <div className={`flex items-start gap-4 p-4 rounded-xl border ${dk ? "bg-red-900/20 border-red-800/40" : "bg-red-50 border-red-100"}`}>
             <span className="text-3xl flex-shrink-0">⚠️</span>
             <div>
               <p className="font-bold text-red-500 text-sm mb-1">This cannot be undone</p>
               <p className={`text-sm ${dk ? "text-red-400" : "text-red-600"}`}>
                 You're about to permanently delete <strong>"{deleteConfirm.name}"</strong>.
-                {deleteConfirm.type==="dept" && " All associated data may be affected."}
+                {deleteConfirm.type === "dept" && " All associated data may be affected."}
               </p>
             </div>
           </div>
