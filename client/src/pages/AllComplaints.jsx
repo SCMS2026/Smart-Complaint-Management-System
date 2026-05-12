@@ -480,9 +480,10 @@ console.log("assets", assets);
     const res = await fetchComplaints(filters);
     if (res.success) {
       setComplaints(res.complaints || []);
-      if (res.pagination) {
-        setTotalPages(res.pagination.pages);
-      }
+      setTotalPages(res.pagination?.pages || 1);
+    } else {
+      setComplaints([]);
+      setTotalPages(1);
     }
   }, [search, filterStatus, page, limit]);
 
@@ -512,20 +513,23 @@ console.log("assets", assets);
         name: user.name || "",
         phone: user.phone || "",
       }));
-      reloadComplaints();
+      await reloadComplaints();
       setLoading(false);
     })();
   }, [navigate, reloadComplaints]);
 
-  // Reload when filters change
+  // Reset page to 1 when filters change, then reload complaint data.
   useEffect(() => {
     if (!loading) {
-      setPage(1);
-      reloadComplaints();
+      if (page === 1) {
+        reloadComplaints();
+      } else {
+        setPage(1);
+      }
     }
-   }, [search, filterStatus, reloadComplaints]);
+  }, [search, filterStatus, loading]);
 
-  // Reload when page changes
+  // Reload whenever the current page changes.
   useEffect(() => {
     if (!loading) {
       reloadComplaints();
