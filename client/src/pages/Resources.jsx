@@ -1,89 +1,26 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import {
+  BarChart3,
+  Book,
+  Play,
+  Pause,
+  SkipBack,
+  SkipForward,
+  Volume2,
+  HelpCircle,
+  Download,
+  Headphones,
+  Search,
+  ChevronDown,
+  ChevronRight,
+} from "lucide-react";
 
-// ─── Icons ────────────────────────────────────────────────────────────────
-const BookIcon = () => (
-  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-  </svg>
-);
-
-const VideoIcon = () => (
-  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" />
-  </svg>
-);
-
-const QuestionIcon = () => (
-  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-  </svg>
-);
-
-const DownloadIcon = () => (
-  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-  </svg>
-);
-
-const SupportIcon = () => (
-  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
-  </svg>
-);
-
-const SearchIcon = () => (
-  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-  </svg>
-);
-
-const ChevronIcon = ({ open }) => (
-  <svg className={`w-5 h-5 transition-transform duration-300 ${open ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-  </svg>
-);
-
-const ArrowIcon = () => (
-  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-  </svg>
-);
-
-const PlayIcon = () => (
-  <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-    <path d="M8 5v14l11-7z" />
-  </svg>
-);
-
-const PauseIcon = () => (
-  <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-    <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
-  </svg>
-);
-
-const PrevIcon = () => (
-  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M19 20L9 12l10-8v16zM5 19V5" />
-  </svg>
-);
-
-const NextIcon = () => (
-  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M5 4l10 8-10 8V4zM19 5v14" />
-  </svg>
-);
-
-const VolumeIcon = () => (
-  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072M12 6v12m-3.536-9.536a5 5 0 000 7.072M5 12H3" />
-  </svg>
-);
 
 // ─── Data ─────────────────────────────────────────────────────────────────
 const GUIDES = [
   {
-    icon: "📋",
+    icon: Book,
     title: "How to File a Complaint",
     desc: "Step-by-step guide to submitting your first complaint — from registration to confirmation.",
     tag: "Beginner",
@@ -92,7 +29,7 @@ const GUIDES = [
     linkLabel: "File Now",
   },
   {
-    icon: "🔍",
+    icon: Search,
     title: "Tracking Your Complaint",
     desc: "Learn how to use the tracking system to monitor your complaint status in real-time.",
     tag: "Beginner",
@@ -101,7 +38,7 @@ const GUIDES = [
     linkLabel: "Track Now",
   },
   {
-    icon: "⏱",
+    icon: HelpCircle,
     title: "Understanding SLA & Deadlines",
     desc: "What are Service Level Agreements, how priorities affect resolution time, and what happens when SLA is breached.",
     tag: "Intermediate",
@@ -110,7 +47,7 @@ const GUIDES = [
     linkLabel: "Read More",
   },
   {
-    icon: "🚨",
+    icon: Download,
     title: "Priority Levels Explained",
     desc: "Difference between Low, Medium, High, and Critical — when to use each and what response time to expect.",
     tag: "Intermediate",
@@ -119,7 +56,7 @@ const GUIDES = [
     linkLabel: "Read More",
   },
   {
-    icon: "📊",
+    icon: BarChart3,
     title: "Reading Analytics Reports",
     desc: "A guide for Analyzers and Admins on how to interpret KPIs, heatmaps, and department reports.",
     tag: "Advanced",
@@ -128,7 +65,7 @@ const GUIDES = [
     linkLabel: "Open Analytics",
   },
   {
-    icon: "🏢",
+    icon: Headphones,
     title: "Department Admin Handbook",
     desc: "Managing workers, assigning complaints, setting SLA thresholds, and reviewing department-level performance.",
     tag: "Advanced",
@@ -175,7 +112,7 @@ const FAQS = [
 
 const DOWNLOADS = [
   {
-    icon: "📄",
+    icon: FileText,
     title: "User Guide (PDF)",
     desc: "Complete guide for citizens — filing, tracking, and approval workflows.",
     size: "1.2 MB",
@@ -183,7 +120,7 @@ const DOWNLOADS = [
     typeColor: "bg-red-100 text-red-700",
   },
   {
-    icon: "📊",
+    icon: BarChart3,
     title: "Admin Handbook (PDF)",
     desc: "Full handbook for administrators and department admins.",
     size: "2.4 MB",
@@ -191,7 +128,7 @@ const DOWNLOADS = [
     typeColor: "bg-red-100 text-red-700",
   },
   {
-    icon: "📋",
+    icon: FileText,
     title: "SLA Policy Document",
     desc: "Official SLA timelines, priority definitions, and escalation rules.",
     size: "840 KB",
@@ -199,7 +136,7 @@ const DOWNLOADS = [
     typeColor: "bg-red-100 text-red-700",
   },
   {
-    icon: "📑",
+    icon: FileText,
     title: "Complaint Form Template",
     desc: "Printable offline complaint form for areas with limited internet access.",
     size: "320 KB",
@@ -210,17 +147,17 @@ const DOWNLOADS = [
 
 const TUTORIALS = [
   {
-    icon: "▶️",
+    icon: Play,
     title: "How to Submit a Complaint",
     duration: "3:42",
     durationSecs: 222,
     level: "Beginner",
     videoUrl: "https://player.cloudinary.com/embed/?cloud_name=dbtkd4rfb&public_id=Video_Project_2_lkpzza",
   },
-  { icon: "▶️", title: "Tracking Your Complaint Status", duration: "2:15", durationSecs: 135, level: "Beginner",videoUrl: "https://player.cloudinary.com/embed/?cloud_name=dbtkd4rfb&public_id=trak_pfthnw" },
-  { icon: "▶️", title: "Admin Dashboard Walkthrough", duration: "7:30", durationSecs: 450, level: "Admin" },
-  { icon: "▶️", title: "Using the Analytics Dashboard", duration: "6:10", durationSecs: 370, level: "Analyzer" },
-  { icon: "▶️", title: "Auto-Assign & SLA Monitoring", duration: "4:55", durationSecs: 295, level: "Admin" },
+  { icon: Play, title: "Tracking Your Complaint Status", duration: "2:15", durationSecs: 135, level: "Beginner", videoUrl: "https://player.cloudinary.com/embed/?cloud_name=dbtkd4rfb&public_id=trak_pfthnw" },
+  { icon: Play, title: "Admin Dashboard Walkthrough", duration: "7:30", durationSecs: 450, level: "Admin" },
+  { icon: Play, title: "Using the Analytics Dashboard", duration: "6:10", durationSecs: 370, level: "Analyzer" },
+  { icon: Play, title: "Auto-Assign & SLA Monitoring", duration: "4:55", durationSecs: 295, level: "Admin" },
 ];
 
 const LEVEL_COLOR = {
@@ -243,7 +180,7 @@ const FAQItem = ({ q, a }) => {
       >
         <span className="font-semibold text-sm sm:text-base pr-4" style={{ color: "var(--text-main)" }}>{q}</span>
         <span className="flex-shrink-0" style={{ color: "var(--text-secondary)" }}>
-          <ChevronIcon open={open} />
+          <ChevronDown className={`w-5 h-5 transition-transform duration-300 ${open ? "rotate-180" : ""}`} />
         </span>
       </button>
       {open && (
@@ -353,7 +290,7 @@ const VideoPlayer = () => {
                 onClick={(e) => { e.stopPropagation(); togglePlay(); }}
                 className="relative z-10 w-16 h-16 rounded-full bg-sky-500 hover:bg-sky-400 flex items-center justify-center transition-transform duration-150 hover:scale-105 shadow-lg"
               >
-                {playing ? <PauseIcon /> : <PlayIcon />}
+                {playing ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6" />}
               </button>
               <span className="relative z-10 text-white text-sm font-medium bg-black/40 px-4 py-1.5 rounded-full">
                 {current.title}
@@ -410,14 +347,14 @@ const VideoPlayer = () => {
                 className="p-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/10 transition disabled:opacity-30 cursor-pointer"
                 style={{ color: "var(--text-secondary)" }}
               >
-                <PrevIcon />
+                <SkipBack className="w-5 h-5" />
               </button>
 
               <button
                 onClick={togglePlay}
                 className="w-10 h-10 rounded-xl bg-sky-500 hover:bg-sky-600 text-white flex items-center justify-center transition cursor-pointer"
               >
-                {playing ? <PauseIcon /> : <PlayIcon />}
+                {playing ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
               </button>
 
               <button
@@ -426,13 +363,13 @@ const VideoPlayer = () => {
                 className="p-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/10 transition disabled:opacity-30 cursor-pointer"
                 style={{ color: "var(--text-secondary)" }}
               >
-                <NextIcon />
+                <SkipForward className="w-5 h-5" />
               </button>
 
               {/* Volume */}
               <div className="flex items-center gap-2 ml-auto">
                 <span style={{ color: "var(--text-secondary)" }}>
-                  <VolumeIcon />
+                  <Volume2 className="w-4 h-4" />
                 </span>
                 <input
                   type="range"
@@ -457,7 +394,7 @@ const VideoPlayer = () => {
               className="p-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/10 transition disabled:opacity-30 cursor-pointer"
               style={{ color: "var(--text-secondary)" }}
             >
-              <PrevIcon />
+              <SkipBack className="w-5 h-5" />
             </button>
             <span className="text-sm font-semibold flex-1 truncate" style={{ color: "var(--text-main)" }}>
               {current.title}
@@ -468,7 +405,7 @@ const VideoPlayer = () => {
               className="p-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/10 transition disabled:opacity-30 cursor-pointer"
               style={{ color: "var(--text-secondary)" }}
             >
-              <NextIcon />
+              <SkipForward className="w-5 h-5" />
             </button>
           </div>
         )}
@@ -496,13 +433,7 @@ const VideoPlayer = () => {
                 currentIdx === i ? "bg-sky-500" : "bg-slate-800 dark:bg-slate-700 group-hover:bg-sky-500/20"
               }`}
             >
-              <svg
-                className={`w-5 h-5 ml-0.5 transition-colors ${currentIdx === i ? "text-white" : "text-sky-400"}`}
-                fill="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path d="M8 5v14l11-7z" />
-              </svg>
+              <Play className={`w-5 h-5 ml-0.5 transition-colors ${currentIdx === i ? "text-white" : "text-sky-400"}`} />
             </div>
 
             {/* Info */}
@@ -524,7 +455,7 @@ const VideoPlayer = () => {
         className="rounded-2xl border border-dashed p-8 text-center"
         style={{ borderColor: "var(--border-color)" }}
       >
-        <p className="text-2xl mb-2">🎬</p>
+        <Video className="inline-block w-10 h-10 mb-2 text-sky-500" />
         <p className="font-semibold mb-1" style={{ color: "var(--text-main)" }}>More tutorials coming soon</p>
         <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
           We're constantly adding new walkthroughs based on user feedback.
@@ -549,11 +480,11 @@ const Resources = () => {
   const [activeTab, setActiveTab] = useState("guides");
 
   const tabs = [
-    { id: "guides",    label: "Guides",    icon: <BookIcon /> },
-    { id: "faq",       label: "FAQ",       icon: <QuestionIcon /> },
-    { id: "tutorials", label: "Tutorials", icon: <VideoIcon /> },
-    { id: "downloads", label: "Downloads", icon: <DownloadIcon /> },
-    { id: "support",   label: "Support",   icon: <SupportIcon /> },
+    { id: "guides",    label: "Guides",    icon: <Book className="w-4 h-4" /> },
+    { id: "faq",       label: "FAQ",       icon: <HelpCircle className="w-4 h-4" /> },
+    { id: "tutorials", label: "Tutorials", icon: <Video className="w-4 h-4" /> },
+    { id: "downloads", label: "Downloads", icon: <Download className="w-4 h-4" /> },
+    { id: "support",   label: "Support",   icon: <Headphones className="w-4 h-4" /> },
   ];
 
   const filteredFaqs = FAQS.filter(
@@ -570,8 +501,9 @@ const Resources = () => {
       <section className="relative pt-28 pb-20 px-4 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-slate-800 dark:via-slate-800 dark:to-slate-900 -z-10" />
         <div className="max-w-4xl mx-auto text-center">
-          <div className="inline-block px-4 py-1 mb-4 rounded-full bg-sky-100 text-sky-700 text-sm font-medium">
-            📚 Resource Center
+          <div className="inline-flex items-center gap-2 px-4 py-1 mb-4 rounded-full bg-sky-100 text-sky-700 text-sm font-medium">
+            <Book className="w-4 h-4" />
+            Resource Center
           </div>
           <h1 className="text-4xl sm:text-5xl font-bold mb-4 text-gray-900 dark:text-white leading-tight">
             Everything you need to
@@ -584,7 +516,7 @@ const Resources = () => {
           {/* Search bar */}
           <div className="relative max-w-xl mx-auto">
             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
-              <SearchIcon />
+              <Search className="w-5 h-5" />
             </span>
             <input
               type="text"
@@ -660,7 +592,7 @@ const Resources = () => {
                   onClick={() => g.link.startsWith("/") ? navigate(g.link) : null}
                 >
                   <div className="flex items-start justify-between mb-3">
-                    <span className="text-3xl">{g.icon}</span>
+                    <span className="text-slate-900 dark:text-white"><g.icon className="w-6 h-6" /></span>
                     <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${g.tagColor}`}>{g.tag}</span>
                   </div>
                   <h3 className="font-bold text-base mb-2" style={{ color: "var(--text-main)" }}>{g.title}</h3>
@@ -669,7 +601,7 @@ const Resources = () => {
                     onClick={(e) => { e.stopPropagation(); g.link.startsWith("/") ? navigate(g.link) : null; }}
                     className="flex items-center gap-1.5 text-sky-500 text-sm font-semibold hover:gap-3 transition-all duration-200 cursor-pointer"
                   >
-                    {g.linkLabel} <ArrowIcon />
+                    {g.linkLabel} <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
               ))}
@@ -746,14 +678,14 @@ const Resources = () => {
                   style={{ backgroundColor: "var(--bg-primary)", borderColor: "var(--border-color)" }}
                 >
                   <div className="flex items-start justify-between mb-4">
-                    <span className="text-3xl">{d.icon}</span>
+                    <span className="text-slate-900 dark:text-white"><d.icon className="w-6 h-6" /></span>
                     <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${d.typeColor}`}>{d.type}</span>
                   </div>
                   <h3 className="font-bold mb-1" style={{ color: "var(--text-main)" }}>{d.title}</h3>
                   <p className="text-sm mb-1" style={{ color: "var(--text-secondary)" }}>{d.desc}</p>
                   <p className="text-xs mb-5" style={{ color: "var(--text-secondary)" }}>Size: {d.size}</p>
                   <button className="flex items-center gap-2 text-sm font-semibold text-sky-500 hover:gap-3 transition-all duration-200 cursor-pointer">
-                    <DownloadIcon />
+                    <Download className="w-4 h-4" />
                     Download
                   </button>
                 </div>
@@ -773,16 +705,16 @@ const Resources = () => {
             {/* Contact cards */}
             <div className="grid sm:grid-cols-3 gap-5 mb-10">
               {[
-                { icon: "💬", title: "Live Chat", desc: "Chat with a support agent directly.", badge: "Online", badgeColor: "bg-emerald-100 text-emerald-700", action: "Start Chat" },
-                { icon: "📧", title: "Email Support", desc: "support@smartcomplaint.in", badge: "24h response", badgeColor: "bg-blue-100 text-blue-700", action: "Send Email" },
-                { icon: "📞", title: "Phone Support", desc: "1800-XXX-XXXX (Toll Free)", badge: "Mon–Sat 9–6", badgeColor: "bg-amber-100 text-amber-700", action: "Call Now" },
+                { icon: MessageCircle, title: "Live Chat", desc: "Chat with a support agent directly.", badge: "Online", badgeColor: "bg-emerald-100 text-emerald-700", action: "Start Chat" },
+                { icon: Mail, title: "Email Support", desc: "support@smartcomplaint.in", badge: "24h response", badgeColor: "bg-blue-100 text-blue-700", action: "Send Email" },
+                { icon: Phone, title: "Phone Support", desc: "1800-XXX-XXXX (Toll Free)", badge: "Mon–Sat 9–6", badgeColor: "bg-amber-100 text-amber-700", action: "Call Now" },
               ].map((c, i) => (
                 <div
                   key={i}
                   className="rounded-2xl border p-6 text-center hover:shadow-md transition"
                   style={{ backgroundColor: "var(--bg-primary)", borderColor: "var(--border-color)" }}
                 >
-                  <span className="text-3xl">{c.icon}</span>
+                  <span className="inline-flex items-center justify-center w-12 h-12 mx-auto rounded-2xl bg-slate-100 dark:bg-slate-800 text-sky-500 mb-3"><c.icon className="w-6 h-6" /></span>
                   <span className={`inline-block mt-3 text-xs font-bold px-2.5 py-1 rounded-full ${c.badgeColor}`}>{c.badge}</span>
                   <h3 className="font-bold mt-3 mb-1" style={{ color: "var(--text-main)" }}>{c.title}</h3>
                   <p className="text-sm mb-5" style={{ color: "var(--text-secondary)" }}>{c.desc}</p>

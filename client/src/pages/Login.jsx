@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { loginUser, googleSignIn } from "../services/auth";
 import { useTheme } from "../context/ThemeContext";
+import { ArrowLeft, Mail, Lock, Loader } from "lucide-react";
 
 const Login = () => {
   const nav = useNavigate();
@@ -103,9 +104,7 @@ const Login = () => {
           <div className="relative z-10">
             <Link to="/" className="inline-flex items-center gap-3 text-white hover:opacity-80 transition-opacity mb-16">
               <div className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/30">
-                <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                </svg>
+                <ArrowLeft className="w-6 h-6 text-white" />
               </div>
               <span className="font-semibold tracking-wide">Back to Home</span>
             </Link>
@@ -149,9 +148,7 @@ const Login = () => {
                 <label className="text-sm font-semibold block" style={{ color: 'var(--text-main)' }}>Email Address</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{ color: 'var(--text-secondary)' }}>
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
-                    </svg>
+                    <Mail className="h-5 w-5" style={{ color: 'var(--text-secondary)' }} />
                   </div>
                   <input
                     type="email"
@@ -173,9 +170,7 @@ const Login = () => {
                 </div>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{ color: 'var(--text-secondary)' }}>
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                    </svg>
+                    <Lock className="h-5 w-5" style={{ color: 'var(--text-secondary)' }} />
                   </div>
                   <input
                     type="password"
@@ -206,10 +201,7 @@ const Login = () => {
               >
                 {loading ? (
                   <>
-                    <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
+                    <Loader className="animate-spin h-5 w-5 text-white" />
                     Signing in...
                   </>
                 ) : (

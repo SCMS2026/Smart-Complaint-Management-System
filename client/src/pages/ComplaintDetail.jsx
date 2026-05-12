@@ -2,6 +2,25 @@ import React, { useState, useEffect } from "react";
 import { getComplaintById, getWorkerTasksForComplaint, updateComplaintStatusRequest, markComplaintAsFake, addCommentToComplaint, userApproveComplaintRequest } from "../services/complaints";
 import WorkerPhotos from "../components/WorkerPhotos";
 import { useTheme } from "../context/ThemeContext";
+import {
+  AlertTriangle,
+  Building2,
+  Calendar,
+  Camera,
+  CheckCircle2,
+  Clock2,
+  FileText,
+  HelpCircle,
+  Image,
+  MapPin,
+  MessageCircle,
+  Search,
+  X,
+  XCircle,
+  ThumbsDown,
+  ThumbsUp,
+  Wrench,
+} from "lucide-react";
 
 
 const ComplaintDetail = ({ complaintId, onClose, onStatusChange }) => {
@@ -161,7 +180,7 @@ const ComplaintDetail = ({ complaintId, onClose, onStatusChange }) => {
         <div className={`rounded-2xl p-8 shadow-2xl max-w-md ${isDark ? 'bg-slate-800' : 'bg-white'}`}>
           <div className="text-center">
             <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-2xl">⚠️</span>
+              <AlertTriangle className="w-8 h-8 text-red-700" />
             </div>
             <p className={`text-lg font-semibold mb-2 ${isDark ? 'text-white' : 'text-slate-800'}`}>Error</p>
             <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-slate-600'} mb-6`}>{error || "Complaint not found"}</p>
@@ -184,19 +203,15 @@ const ComplaintDetail = ({ complaintId, onClose, onStatusChange }) => {
         <div className={`px-6 py-5 flex items-center justify-between shadow-sm ${isDark ? 'bg-linear-to-r from-slate-900 to-slate-800 border-b border-slate-700' : 'bg-linear-to-r from-slate-900 to-slate-800 border-b border-slate-700'}`}>
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-2xl bg-white/10 backdrop-blur flex items-center justify-center">
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
+              <FileText className="w-5 h-5 text-white" />
             </div>
             <div>
               <h2 className="text-xl font-bold text-white">Complaint Details</h2>
               <p className="text-xs text-slate-300 mt-0.5">#{complaint._id?.slice(-6)}</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-3 rounded-2xl bg-white/10 text-slate-100 hover:bg-white/20 transition shadow-sm">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
+          <button onClick={onClose} className="p-3 rounded-2xl bg-white/10 text-slate-100 hover:bg-white/20 transition shadow-sm" aria-label="Close details">
+            <X className="w-5 h-5" />
           </button>
         </div>
 
@@ -204,9 +219,7 @@ const ComplaintDetail = ({ complaintId, onClose, onStatusChange }) => {
         <div className="p-4 sm:p-6 space-y-6 max-h-[calc(100vh-180px)] overflow-y-auto">
           {error && (
             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2">
-              <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+              <AlertTriangle className="w-5 h-5 flex-shrink-0" />
               <span className="text-sm">{error}</span>
             </div>
           )}
@@ -218,8 +231,9 @@ const ComplaintDetail = ({ complaintId, onClose, onStatusChange }) => {
               <span className="capitalize">{complaint.status.replace(/_/g, ' ')}</span>
             </div>
             {complaint.isFake && (
-              <div className="px-4 py-2 rounded-xl text-sm font-semibold bg-red-100 text-red-700 border border-red-300">
-                ⚠ Marked as Fake
+              <div className="px-4 py-2 rounded-xl text-sm font-semibold bg-red-100 text-red-700 border border-red-300 inline-flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4" />
+                <span>Marked as Fake</span>
               </div>
             )}
           </div>
@@ -302,11 +316,7 @@ const ComplaintDetail = ({ complaintId, onClose, onStatusChange }) => {
            {((['admin','super_admin','department_admin'].includes(user?.role) || isComplaintOwner()) && (loadingTasks || hasPhotoTasks)) && (
              <section>
                <SectionHeader 
-                 icon={() => (
-                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 002-2H6a2 2 0 002-2v12a2 2 0 002 2z" />
-                   </svg>
-                 )} 
+                 icon={() => <Camera className="w-4 h-4" />} 
                  title="Worker Resolution Photos" 
                  color="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" 
                />
@@ -380,27 +390,21 @@ const ComplaintDetail = ({ complaintId, onClose, onStatusChange }) => {
                 onClick={() => handleUserApproval("approve")}
                 className="flex-1 min-w-[160px] px-4 py-2.5 rounded-lg text-sm font-semibold bg-emerald-500 hover:bg-emerald-600 text-white transition flex items-center justify-center gap-2 shadow-sm hover:shadow"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
-                </svg>
+                <CheckCircle2 className="w-4 h-4" />
                 Approve Completion
               </button>
               <button
                 onClick={() => handleUserApproval("reject")}
                 className="flex-1 min-w-[160px] px-4 py-2.5 rounded-lg text-sm font-semibold bg-orange-500 hover:bg-orange-600 text-white transition flex items-center justify-center gap-2 shadow-sm hover:shadow"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <X className="w-4 h-4" />
                 Reject Completion
               </button>
             </div>
           )}
           {user?.role === "user" && complaint.status === "user_approval_pending" && (
             <div className="w-full bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 text-amber-700 dark:text-amber-400 px-4 py-3 rounded-lg flex items-center gap-3">
-              <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+              <Clock2 className="w-5 h-5 flex-shrink-0" />
               <span className="text-sm font-medium">Your approval is pending for this completed complaint</span>
             </div>
           )}
@@ -410,27 +414,21 @@ const ComplaintDetail = ({ complaintId, onClose, onStatusChange }) => {
                 onClick={handleVerify}
                 className="flex-1 min-w-[140px] px-4 py-2.5 rounded-lg text-sm font-semibold bg-emerald-500 hover:bg-emerald-600 text-white transition flex items-center justify-center gap-2 shadow-sm hover:shadow"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+                <CheckCircle2 className="w-4 h-4" />
                 Verify
               </button>
               <button
                 onClick={handleMarkAsFake}
                 className="flex-1 min-w-[140px] px-4 py-2.5 rounded-lg text-sm font-semibold bg-red-500 hover:bg-red-600 text-white transition flex items-center justify-center gap-2 shadow-sm hover:shadow"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-                </svg>
+                <XCircle className="w-4 h-4" />
                 Mark as Fake
               </button>
               <button
                 onClick={handleRequestMoreInfo}
                 className="flex-1 min-w-[140px] px-4 py-2.5 rounded-lg text-sm font-semibold bg-blue-500 hover:bg-blue-600 text-white transition flex items-center justify-center gap-2 shadow-sm hover:shadow"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+                <HelpCircle className="w-4 h-4" />
                 Request More Info
               </button>
             </div>
@@ -469,61 +467,26 @@ const getStatusColor = (status) => {
 
 const getStatusIcon = (status) => {
   const icons = {
-    pending: "⏳",
-    verified: "🔍",
-    assigned: "📌",
-    in_progress: "🔧",
-    completed: "✅",
-    rejected: "❌",
-    user_approval_pending: "🙋",
-    approved_by_user: "👍",
-    rejected_by_user: "👎",
+    pending: <Clock2 className="w-4 h-4" />,
+    verified: <Search className="w-4 h-4" />,
+    assigned: <MapPin className="w-4 h-4" />,
+    in_progress: <Wrench className="w-4 h-4" />,
+    completed: <CheckCircle2 className="w-4 h-4" />,
+    rejected: <XCircle className="w-4 h-4" />,
+    user_approval_pending: <HelpCircle className="w-4 h-4" />,
+    approved_by_user: <ThumbsUp className="w-4 h-4" />,
+    rejected_by_user: <ThumbsDown className="w-4 h-4" />,
   };
-  return icons[status] || "●";
+  return icons[status] || <span className="w-2 h-2 rounded-full bg-slate-400 inline-block" />;
 };
 
 // Icon Components
-const FileTextIcon = ({ className }) => (
-  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-  </svg>
-);
-
-const MapPinIcon = ({ className }) => (
-  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-  </svg>
-);
-
-const BuildingIcon = ({ className }) => (
-  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-  </svg>
-);
-
-const CalendarIcon = ({ className }) => (
-  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-  </svg>
-);
-
-const ImageIcon = ({ className }) => (
-  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-  </svg>
-);
-
-const CommentsIcon = ({ className }) => (
-  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 5.523-4.477 10-10 10a9.95 9.95 0 01-2.95-.585m2.95-1.658A9.95 9.95 0 0112 3c5.523 0 10-4.477 10-10a9.95 9.95 0 01-2.95.585m-2.95 1.658A9.95 9.95 0 0012 21c5.523 0 10-4.477 10-10a9.95 9.95 0 01-2.95-.585" />
-  </svg>
-);
-
-const AlertIcon = ({ className }) => (
-  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-  </svg>
-);
+const FileTextIcon = ({ className }) => <FileText className={className} />;
+const MapPinIcon = ({ className }) => <MapPin className={className} />;
+const BuildingIcon = ({ className }) => <Building2 className={className} />;
+const CalendarIcon = ({ className }) => <Calendar className={className} />;
+const ImageIcon = ({ className }) => <Image className={className} />;
+const CommentsIcon = ({ className }) => <MessageCircle className={className} />;
+const AlertIcon = ({ className }) => <AlertTriangle className={className} />;
 
 export default ComplaintDetail;

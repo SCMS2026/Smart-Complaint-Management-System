@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { getMe, logout } from "../services/auth";
 import { getUnreadCount, markAsRead, markAllAsRead } from "../services/notifications";
 import { useTheme } from "../context/ThemeContext";
+import { Bell, ChevronDown, Menu, Moon, Sun, X } from "lucide-react";
 
 const Navbar = () => {
   const [user, setUser] = useState(null);
@@ -101,15 +102,7 @@ const Navbar = () => {
             <div className="relative group">
               <button className="px-4 py-2 rounded-lg flex items-center gap-1 hover:bg-black/5 dark:hover:bg-white/10 transition">
                 Services
-                <svg
-                  className="w-4 h-4 transition group-hover:rotate-180"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  viewBox="0 0 24 24"
-                >
-                  <path d="M6 9l6 6 6-6" />
-                </svg>
+                <ChevronDown className="w-4 h-4 transition group-hover:rotate-180" />
               </button>
 
               {/* Dropdown */}
@@ -226,17 +219,12 @@ const Navbar = () => {
             {theme === 'light' ? (
               <>
                 <span>Dark</span>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path d="M21 12.79A9 9 0 1111.79 3 7 7 0 0021 12.79z" />
-                </svg>
+                <Moon className="w-4 h-4" />
               </>
             ) : (
               <>
                 <span>Light</span>
-                <svg className="w-4 h-4 text-yellow-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <circle cx="12" cy="12" r="5" />
-                  <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
-                </svg>
+                <Sun className="w-4 h-4 text-yellow-400" />
               </>
             )}
           </button>
@@ -249,19 +237,7 @@ const Navbar = () => {
             aria-label="Toggle mobile menu"
             aria-expanded={mobileMenuOpen}
           >
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              viewBox="0 0 24 24"
-            >
-              {mobileMenuOpen ? (
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              ) : (
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-              )}
-            </svg>
+            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
 
           {/* ================= NOTIFICATIONS ================= */}
@@ -309,8 +285,9 @@ const Navbar = () => {
                         onClick={() => setNotifOpen(false)}
                         className="p-1 rounded hover:bg-black/5 dark:hover:bg-white/10"
                         style={{ color: 'var(--text-main)' }}
+                        aria-label="Close notifications"
                       >
-                        ✕
+                        <X className="w-4 h-4" />
                       </button>
                     </div>
                   </div>
@@ -513,14 +490,9 @@ const Navbar = () => {
              >
                <span>{theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}</span>
                {theme === 'light' ? (
-                 <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                   <path d="M21 12.79A9 9 0 1111.79 3 7 7 0 0021 12.79z" />
-                 </svg>
+                 <Moon className="w-5 h-5" />
                ) : (
-                 <svg className="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                   <circle cx="12" cy="12" r="5" />
-                   <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
-                 </svg>
+                 <Sun className="w-5 h-5 text-yellow-400" />
                )}
              </button>
 

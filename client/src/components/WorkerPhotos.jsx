@@ -1,4 +1,5 @@
 import React from 'react';
+import { Camera } from 'lucide-react';
 
 const WorkerPhotos = ({ tasks = [], isDark = false }) => {
   if (!tasks || tasks.length === 0) {
@@ -28,7 +29,7 @@ const WorkerPhotos = ({ tasks = [], isDark = false }) => {
     <section>
       <div className="flex items-center gap-2 mb-4 pb-2 border-b border-slate-200 dark:border-slate-700">
         <div className="w-5 h-5 bg-emerald-500 rounded-lg flex items-center justify-center">
-          <span className="text-white text-xs font-bold">📸</span>
+          <Camera size={12} className="text-white" />
         </div>
         <h3 className="font-semibold text-sm text-slate-800 dark:text-slate-200">
           Worker Resolution Photos

@@ -1,6 +1,31 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
+import {
+  AlertCircle,
+  ArrowRight,
+  BarChart3,
+  Bell,
+  Building2,
+  CheckCircle2,
+  ChevronDown,
+  Crown,
+  Droplets,
+  FileText,
+  Leaf,
+  Lightbulb,
+  Mail,
+  MapPin,
+  Phone,
+  Rocket,
+  Shield,
+  Star,
+  Trash2,
+  User,
+  Users,
+  Wrench,
+  Zap,
+} from "lucide-react";
 
 // ── Animated Counter ──────────────────────────────────────────────
 const Counter = ({ end, suffix = "", duration = 2000 }) => {
@@ -28,76 +53,20 @@ const Counter = ({ end, suffix = "", duration = 2000 }) => {
   return <span ref={ref}>{val.toLocaleString()}{suffix}</span>;
 };
 
-const IconReport = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{width:28,height:28}}>
-    <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414A1 1 0 0119 9.414V19a2 2 0 01-2 2z"/>
-  </svg>
-);
-const IconRoute = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{width:28,height:28}}>
-    <path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
-  </svg>
-);
-const IconTrack = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{width:28,height:28}}>
-    <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
-  </svg>
-);
-const IconResolve = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{width:28,height:28}}>
-    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-  </svg>
-);
-const IconShield = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{width:32,height:32}}>
-    <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-  </svg>
-);
-const IconBolt = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{width:32,height:32}}>
-    <path d="M13 10V3L4 14h7v7l9-11h-7z"/>
-  </svg>
-);
-const IconChart = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{width:32,height:32}}>
-    <path d="M16 8v8m-8-5v5m4-9v9M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-  </svg>
-);
-const IconBell = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{width:32,height:32}}>
-    <path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
-  </svg>
-);
-const IconUsers = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{width:32,height:32}}>
-    <path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-  </svg>
-);
-const IconArrow = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{width:20,height:20}}>
-    <path d="M17 8l4 4m0 0l-4 4m4-4H3"/>
-  </svg>
-);
-const IconStar = () => (
-  <svg viewBox="0 0 24 24" fill="currentColor" style={{width:16,height:16}}>
-    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-  </svg>
-);
-const IconMail = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{width:22,height:22}}>
-    <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-  </svg>
-);
-const IconPhone = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{width:22,height:22}}>
-    <path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
-  </svg>
-);
-const IconLocation = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{width:22,height:22}}>
-    <path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-  </svg>
-);
+const IconReport = (props) => <FileText {...props} />;
+const IconRoute = (props) => <MapPin {...props} />;
+const IconTrack = (props) => <MapPin {...props} />;
+const IconResolve = (props) => <CheckCircle2 {...props} />;
+const IconShield = (props) => <Shield {...props} />;
+const IconBolt = (props) => <Zap {...props} />;
+const IconChart = (props) => <BarChart3 {...props} />;
+const IconBell = (props) => <Bell {...props} />;
+const IconUsers = (props) => <Users {...props} />;
+const IconArrow = (props) => <ArrowRight {...props} />;
+const IconStar = (props) => <Star {...props} />;
+const IconMail = (props) => <Mail {...props} />;
+const IconPhone = (props) => <Phone {...props} />;
+const IconLocation = (props) => <MapPin {...props} />;
 
 // ── Floating Particle Background ──────────────────────────────────
 const Particles = () => {
@@ -139,10 +108,11 @@ const FAQItem = ({ q, a, c }) => {
         color:c.text, fontFamily:'inherit',
       }}>
         <span style={{fontSize:16,fontWeight:600}}>{q}</span>
-        <svg viewBox="0 0 24 24" fill="none" stroke={c.accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-          style={{width:20,height:20,flexShrink:0,marginLeft:16,transition:'transform 0.3s',transform:open?'rotate(180deg)':'rotate(0deg)'}}>
-          <path d="M19 9l-7 7-7-7"/>
-        </svg>
+        <ChevronDown
+          size={20}
+          color={c.accent}
+          className={`flex-shrink-0 ml-4 transition-transform ${open ? 'rotate-180' : ''}`}
+        />
       </button>
       <div style={{maxHeight:open?300:0, overflow:'hidden', transition:'max-height 0.35s ease'}}>
         <div style={{padding:'0 24px 20px', color:c.muted, fontSize:15, lineHeight:1.75}}>{a}</div>
@@ -174,7 +144,7 @@ const ContactForm = ({ c }) => {
 
   if (sent) return (
     <div style={{background:'rgba(16,185,129,0.08)',border:'1px solid rgba(16,185,129,0.25)',borderRadius:20,padding:'48px 32px',textAlign:'center'}}>
-      <div style={{fontSize:48,marginBottom:16}}>✅</div>
+      <CheckCircle2 size={48} className="mx-auto mb-4 text-emerald-500" />
       <h3 style={{fontSize:22,fontWeight:700,color:'#10b981',marginBottom:8}}>Message Sent!</h3>
       <p style={{color:c.muted,fontSize:15}}>We'll get back to you within 24 hours.</p>
       <button onClick={() => {setSent(false);setForm({name:'',email:'',subject:'',message:''});}}
@@ -242,8 +212,8 @@ const Home = () => {
   ];
 
   const features = [
-    {icon:<IconBolt/>,color:'#f59e0b',bg:'rgba(245,158,11,0.12)',title:'Lightning Fast',desc:'Submit a complaint in under 2 minutes. Smart forms auto-fill location and category.'},
-    {icon:<IconShield/>,color:'#10b981',bg:'rgba(16,185,129,0.12)',title:'Transparent & Secure',desc:'JWT-secured accounts. Every status change is logged. Your data stays private.'},
+    {icon:<Zap />,color:'#f59e0b',bg:'rgba(245,158,11,0.12)',title:'Lightning Fast',desc:'Submit a complaint in under 2 minutes. Smart forms auto-fill location and category.'},
+    {icon:<Shield />,color:'#10b981',bg:'rgba(16,185,129,0.12)',title:'Transparent & Secure',desc:'JWT-secured accounts. Every status change is logged. Your data stays private.'},
     {icon:<IconChart/>,color:'#3b82f6',bg:'rgba(59,130,246,0.12)',title:'Live Analytics',desc:'Real-time dashboards for departments. SLA tracking, resolution rates, trend maps.'},
     {icon:<IconBell/>,color:'#8b5cf6',bg:'rgba(139,92,246,0.12)',title:'Smart Notifications',desc:'Get email & in-app alerts at every stage. Never miss an update on your complaint.'},
     {icon:<IconUsers/>,color:'#ef4444',bg:'rgba(239,68,68,0.12)',title:'Multi-Role System',desc:'Separate dashboards for citizens, workers, admins, departments, and analysts.'},
@@ -251,10 +221,10 @@ const Home = () => {
   ];
 
   const categories = [
-    {emoji:'🛣️',name:'Roads & Potholes'},{emoji:'💧',name:'Water Supply'},
-    {emoji:'⚡',name:'Electricity'},{emoji:'🗑️',name:'Sanitation'},
-    {emoji:'🌳',name:'Parks & Gardens'},{emoji:'🏗️',name:'Public Buildings'},
-    {emoji:'🚦',name:'Traffic Signals'},{emoji:'🔆',name:'Street Lights'},
+    {icon:MapPin,name:'Roads & Potholes'},{icon:Droplets,name:'Water Supply'},
+    {icon:Zap,name:'Electricity'},{icon:Trash2,name:'Sanitation'},
+    {icon:Leaf,name:'Parks & Gardens'},{icon:Building2,name:'Public Buildings'},
+    {icon:AlertCircle,name:'Traffic Signals'},{icon:Lightbulb,name:'Street Lights'},
   ];
 
   const testimonials = [
@@ -399,8 +369,8 @@ const Home = () => {
                 </div>
               </div>
             </div>
-            <div style={{position:'absolute',top:-18,right:-18,background:'linear-gradient(135deg,#2563eb,#7c3aed)',color:'#fff',borderRadius:16,padding:'12px 18px',fontSize:13,fontWeight:700,boxShadow:'0 8px 24px rgba(37,99,235,0.4)',animation:'pulse2 3s ease-in-out infinite'}}>
-              🚀 Live Tracking
+            <div style={{position:'absolute',top:-18,right:-18,background:'linear-gradient(135deg,#2563eb,#7c3aed)',color:'#fff',borderRadius:16,padding:'12px 18px',fontSize:13,fontWeight:700,boxShadow:'0 8px 24px rgba(37,99,235,0.4)',animation:'pulse2 3s ease-in-out infinite',display:'flex',alignItems:'center',gap:8}}>
+              <Rocket size={18} style={{animation:'slideInRight 0.6s ease-out'}} /> Live Tracking
             </div>
           </div>
         </div>
@@ -488,11 +458,14 @@ const Home = () => {
           <h2 style={{fontSize:'clamp(1.6rem,3vw,2.4rem)',fontWeight:800,marginBottom:12,letterSpacing:'-0.02em'}}>What can you report?</h2>
           <p style={{color:c.muted,fontSize:16,marginBottom:40}}>From potholes to power outages — we cover all civic issues.</p>
           <div style={{display:'flex',flexWrap:'wrap',gap:12,justifyContent:'center'}}>
-            {categories.map((cat,i) => (
+            {categories.map((cat,i) => {
+              const IconComponent = cat.icon;
+              return (
               <div key={i} className="cat-pill" onClick={() => navigate('/complaint')} style={{display:'flex',alignItems:'center',gap:10,background:c.surface,border:`1.5px solid ${c.border}`,borderRadius:100,padding:'12px 22px',fontSize:14,fontWeight:600,boxShadow:isDark?'0 2px 12px rgba(0,0,0,0.2)':'0 2px 12px rgba(0,0,0,0.06)'}}>
-                <span style={{fontSize:20}}>{cat.emoji}</span>{cat.name}
+                <IconComponent style={{width:20,height:20}} />{cat.name}
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
@@ -571,20 +544,23 @@ const Home = () => {
           </div>
           <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))',gap:16}}>
             {[
-              {emoji:'👤',role:'Citizen',desc:'File complaints, track status, approve resolutions.',color:'#2563eb'},
-              {emoji:'🔧',role:'Worker',desc:'See assigned tasks, update progress, upload proof.',color:'#10b981'},
-              {emoji:'🏢',role:'Dept. Admin',desc:'Manage department complaints, assign workers, view stats.',color:'#f59e0b'},
-              {emoji:'👑',role:'Super Admin',desc:'Full system control, user management, all analytics.',color:'#8b5cf6'},
-              {emoji:'📊',role:'Analyzer',desc:'Access analytics dashboards and generate reports.',color:'#ef4444'},
-            ].map((r,i) => (
+              {icon:User,role:'Citizen',desc:'File complaints, track status, approve resolutions.',color:'#2563eb'},
+              {icon:Wrench,role:'Worker',desc:'See assigned tasks, update progress, upload proof.',color:'#10b981'},
+              {icon:Building2,role:'Dept. Admin',desc:'Manage department complaints, assign workers, view stats.',color:'#f59e0b'},
+              {icon:Crown,role:'Super Admin',desc:'Full system control, user management, all analytics.',color:'#8b5cf6'},
+              {icon:BarChart3,role:'Analyzer',desc:'Access analytics dashboards and generate reports.',color:'#ef4444'},
+            ].map((r,i) => {
+              const IconComponent = r.icon;
+              return (
               <div key={i} style={{background:c.surface,borderRadius:16,padding:'24px 20px',border:`1px solid ${c.border}`,textAlign:'center',transition:'transform 0.2s,box-shadow 0.2s'}}
                 onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-4px)';e.currentTarget.style.boxShadow='0 8px 24px rgba(0,0,0,0.1)'}}
                 onMouseLeave={e=>{e.currentTarget.style.transform='';e.currentTarget.style.boxShadow=''}}>
-                <div style={{fontSize:36,marginBottom:12}}>{r.emoji}</div>
+                <div style={{fontSize:36,marginBottom:12,display:'flex',justifyContent:'center'}}><IconComponent size={36} style={{color:r.color}}/></div>
                 <div style={{fontSize:16,fontWeight:700,color:r.color,marginBottom:8}}>{r.role}</div>
                 <div style={{fontSize:13,color:c.muted,lineHeight:1.6}}>{r.desc}</div>
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
