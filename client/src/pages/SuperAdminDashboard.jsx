@@ -6,6 +6,7 @@ import { fetchUsers, createUser, setUserRole, getToken } from "../services/auth"
 import { fetchComplaints } from "../services/complaints";
 import { fetchWorkerTasks } from "../services/workerTask";
 import { useTheme } from "../context/ThemeContext";
+import ComplaintDetail from "./ComplaintDetail";
 import {
   PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis,
   CartesianGrid, Tooltip, Legend, ResponsiveContainer,
@@ -170,6 +171,7 @@ const SuperAdminDashboard = () => {
   const [showUserForm, setShowUserForm] = useState(false);
   const [userForm, setUserForm] = useState({ name: "", email: "", password: "", role: "", department_id: "" });
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [selectedComplaintId, setSelectedComplaintId] = useState(null);
 
   const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
 
@@ -758,7 +760,7 @@ const SuperAdminDashboard = () => {
               {filteredComplaints.length === 0 ? (
                 <div className="py-16 text-center"><p className={`text-sm ${dk ? "text-slate-600" : "text-slate-400"}`}>No complaints found</p></div>
               ) : filteredComplaints.map(c => (
-                <div key={c._id} className={`${card(dk)} p-4`}>
+                <button key={c._id} onClick={() => setSelectedComplaintId(c._id)} className={`${card(dk)} p-4 transition text-left hover:shadow-md`}>
                   <div className="flex items-start justify-between gap-2 mb-2">
                     <div className="flex-1 min-w-0">
                       <span className={`font-mono text-[10px] ${dk ? "text-slate-600" : "text-slate-300"}`}>#{c._id?.slice(-6)}</span>
@@ -775,7 +777,7 @@ const SuperAdminDashboard = () => {
                     {c.userId?.name && <span className={dk ? "text-slate-400" : "text-slate-400"}>{c.userId.name}</span>}
                     <span className={`ml-auto ${dk ? "text-slate-500" : "text-slate-400"}`}>{fmtDate(c.createdAt)}</span>
                   </div>
-                </div>
+                </button>
               ))}
             </div>
 
@@ -794,7 +796,7 @@ const SuperAdminDashboard = () => {
                     {filteredComplaints.length === 0 ? (
                       <tr><td colSpan={6} className={`py-16 text-center text-sm ${dk ? "text-slate-600" : "text-slate-300"}`}>No complaints found</td></tr>
                     ) : filteredComplaints.map(c => (
-                      <tr key={c._id} className={tableRow(dk) + " group"}>
+                      <tr key={c._id} onClick={() => setSelectedComplaintId(c._id)} className={tableRow(dk) + " group cursor-pointer"}>
                         <td className="px-5 py-4">
                           <span className={`font-mono text-xs ${dk ? "text-slate-600" : "text-slate-300"}`}>#{c._id?.slice(-6)}</span>
                         </td>
@@ -883,6 +885,10 @@ const SuperAdminDashboard = () => {
             </div>
           </div>
         </Modal>
+      )}
+
+      {selectedComplaintId && (
+        <ComplaintDetail complaintId={selectedComplaintId} onClose={() => setSelectedComplaintId(null)} onStatusChange={loadAll} />
       )}
     </div>
   );

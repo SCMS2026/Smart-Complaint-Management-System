@@ -83,6 +83,8 @@ export const updateComplaintStatusRequest = async (id, status) => {
       return { success: false, message: "Authentication token missing. Please login again." };
     }
 
+    console.log("Updating complaint status:", { complaintId: id, status });
+
     const res = await fetch(`${API}/${id}/status`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json", ...getAuthHeader() },
@@ -90,9 +92,17 @@ export const updateComplaintStatusRequest = async (id, status) => {
       body: JSON.stringify({ status }),
     });
 
-    const data = await handleResponse(res);
+    const data = await res.json().catch(() => ({}));
+    
+    if (!res.ok) {
+      console.error("Status update failed:", { status: res.status, response: data });
+      throw new Error(data.message || `Request failed (${res.status})`);
+    }
+    
+    console.log("Status update successful:", data);
     return { success: true, complaint: data.complaint };
   } catch (err) {
+    console.error("updateComplaintStatusRequest error:", err.message);
     return { success: false, message: err.message };
   }
 };

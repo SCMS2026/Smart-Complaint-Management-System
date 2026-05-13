@@ -275,7 +275,11 @@ const ComplaintDetail = ({ complaintId, onClose, onStatusChange }) => {
               />
               <FieldRow 
                 label="Assigned To" 
-                value={complaint.assignedTo?.name || "—"} 
+                value={
+                  workerTasks && workerTasks.length > 0 
+                    ? workerTasks.map(task => task.worker_id?.name || task.worker_id?.email || "—").join(", ")
+                    : complaint.assignedTo?.name || "—"
+                } 
               />
             </div>
           </section>

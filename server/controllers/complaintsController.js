@@ -811,25 +811,46 @@ const updateComplaintStatus = async (req, res) => {
     const { complaintId } = req.params;
     const { status, assignedTo, workerId } = req.body;
 
-    // Validate status transition
-    const validStatuses = ['pending', 'assigned', 'in_progress', 'completed', 'rejected'];
+    console.log("=== UPDATE STATUS REQUEST ===");
+    console.log("Complaint ID:", complaintId);
+    console.log("Request Body:", req.body);
+    console.log("Status param:", status);
+    console.log("User:", { id: req.user?.id, role: req.user?.role });
+
+    // Validate status is provided
+    if (!status) {
+      console.error("❌ Status is missing from request body");
+      return res.status(400).json({ message: 'Status is required' });
+    }
+
+    // Validate status transition - match schema enum values
+    const validStatuses = ['pending', 'verified', 'assigned', 'in_progress', 'completed', 'rejected', 'user_approval_pending', 'approved_by_user', 'rejected_by_user'];
     if (!validStatuses.includes(status)) {
-      return res.status(400).json({ message: 'Invalid status' });
+      console.error("❌ Invalid status:", status, "Valid:", validStatuses);
+      return res.status(400).json({ message: 'Invalid status', validStatuses });
     }
 
     const complaint = await Complaint.findById(complaintId);
     if (!complaint) {
+      console.error("❌ Complaint not found:", complaintId);
       return res.status(404).json({ message: "Complaint not found" });
     }
 
     // Authorization check
     if (req.user.role === 'user' && complaint.userId.toString() !== req.user.id) {
+      console.error("❌ Unauthorized - User not owner:", { complaintOwner: complaint.userId.toString(), currentUser: req.user.id });
       return res.status(403).json({ message: 'Unauthorized' });
     }
 
-    if (req.user.role === 'department_admin' &&
-      complaint.department_id.toString() !== req.user.department?.toString()) {
-      return res.status(403).json({ message: 'Unauthorized for this department' });
+    if (req.user.role === 'department_admin') {
+      const complaintDeptId = complaint.department_id?.toString();
+      const userDeptId = req.user.department?.toString();
+      console.log("Department check:", { complaintDeptId, userDeptId, match: complaintDeptId === userDeptId });
+      
+      if (complaintDeptId !== userDeptId) {
+        console.error("❌ Unauthorized - Department mismatch");
+        return res.status(403).json({ message: 'Unauthorized for this department' });
+      }
     }
 
     // Auto-approval workflow
@@ -924,8 +945,22 @@ const updateComplaintStatus = async (req, res) => {
       complaint: updatedComplaint,
     });
   } catch (error) {
-    console.error("Update status error:", error);
-    res.status(500).json({ message: "Error updating status" });
+    console.error("Update status error:", error.message);
+    
+    // Handle Mongoose validation errors
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ 
+        message: "Validation error",
+        errors: Object.values(error.errors).map(e => e.message)
+      });
+    }
+    
+    // Handle cast errors (invalid ID format)
+    if (error.name === 'CastError') {
+      return res.status(400).json({ message: "Invalid complaint ID format" });
+    }
+    
+    res.status(500).json({ message: "Error updating status", error: error.message });
   }
 };
 

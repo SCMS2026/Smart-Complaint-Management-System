@@ -590,8 +590,8 @@ const DepartmentAdminDashboard = () => {
                       </td>
                     </tr>
                   ) : visibleComplaints.map(c => (
-                    <tr key={c._id}
-                      className={`border-t transition-colors ${selectedComplaintId === c._id ? (theme === 'dark' ? 'bg-blue-900/30' : 'bg-blue-50/70') : (theme === 'dark' ? 'border-slate-700 hover:bg-slate-700/50' : 'border-slate-50 hover:bg-slate-50/50')}`}>
+                    <tr key={c._id} onClick={() => setViewComplaintId(c._id)}
+                      className={`border-t cursor-pointer transition-colors ${selectedComplaintId === c._id ? (theme === 'dark' ? 'bg-blue-900/30' : 'bg-blue-50/70') : (theme === 'dark' ? 'border-slate-700 hover:bg-slate-700/50' : 'border-slate-50 hover:bg-slate-50/50')}`}>
                       <td className="px-5 py-3.5">
                         <input type="radio" name="complaint"
                           checked={selectedComplaintId === c._id}
@@ -604,7 +604,7 @@ const DepartmentAdminDashboard = () => {
                       <td className="px-5 py-3.5 text-xs text-slate-400">{c.city || "—"}</td>
                       <td className="px-5 py-3.5"><StatusBadge status={c.status} /></td>
                       <td className="px-5 py-3.5 text-xs text-slate-400 whitespace-nowrap">{new Date(c.createdAt).toLocaleDateString()}</td>
-                      <td className="px-5 py-3.5">
+                      <td className="px-5 py-3.5" onClick={e => e.stopPropagation()}>
                         <div className="flex items-center gap-1.5">
                           <button onClick={() => setViewComplaintId(c._id)}
                             className="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-blue-600 hover:bg-blue-50 transition">View</button>
