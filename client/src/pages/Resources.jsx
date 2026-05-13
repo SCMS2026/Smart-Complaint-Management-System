@@ -13,6 +13,7 @@ import {
   Headphones,
   Search,
   ChevronDown,
+  FileText,
   ChevronRight,
 } from "lucide-react";
 
