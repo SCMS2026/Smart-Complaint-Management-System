@@ -28,7 +28,7 @@ const Login = () => {
         const userData = { ...res.user, token: res.token };
         localStorage.setItem("user_token", res.token);
         localStorage.setItem("user", JSON.stringify(userData));
-        nav("/profile");
+        window.location.href = "/profile";
       } else {
         setError(res.message || "Login failed.");
       }
@@ -52,7 +52,7 @@ const Login = () => {
           if (res.success) {
             localStorage.setItem("user_token", res.token);
             localStorage.setItem("user", JSON.stringify({ ...res.user, token: res.token }));
-            nav("/");
+            window.location.href = "/";
           } else {
             setError(res.message || "Google login failed");
           }

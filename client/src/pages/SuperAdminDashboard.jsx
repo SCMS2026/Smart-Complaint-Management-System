@@ -12,7 +12,7 @@ import {
   CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   AreaChart, Area,
 } from "recharts";
-import { Users, Building2, SquareKanban, NotepadText, CircleCheck,Pencil,Trash } from "lucide-react";
+import { Users, Building2, SquareKanban, NotepadText, CircleCheck, Pencil, Trash } from "lucide-react";
 
 /* ─── helpers ─── */
 const initials = (name = "") => name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase() || "?";
@@ -534,9 +534,9 @@ const SuperAdminDashboard = () => {
                         </div>
                         <div className="flex gap-1.5 flex-shrink-0">
                           <button onClick={() => { setEditingDept(dept); setDeptForm({ name: dept.name, description: dept.description || "" }); setShowDeptForm(true); }}
-                            className={`p-2 rounded-lg text-sm transition ${dk ? "text-slate-400 hover:text-blue-400 hover:bg-blue-900/30" : "text-slate-400 hover:text-blue-600 hover:bg-blue-50"}`}><Pencil /></button>
+                            className="text-xs text-blue-500 hover:text-blue-600 px-2 py-1 rounded-lg transition flex-shrink-0 cursor-pointer"><Pencil /></button>
                           <button onClick={() => setDeleteConfirm({ type: "dept", id: dept._id, name: dept.name })}
-                            className={`p-2 rounded-lg text-sm transition ${dk ? "text-slate-400 hover:text-red-400 hover:bg-red-900/30" : "text-slate-400 hover:text-red-500 hover:bg-red-50"}`}><Trash /></button>
+                            className="text-xs text-red-400 hover:text-red-500 px-2 py-1 rounded-lg transition flex-shrink-0 cursor-pointer"><Trash /></button>
                         </div>
                       </div>
                       <div className={`grid grid-cols-3 gap-2 text-center border-t pt-4 ${dk ? "border-slate-700" : "border-slate-50"}`}>
@@ -570,16 +570,16 @@ const SuperAdminDashboard = () => {
                 <h1 className={`text-2xl font-black ${heading(dk)}`}>User Management</h1>
                 <p className={sub(dk) + " mt-0.5"}>{users.length} users registered</p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 {selectedUsers.length > 0 && (
                   <button onClick={handleBulkDelete}
-                    className="flex items-center gap-1.5 px-3 py-2.5 bg-red-500 hover:bg-red-600 text-white text-xs font-bold rounded-xl transition">
+                    className="flex items-center justify-center gap-1.5 px-3 py-2.5 bg-red-500 hover:bg-red-600 text-white text-xs font-bold rounded-xl transition">
                     🗑 Delete ({selectedUsers.length})
                   </button>
                 )}
                 <button onClick={() => setShowUserForm(true)}
-                  className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl transition shadow-sm shadow-emerald-300/30">
-                  + <span className="hidden sm:inline">New</span> User
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl transition shadow-sm shadow-emerald-300/30">
+                  <span className="text-lg">+</span> <span className="hidden xs:inline">New</span> <span className="hidden sm:inline">User</span>
                 </button>
               </div>
             </div>
@@ -592,7 +592,7 @@ const SuperAdminDashboard = () => {
                   ${dk ? "bg-slate-800 border-slate-700 text-white placeholder-slate-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-900/40"
                     : "bg-white border-slate-200 text-slate-800 focus:border-blue-300 focus:ring-2 focus:ring-blue-100"}`} />
               <select value={filterRole} onChange={e => setFilterRole(e.target.value)}
-                className={`sm:w-44 rounded-xl border px-4 py-2.5 text-sm outline-none transition
+                className={`w-full sm:w-44 rounded-xl border px-4 py-2.5 text-sm outline-none transition
                   ${dk ? "bg-slate-800 border-slate-700 text-slate-200 focus:border-blue-500"
                     : "bg-white border-slate-200 text-slate-600 focus:border-blue-300"}`}>
                 <option value="all">All Roles</option>
@@ -608,6 +608,8 @@ const SuperAdminDashboard = () => {
                 <div className="py-16 text-center"><p className={`text-sm ${dk ? "text-slate-600" : "text-slate-400"}`}>No users found</p></div>
               ) : filteredUsers.map(user => {
                 const sel = selectedUsers.includes(user._id);
+                const deptId = user.department && typeof user.department === "object" ? user.department._id : user.department || "";
+                const deptName = user.department && typeof user.department === "object" ? user.department.name : "";
                 return (
                   <div key={user._id} className={`${card(dk)} p-4 transition ${sel ? dk ? "border-blue-600/50" : "border-blue-200" : ""}`}>
                     <div className="flex items-start gap-3">
@@ -617,21 +619,47 @@ const SuperAdminDashboard = () => {
                       <Avatar name={user.name} src={user.profileImage} />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">
-                          <div>
-                            <p className={`font-bold text-sm ${dk ? "text-white" : "text-slate-800"}`}>{user.name}</p>
-                            <p className={`text-xs truncate ${dk ? "text-slate-400" : "text-slate-400"}`}>{user.email}</p>
+                          <div className="flex-1 min-w-0">
+                            <p className={`font-bold text-sm truncate ${dk ? "text-white" : "text-slate-800"}`}>{user.name}</p>
+                            <p className={`text-xs truncate ${dk ? "text-slate-400" : "text-slate-500"}`}>{user.email}</p>
                           </div>
                           <button onClick={() => setDeleteConfirm({ type: "user", id: user._id, name: user.name })}
-                            className="text-xs text-red-400 hover:text-red-500 px-2 py-1 rounded-lg transition flex-shrink-0">Del</button>
+                            className="text-xs text-red-400 hover:text-red-500 px-2 py-1 rounded-lg transition flex-shrink-0 "><Trash /></button>
                         </div>
-                        <div className="flex items-center gap-2 mt-2 flex-wrap">
-                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${ROLE_CLR[user.role] || "bg-slate-100 text-slate-500 border-slate-200"}`}>
-                            {user.role?.replace(/_/g, " ")}
-                          </span>
+
+                        {/* Role Selector */}
+                        <div className="mt-2">
+                          <label className={`text-xs font-medium block mb-1 ${dk ? "text-slate-300" : "text-slate-600"}`}>Role</label>
+                          <select value={user.role}
+                            onChange={e => handleRoleChange(user._id, e.target.value, deptId)}
+                            disabled={user._id === currentUser?._id}
+                            className={`text-xs rounded-lg px-3 py-2 border outline-none focus:ring-1 transition w-full
+                              ${dk ? "bg-slate-700 border-slate-600 text-slate-200 focus:ring-blue-500" : "bg-white border-slate-200 text-slate-700 focus:ring-blue-100"}`}>
+                            {["user", "department_admin", "worker", "contractor", "analyzer", "super_admin"].map(r => (
+                              <option key={r} value={r}>{r.replace(/_/g, " ")}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        {/* Department Selector */}
+                        <div className="mt-2">
+                          <label className={`text-xs font-medium block mb-1 ${dk ? "text-slate-300" : "text-slate-600"}`}>Department</label>
+                          <select value={deptId}
+                            onChange={e => handleRoleChange(user._id, user.role, e.target.value)}
+                            className={`text-xs rounded-lg px-3 py-2 border outline-none focus:ring-1 transition w-full
+                              ${dk ? "bg-slate-700 border-slate-600 text-slate-200 focus:ring-blue-500" : "bg-white border-slate-200 text-slate-700 focus:ring-blue-100"}`}>
+                            <option value="">None</option>
+                            {departments.map(d => <option key={d._id} value={d._id}>{d.name}</option>)}
+                          </select>
+                        </div>
+
+                        {/* Status Toggle */}
+                        <div className="mt-2">
                           <button onClick={() => handleToggleStatus(user._id)}
                             disabled={user._id === currentUser?._id}
-                            className={`text-[10px] px-2 py-0.5 rounded-full font-bold transition ${user.status === "active" ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-600"}`}>
-                            {user.status === "active" ? "● Active" : "○ Blocked"}
+                            className={`text-xs px-3 py-2 rounded-full font-bold transition w-full
+                              ${user.status === "active" ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200" : "bg-red-100 text-red-600 hover:bg-red-200"}`}>
+                            {user.status === "active" ? "● Active - Click to Block" : "○ Blocked - Click to Activate"}
                           </button>
                         </div>
                       </div>
@@ -644,68 +672,68 @@ const SuperAdminDashboard = () => {
             {/* Desktop table */}
             <div className={`hidden sm:block ${card(dk)} overflow-hidden`}>
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[800px]">
+                <table className="w-full min-w-[600px] md:min-w-[700px] lg:min-w-[800px]">
                   <thead>
                     <tr className={`border-b ${dk ? "border-slate-700 bg-slate-700/30" : "border-slate-100 bg-slate-50/70"}`}>
-                      <th className="px-5 py-4 w-10">
+                      <th className="px-3 md:px-5 py-4 w-10">
                         <input type="checkbox"
                           checked={selectedUsers.length === users.length && users.length > 0}
                           onChange={e => e.target.checked ? setSelectedUsers(users.map(u => u._id)) : setSelectedUsers([])}
                           className="w-4 h-4 rounded" />
                       </th>
                       {["User", "Email", "Role", "Status", "Department", "Actions"].map(h => (
-                        <th key={h} className={`px-5 py-4 text-left ${tableHead(dk)}`}>{h}</th>
+                        <th key={h} className={`px-3 md:px-5 py-4 text-left text-xs md:text-sm ${tableHead(dk)} ${h === "Department" ? "hidden lg:table-cell" : ""} ${h === "Actions" ? "w-20" : ""}`}>{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {filteredUsers.length === 0 ? (
-                      <tr><td colSpan={7} className={`py-16 text-center text-sm ${dk ? "text-slate-600" : "text-slate-300"}`}>No users match your filters</td></tr>
+                      <tr><td colSpan={6} className={`py-16 text-center text-sm ${dk ? "text-slate-600" : "text-slate-300"}`}>No users match your filters</td></tr>
                     ) : filteredUsers.map(user => {
                       const deptId = user.department && typeof user.department === "object" ? user.department._id : user.department || "";
                       return (
                         <tr key={user._id} className={tableRow(dk) + (selectedUsers.includes(user._id) ? dk ? " bg-blue-900/10" : " bg-blue-50/30" : "")}>
-                          <td className="px-5 py-3.5">
+                          <td className="px-3 md:px-5 py-3.5">
                             <input type="checkbox" checked={selectedUsers.includes(user._id)}
                               onChange={e => e.target.checked ? setSelectedUsers([...selectedUsers, user._id]) : setSelectedUsers(selectedUsers.filter(i => i !== user._id))}
                               className="w-4 h-4 rounded" />
                           </td>
-                          <td className="px-5 py-3.5">
-                            <div className="flex items-center gap-3">
+                          <td className="px-3 md:px-5 py-3.5">
+                            <div className="flex items-center gap-2 md:gap-3">
                               <Avatar name={user.name} src={user.profileImage} size="sm" />
-                              <p className={`font-semibold text-sm ${dk ? "text-slate-100" : "text-slate-800"}`}>{user.name}</p>
+                              <p className={`font-semibold text-xs md:text-sm ${dk ? "text-slate-100" : "text-slate-800"}`}>{user.name}</p>
                             </div>
                           </td>
-                          <td className={`px-5 py-3.5 text-sm ${dk ? "text-slate-400" : "text-slate-400"}`}>{user.email}</td>
-                          <td className="px-5 py-3.5">
+                          <td className={`px-3 md:px-5 py-3.5 text-xs md:text-sm ${dk ? "text-slate-400" : "text-slate-400"}`}>{user.email}</td>
+                          <td className="px-3 md:px-5 py-3.5">
                             <select value={user.role}
                               onChange={e => handleRoleChange(user._id, e.target.value, deptId)}
                               disabled={user._id === currentUser?._id}
-                              className={`text-xs rounded-lg px-2 py-1.5 border outline-none focus:ring-1 transition
+                              className={`text-xs rounded-lg px-2 py-1.5 border outline-none focus:ring-1 transition w-full max-w-[120px]
                                 ${dk ? "bg-slate-700 border-slate-600 text-slate-200 focus:ring-blue-500" : "bg-white border-slate-200 text-slate-700 focus:ring-blue-100"}`}>
                               {["user", "department_admin", "worker", "contractor", "analyzer", "super_admin"].map(r => (
                                 <option key={r} value={r}>{r.replace(/_/g, " ")}</option>
                               ))}
                             </select>
                           </td>
-                          <td className="px-5 py-3.5">
+                          <td className="px-3 md:px-5 py-3.5">
                             <button onClick={() => handleToggleStatus(user._id)}
                               disabled={user._id === currentUser?._id}
-                              className={`text-[11px] px-2.5 py-1 rounded-full font-bold transition
+                              className={`text-[10px] md:text-[11px] px-2 md:px-2.5 py-1 rounded-full font-bold transition
                                 ${user.status === "active" ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200" : "bg-red-100 text-red-600 hover:bg-red-200"}`}>
                               {user.status === "active" ? "● Active" : "○ Blocked"}
                             </button>
                           </td>
-                          <td className="px-5 py-3.5">
+                          <td className="px-3 md:px-5 py-3.5 hidden lg:table-cell">
                             <select value={deptId}
                               onChange={e => handleRoleChange(user._id, user.role, e.target.value)}
-                              className={`text-xs rounded-lg px-2 py-1.5 border outline-none focus:ring-1 transition
+                              className={`text-xs rounded-lg px-2 py-1.5 border outline-none focus:ring-1 transition w-full max-w-[140px]
                                 ${dk ? "bg-slate-700 border-slate-600 text-slate-200 focus:ring-blue-500" : "bg-white border-slate-200 text-slate-700 focus:ring-blue-100"}`}>
                               <option value="">None</option>
                               {departments.map(d => <option key={d._id} value={d._id}>{d.name}</option>)}
                             </select>
                           </td>
-                          <td className="px-5 py-3.5">
+                          <td className="px-3 md:px-5 py-3.5">
                             <button onClick={() => setDeleteConfirm({ type: "user", id: user._id, name: user.name })}
                               className="text-xs text-red-400 hover:text-red-500 font-semibold px-2 py-1 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition">
                               Delete

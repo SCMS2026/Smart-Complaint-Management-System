@@ -11,7 +11,7 @@ import API_URL from "../services/apiConfig";
 import { useTheme } from "../context/ThemeContext";
 import { useNavigate } from "react-router-dom";
 import PropTypes from "prop-types";
-
+import { Users, Building2, SquareKanban, NotepadText, CircleCheck, Pencil, Trash } from "lucide-react";
 const lightTheme = {
   bg: "#F1F5F9",
   cardBg: "#fff",
