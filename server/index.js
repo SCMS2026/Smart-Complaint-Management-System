@@ -151,9 +151,13 @@ app.use((err, req, res, next) => {
 
 // ── START SERVER ──────────────────────────
 const PORT = process.env.PORT || 5000;
+const createIndexes = require('./utils/createIndexes');
 
 connectDB()
-  .then(() => {
+  .then(async () => {
+    // Create database indexes for optimal performance
+    await createIndexes().catch(err => console.error('Index creation error:', err));
+    
     app.listen(PORT, () => {
       console.log(`✅ Server running on port ${PORT}`);
     });

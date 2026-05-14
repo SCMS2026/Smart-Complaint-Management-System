@@ -51,19 +51,31 @@ export const createComplaintRequest = async (complaintData) => {
     if (!token) {
       return { success: false, message: "User not logged in. Please login again." };
     }
-    console.log("Sending complaint data:", complaintData);
+
+    const startTime = performance.now();
+    console.log("🚀 Sending complaint data...");
+
+    // Use AbortController for timeout (30 seconds)
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
+
     const res = await fetch(API, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
       },
       body: complaintData,
+      signal: controller.signal,
     });
+
+    clearTimeout(timeoutId);
+    const endTime = performance.now();
+    const duration = ((endTime - startTime) / 1000).toFixed(2);
+    console.log(`✅ Response received in ${duration}s`);
 
     const data = await res.json().catch(() => ({}));
 
     if (!res.ok) {
-      // Log the specific error from the server to identify the missing/invalid field
       console.error("Server Validation Error:", data);
       return { success: false, message: data.message || "Invalid complaint data." };
     }
@@ -71,7 +83,10 @@ export const createComplaintRequest = async (complaintData) => {
     return { success: true, data };
 
   } catch (err) {
-    // Network error — server unreachable
+    if (err.name === 'AbortError') {
+      return { success: false, message: "Request timeout. Please check your internet connection and try again." };
+    }
+    console.error("Complaint submission error:", err);
     return { success: false, message: "Cannot connect to server. Check your internet connection." };
   }
 };
@@ -225,4 +240,3 @@ export const searchComplaintsPublic = async (query) => {
 // Worker Tasks for Complaint - Re-export for convenience
 export { getWorkerTasksByComplaint } from './workerTask.js';
 export { getWorkerTasksByComplaint as getWorkerTasksForComplaint } from './workerTask.js';
-

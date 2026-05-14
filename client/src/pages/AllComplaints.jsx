@@ -1144,6 +1144,35 @@ console.log("assets", assets);
                 </div>
               )}
 
+              {submitting && (
+                <div
+                  style={{
+                    gridColumn: "1 / -1",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 12,
+                    padding: "12px 14px",
+                    background: t.filterBtnActiveBg,
+                    border: `1px solid ${t.filterBtnActiveBorder}`,
+                    borderRadius: 8,
+                    fontSize: 13,
+                    color: t.filterBtnActiveColor,
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 20,
+                      height: 20,
+                      border: `2.5px solid ${t.filterBtnActiveBg}`,
+                      borderTop: `2.5px solid ${t.filterBtnActiveColor}`,
+                      borderRadius: "50%",
+                      animation: "spin 0.8s linear infinite",
+                    }}
+                  />
+                  <span style={{ fontWeight: 600 }}>Processing your complaint...</span>
+                </div>
+              )}
+
               <button
                 type="submit"
                 disabled={submitting}
@@ -1154,10 +1183,18 @@ console.log("assets", assets);
                     : "linear-gradient(135deg,#2563EB,#1E40AF)",
                   cursor: submitting ? "not-allowed" : "pointer",
                   boxShadow: "0 4px 12px rgba(37,99,235,.35)",
+                  opacity: submitting ? 0.9 : 1,
                 }}
               >
                 {submitting ? "⏳ Submitting..." : "🚀 Submit Complaint"}
               </button>
+              
+              <style>{`
+                @keyframes spin {
+                  from { transform: rotate(0deg); }
+                  to { transform: rotate(360deg); }
+                }
+              `}</style>
             </form>
           </div>
         )}
